@@ -8,7 +8,7 @@ Um sistema web desenvolvido em Django para gestão receptiva.
 - Python 3.12+
 - Git
 
-### Instalação
+### Instalação Local
 
 1. Clone o repositório:
 ```bash
@@ -52,6 +52,60 @@ python manage.py runserver
 
 O sistema estará disponível em `http://127.0.0.1:8000/`
 
+### Instalação com Docker
+
+#### Desenvolvimento
+```bash
+# Construir e executar os containers
+docker-compose up --build
+
+# Executar em background
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# Parar os containers
+docker-compose down
+```
+
+#### Produção
+```bash
+# Executar em produção
+docker-compose -f docker-compose.prod.yml up --build -d
+
+# Ver logs
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Parar os containers
+docker-compose -f docker-compose.prod.yml down
+```
+
+O sistema estará disponível em:
+- **Desenvolvimento**: `http://localhost:8000`
+- **Produção**: `http://localhost` (porta 80)
+
+### Comandos Docker Úteis
+
+```bash
+# Executar comandos Django no container
+docker-compose exec web python manage.py createsuperuser
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py collectstatic
+
+# Acessar o shell do container
+docker-compose exec web bash
+
+# Reconstruir apenas um serviço
+docker-compose up --build web
+
+# Ver logs de um serviço específico
+docker-compose logs -f web
+
+# Limpar volumes (cuidado - remove dados do banco)
+docker-compose down -v
+```
+
 ## Estrutura do Projeto
 
 ```
@@ -64,6 +118,13 @@ WebReceptivo/
 │   └── wsgi.py
 ├── requirements.txt
 ├── .gitignore
+├── .dockerignore
+├── .env.example
+├── Dockerfile
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── nginx.conf
+├── entrypoint.sh
 └── README.md
 ```
 
