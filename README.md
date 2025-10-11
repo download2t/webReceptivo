@@ -1,6 +1,49 @@
 # WebReceptivo
 
-Um sistema web desenvolvido em Django para gestão receptiva.
+Sistema web profissional desenvolvido em Django para gestão receptiva, com interface moderna, responsiva e completo sistema de usuários.
+
+## ✨ Funcionalidades
+
+### 🎨 Interface Moderna
+- **Design Responsivo**: Interface adaptativa para desktop, tablet e mobile
+- **Tema Claro/Escuro**: Alternância entre temas com persistência de preferências
+- **Bootstrap 5**: Framework CSS moderno com componentes otimizados
+- **Animações Suaves**: Transições e efeitos visuais aprimorados
+
+### 👤 Sistema de Usuários Completo
+- **Autenticação Segura**: Login/logout com validação robusta
+- **Perfil de Usuário**: Edição completa de dados pessoais e profissionais
+- **Upload de Avatar**: Sistema de upload e preview de foto de perfil
+- **Alteração de Senha**: Mudança segura de credenciais
+- **Validações**: Máscaras de input e validação em tempo real
+
+### 📱 Experiência Mobile
+- **Menu Responsivo**: Navegação otimizada para dispositivos móveis
+- **Touch Friendly**: Botões e áreas de toque adequadas para mobile
+- **Performance**: Carregamento rápido e interface fluida
+
+## 🏗️ Arquitetura do Sistema
+
+### Backend (Django)
+- **Framework**: Django 5.2.7 com Python 3.12+
+- **Apps Modulares**: 
+  - `accounts`: Gestão de usuários e perfis
+  - `core`: Funcionalidades principais e dashboard
+- **Banco de Dados**: PostgreSQL (produção) / SQLite (desenvolvimento)
+- **Autenticação**: Sistema Django Auth com UserProfile personalizado
+
+### Frontend
+- **CSS Framework**: Bootstrap 5.3.2
+- **Icons**: Bootstrap Icons 1.11.2
+- **JavaScript**: Vanilla JS com funcionalidades modernas
+- **Responsividade**: Mobile-first design
+- **Temas**: Sistema de alternância claro/escuro com LocalStorage
+
+### Infraestrutura
+- **Containerização**: Docker com Docker Compose
+- **Servidor Web**: Django Development Server (dev) / Gunicorn (prod)
+- **Arquivos Estáticos**: Configuração otimizada para servir CSS, JS e imagens
+- **Entrypoint Inteligente**: Sistema de espera automática do banco de dados
 
 ## Configuração do Ambiente
 
@@ -148,6 +191,56 @@ O arquivo `entrypoint.sh` foi aprimorado com:
 - ✅ **Startup Confiável**: Garante que migrações só executem quando banco estiver pronto  
 - ✅ **Compatibilidade**: Funciona com ou sem netcat instalado
 - ✅ **Desenvolvimento Suave**: Experiência consistente ao subir containers
+
+## 📁 Estrutura do Projeto
+
+```
+WebReceptivo/
+├── 📁 accounts/              # App de usuários e perfis
+│   ├── 📄 models.py         # UserProfile com dados completos
+│   ├── 📄 forms.py          # Formulários com validação e máscaras
+│   ├── 📄 views.py          # Views de autenticação e perfil
+│   └── 📁 management/       # Comandos personalizados
+├── 📁 core/                 # App principal
+│   ├── 📄 views.py          # Dashboard e views principais
+│   └── 📄 urls.py           # URLs do core
+├── 📁 templates/            # Templates HTML
+│   ├── 📁 base/            # Template base responsivo
+│   ├── 📁 accounts/        # Templates de usuário
+│   └── 📁 core/            # Templates principais
+├── 📁 static/               # Arquivos estáticos
+│   ├── 📁 css/             # Estilos customizados
+│   ├── 📁 js/              # JavaScript funcional
+│   └── 📁 images/          # Imagens e ícones
+├── 📁 webreceptivo/        # Configurações Django
+├── 📄 requirements.txt     # Dependências Python
+├── 📄 Dockerfile          # Configuração Docker
+├── 📄 docker-compose.yml  # Orquestração containers
+└── 📄 entrypoint.sh       # Script de inicialização
+```
+
+## 🚀 Melhorias Técnicas Implementadas
+
+### Interface e Experiência do Usuário
+- **✨ Navbar Responsiva**: Menu completamente reformulado para mobile e desktop
+- **🎨 Sistema de Temas**: Alternância claro/escuro com persistência
+- **🖼️ Upload de Avatar**: Preview em tempo real e validação de imagens
+- **📱 Mobile-First**: Interface otimizada para dispositivos móveis
+- **🎭 Máscaras de Input**: CPF, telefone e CEP com validação automática
+
+### Backend e Segurança
+- **🔐 Autenticação Robusta**: Sistema seguro com validações server-side
+- **📊 UserProfile Completo**: Dados pessoais, endereço e preferências
+- **🛡️ Validações**: Formulários com validação front-end e back-end
+- **🔄 Signals Django**: Criação automática de perfis de usuário
+- **📝 Management Commands**: Comandos para manutenção de dados
+
+### Performance e Qualidade
+- **⚡ Assets Otimizados**: CSS e JS minificados e organizados
+- **🎯 SEO Ready**: Meta tags e estrutura HTML semântica
+- **♿ Acessibilidade**: ARIA labels e navegação por teclado
+- **🔧 Debugging**: Logs informativos e tratamento de erros
+- **📦 Dependências**: Requirements.txt atualizado com Pillow
 
 ## Troubleshooting
 
