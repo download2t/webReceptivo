@@ -1,0 +1,202 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Permissões - {{ user_obj.username }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}" class="text-decoration-none"><i class="bi bi-house-fill me-1"></i>Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'user_management:user_list' %}" class="text-decoration-none"><i class="bi bi-people-fill me-1"></i>Usuários</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'user_management:user_detail' user_obj.pk %}" class="text-decoration-none">{{ user_obj.username }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-shield-lock-fill me-1"></i>Permissões</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-lock-fill me-2"></i>
+                            Gerenciar Permissões: {{ user_obj.username }}
+                        </h5>
+                        <a href="{% url 'user_management:user_detail' user_obj.pk %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-arrow-left me-1"></i>Voltar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if user_obj.is_superuser %}
+                        <div class="alert alert-warning border-0" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Superusuário:</strong> Este usuário tem acesso total ao sistema e não pode ter suas permissões alteradas.
+                        </div>
+                    {% else %}
+                        <form method="post" class="permissions-form">
+                            {% csrf_token %}
+                            
+                            <!-- Grupos de Usuário -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="bi bi-people-fill me-2"></i>Grupos de Usuário
+                                    </h6>
+                                    <div class="row">
+                                        {% for group in all_groups %}
+                                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="groups" value="{{ group.id }}" 
+                                                           id="group_{{ group.id }}"
+                                                           {% if group in user_groups %}checked{% endif %}>
+                                                    <label class="form-check-label d-flex align-items-center" for="group_{{ group.id }}">
+                                                        <strong>{{ group.name }}</strong>
+                                                        <span class="badge bg-secondary ms-2">{{ group.permissions.count }}</span>
+                                                    </label>
+                                                    <small class="text-muted d-block">
+                                                        {{ group.permissions.count }} permissão{{ group.permissions.count|pluralize:"ões" }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <!-- Permissões Diretas -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="bi bi-key-fill me-2"></i>Permissões Diretas
+                                        <small class="text-muted">(Concedidas especificamente para este usuário)</small>
+                                    </h6>
+                                    
+                                    <div class="accordion" id="permissionsAccordion">
+                                        {% for app_label, permissions in permissions_by_app.items %}
+                                            <div class="accordion-item border-0 shadow-sm mb-2">
+                                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                                    <button class="accordion-button collapsed" type="button" 
+                                                            data-bs-toggle="collapse" 
+                                                            data-bs-target="#collapse{{ forloop.counter }}" 
+                                                            aria-expanded="false" 
+                                                            aria-controls="collapse{{ forloop.counter }}">
+                                                        <strong>{{ app_label|title }}</strong>
+                                                        <span class="badge bg-primary ms-2">{{ permissions|length }}</span>
+                                                    </button>
+                                                </h2>
+                                                <div id="collapse{{ forloop.counter }}" 
+                                                     class="accordion-collapse collapse" 
+                                                     aria-labelledby="heading{{ forloop.counter }}" 
+                                                     data-bs-parent="#permissionsAccordion">
+                                                    <div class="accordion-body">
+                                                        <div class="row">
+                                                            {% for permission in permissions %}
+                                                                <div class="col-lg-4 col-md-6 mb-3">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" 
+                                                                               type="checkbox" 
+                                                                               name="user_permissions" 
+                                                                               value="{{ permission.id }}" 
+                                                                               id="perm_{{ permission.id }}"
+                                                                               {% if permission in user_permissions %}checked{% endif %}>
+                                                                        <label class="form-check-label" for="perm_{{ permission.id }}">
+                                                                            <strong>{{ permission.name }}</strong><br>
+                                                                            <small class="text-muted">{{ permission.codename }}</small>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botões de Ação -->
+                            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                                <a href="{% url 'user_management:user_detail' user_obj.pk %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>Cancelar
+                                </a>
+                                
+                                <div>
+                                    <button type="button" class="btn btn-outline-primary me-2" onclick="selectAllGroups()">
+                                        <i class="bi bi-check-all me-1"></i>Marcar Todos os Grupos
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning me-2" onclick="clearAllSelections()">
+                                        <i class="bi bi-x-circle me-1"></i>Limpar Tudo
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-shield-check me-1"></i>Salvar Permissões
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funções auxiliares para gerenciar seleções
+function selectAllGroups() {
+    const groupCheckboxes = document.querySelectorAll('input[name="groups"]');
+    groupCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function clearAllSelections() {
+    if (confirm('Tem certeza que deseja limpar todas as seleções?')) {
+        const allCheckboxes = document.querySelectorAll('.permissions-form input[type="checkbox"]');
+        allCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+    }
+}
+
+// Confirmar mudanças importantes
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.permissions-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const checkedGroups = document.querySelectorAll('input[name="groups"]:checked').length;
+            const checkedPermissions = document.querySelectorAll('input[name="user_permissions"]:checked').length;
+            
+            const message = `Confirmar alterações de permissões:\n\n` +
+                          `• ${checkedGroups} grupo(s) selecionado(s)\n` +
+                          `• ${checkedPermissions} permissão(ões) direta(s)\n\n` +
+                          `Deseja continuar?`;
+            
+            if (!confirm(message)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+
+// Destacar mudanças
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'checkbox') {
+        const parent = e.target.closest('.form-check');
+        if (parent) {
+            if (e.target.checked) {
+                parent.classList.add('bg-success-subtle');
+            } else {
+                parent.classList.remove('bg-success-subtle');
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

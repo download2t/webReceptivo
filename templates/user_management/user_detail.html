@@ -1,0 +1,377 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ user_obj.get_full_name|default:user_obj.username }} - WebReceptivo{% endblock %}
+
+{% block extra_css %}
+<style>
+.user-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.user-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(50px, -50px);
+}
+
+.user-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+}
+
+.info-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    height: 100%;
+}
+
+.info-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.status-badge {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.status-active {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.status-inactive {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.permission-list {
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--bg-body);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.permission-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Cabeçalho do Usuário -->
+    <div class="user-header">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                {% if user_obj.userprofile.avatar %}
+                    <img src="{{ user_obj.userprofile.avatar.url }}" alt="{{ user_obj.get_full_name }}" class="user-avatar-large">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.svg' %}" alt="{{ user_obj.get_full_name }}" class="user-avatar-large">
+                {% endif %}
+            </div>
+            <div class="col">
+                <h1 class="mb-2">{{ user_obj.get_full_name|default:user_obj.username }}</h1>
+                <p class="mb-2 opacity-75">
+                    <i class="bi bi-envelope me-2"></i>{{ user_obj.email }}
+                    {% if user_obj.username != user_obj.email %}
+                        <span class="ms-3"><i class="bi bi-at me-1"></i>{{ user_obj.username }}</span>
+                    {% endif %}
+                </p>
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if user_obj.is_active %}
+                        <span class="status-badge status-active">
+                            <i class="bi bi-check-circle me-1"></i>Ativo
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="bi bi-x-circle me-1"></i>Inativo
+                        </span>
+                    {% endif %}
+                    
+                    {% if user_obj.is_superuser %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-star me-1"></i>Super Admin
+                        </span>
+                    {% elif user_obj.is_staff %}
+                        <span class="badge bg-info">
+                            <i class="bi bi-gear me-1"></i>Equipe
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if perms.auth.change_user %}
+                    <a href="{% url 'user_management:user_edit' user_obj.pk %}" class="btn btn-light">
+                        <i class="bi bi-pencil me-2"></i>Editar
+                    </a>
+                    {% endif %}
+                    
+                    {% if perms.auth.change_user %}
+                    <a href="{% url 'user_management:permissions_manage' user_obj.pk %}" class="btn btn-outline-light">
+                        <i class="bi bi-key me-2"></i>Permissões
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'user_management:user_list' %}" class="btn btn-outline-light">
+                        <i class="bi bi-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'user_management:user_list' %}">Usuários</a></li>
+            <li class="breadcrumb-item active">{{ user_obj.username }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Informações Básicas -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <h5 class="info-card-title">
+                    <i class="bi bi-person me-2"></i>Informações Básicas
+                </h5>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Nome Completo:</strong></div>
+                    <div class="col-sm-8">{{ user_obj.get_full_name|default:"—" }}</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Username:</strong></div>
+                    <div class="col-sm-8">{{ user_obj.username }}</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>E-mail:</strong></div>
+                    <div class="col-sm-8">{{ user_obj.email }}</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Data de Criação:</strong></div>
+                    <div class="col-sm-8">{{ user_obj.date_joined|date:"d/m/Y H:i" }}</div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Último Login:</strong></div>
+                    <div class="col-sm-8">
+                        {% if user_obj.last_login %}
+                            {{ user_obj.last_login|date:"d/m/Y H:i" }}
+                            <small class="text-muted">({{ user_obj.last_login|timesince }} atrás)</small>
+                        {% else %}
+                            <span class="text-muted">Nunca fez login</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4"><strong>Status:</strong></div>
+                    <div class="col-sm-8">
+                        {% if user_obj.is_active %}
+                            <span class="text-success">
+                                <i class="bi bi-check-circle me-1"></i>Ativo
+                            </span>
+                        {% else %}
+                            <span class="text-danger">
+                                <i class="bi bi-x-circle me-1"></i>Inativo
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grupos e Permissões -->
+        <div class="col-lg-6">
+            <div class="info-card">
+                <h5 class="info-card-title">
+                    <i class="bi bi-people me-2"></i>Grupos e Permissões
+                </h5>
+                
+                <div class="mb-4">
+                    <h6 class="mb-2">Grupos:</h6>
+                    {% if groups %}
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% for group in groups %}
+                                <span class="badge bg-primary">{{ group.name }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Usuário não pertence a nenhum grupo</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <h6 class="mb-2">Permissões Diretas:</h6>
+                    {% if direct_permissions %}
+                        <div class="d-flex gap-1 flex-wrap">
+                            {% for permission in direct_permissions %}
+                                <span class="badge bg-secondary small">{{ permission.codename }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Nenhuma permissão direta atribuída</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="mb-2">Flags de Sistema:</h6>
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if user_obj.is_superuser %}
+                            <span class="badge bg-danger">Super Usuário</span>
+                        {% endif %}
+                        {% if user_obj.is_staff %}
+                            <span class="badge bg-info">Equipe (Staff)</span>
+                        {% endif %}
+                        {% if not user_obj.is_superuser and not user_obj.is_staff %}
+                            <span class="badge bg-secondary">Usuário Regular</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Todas as Permissões -->
+    <div class="row">
+        <div class="col-12">
+            <div class="info-card">
+                <h5 class="info-card-title">
+                    <i class="bi bi-shield-check me-2"></i>Todas as Permissões Efetivas
+                    <small class="text-muted">({{ user_permissions|length }} permissões)</small>
+                </h5>
+                
+                {% if user_permissions %}
+                    <div class="permission-list">
+                        {% for permission in user_permissions %}
+                            <div class="permission-item">{{ permission }}</div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">Usuário não possui nenhuma permissão</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Perigosas -->
+    {% if perms.auth.change_user or perms.auth.delete_user %}
+    <div class="row">
+        <div class="col-12">
+            <div class="info-card border-warning">
+                <h5 class="info-card-title text-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Ações Perigosas
+                </h5>
+                
+                <div class="d-flex gap-2 flex-wrap">
+                    {% if perms.auth.change_user %}
+                    <button type="button" class="btn btn-outline-warning btn-sm toggle-active-btn" 
+                            data-user-id="{{ user_obj.pk }}" 
+                            data-username="{{ user_obj.username }}"
+                            data-current-status="{{ user_obj.is_active|yesno:'true,false' }}">
+                        <i class="bi bi-{% if user_obj.is_active %}pause{% else %}play{% endif %} me-1"></i>
+                        {% if user_obj.is_active %}Inativar Usuário{% else %}Ativar Usuário{% endif %}
+                    </button>
+                    {% endif %}
+                    
+                    {% if perms.auth.delete_user %}
+                    <a href="{% url 'user_management:user_delete' user_obj.pk %}" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Deletar Usuário
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Estas ações são irreversíveis ou podem afetar o acesso do usuário ao sistema.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle ativar/inativar usuário
+    const toggleBtn = document.querySelector('.toggle-active-btn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const username = this.dataset.username;
+            const currentStatus = this.dataset.currentStatus === 'true';
+            const newStatus = !currentStatus;
+            const action = newStatus ? 'ativar' : 'inativar';
+            
+            if (confirm(`Tem certeza que deseja ${action} o usuário ${username}?`)) {
+                fetch(`/users/${userId}/toggle-active/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Erro: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao processar solicitação');
+                });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

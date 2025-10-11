@@ -174,7 +174,7 @@ def user_list(request):
         'staff_users': User.objects.filter(is_staff=True).count(),
     }
     
-    return render(request, 'users/user_list.html', context)
+    return render(request, 'user_management/user_list.html', context)
 
 
 @login_required
@@ -197,7 +197,7 @@ def user_create(request):
         'button_text': 'Criar Usuário'
     }
     
-    return render(request, 'users/user_form.html', context)
+    return render(request, 'user_management/user_form.html', context)
 
 
 @login_required
@@ -223,7 +223,7 @@ def user_edit(request, pk):
         'button_text': 'Salvar Alterações'
     }
     
-    return render(request, 'users/user_form.html', context)
+    return render(request, 'user_management/user_form.html', context)
 
 
 @login_required
@@ -247,7 +247,7 @@ def user_detail(request, pk):
         # 'login_history': login_history,
     }
     
-    return render(request, 'users/user_detail.html', context)
+    return render(request, 'user_management/user_detail.html', context)
 
 
 @login_required
@@ -312,7 +312,7 @@ def user_delete(request, pk):
         'title': f'Deletar Usuário: {user.username}'
     }
     
-    return render(request, 'users/user_delete.html', context)
+    return render(request, 'user_management/user_delete.html', context)
 
 
 @login_required
@@ -352,4 +352,4 @@ def permissions_manage(request, pk):
         'user_groups': user.groups.all(),
     }
     
-    return render(request, 'users/permissions_manage.html', context)
+    return render(request, 'user_management/permissions_manage.html', context)

@@ -35,22 +35,18 @@ class LoginView(FormView):
         if user is not None:
             login(self.request, user)
             
-            # Configurar sessão baseado no "lembrar-me"
-            if not remember_me:
-                self.request.session.set_expiry(0)  # Expira quando fechar browser
+            # Configurar sessão para durar 4 horas por padrão
+            if remember_me:
+                self.request.session.set_expiry(60 * 60 * 24 * 7)  # 7 dias se marcar "lembrar-me"
             else:
-                self.request.session.set_expiry(60 * 60 * 24 * 7)  # 7 dias
+                self.request.session.set_expiry(60 * 60 * 4)  # 4 horas por padrão
             
             messages.success(
                 self.request, 
                 f'Bem-vindo ao WebReceptivo, {user.get_full_name() or user.username}!'
             )
             
-            # Redirecionar para próxima URL se existir
-            next_url = self.request.GET.get('next')
-            if next_url:
-                return redirect(next_url)
-                
+            # Sempre redirecionar para o dashboard (home)
             return redirect(self.success_url)
         else:
             messages.error(self.request, 'Credenciais inválidas. Tente novamente.')

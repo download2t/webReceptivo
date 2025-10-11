@@ -130,15 +130,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication Settings
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/dashboard/dashboard/'  # Sempre redireciona para o dashboard após login
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Session Settings
-SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_COOKIE_AGE = 60 * 60 * 4  # 4 horas (14400 segundos)
 SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Não expira ao fechar o browser
 
 # CSRF Settings
 CSRF_COOKIE_SECURE = not DEBUG
