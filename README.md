@@ -72,6 +72,8 @@ docker-compose logs -f
 docker-compose down
 ```
 
+> **🚀 Melhorias Implementadas**: O entrypoint foi otimizado para aguardar automaticamente o PostgreSQL estar disponível antes de executar migrações, eliminando erros de conexão durante o startup.
+
 #### Produção
 ```bash
 # Executar em produção
@@ -129,6 +131,55 @@ WebReceptivo/
 ├── nginx.conf
 ├── entrypoint.sh
 └── README.md
+```
+
+## Melhorias Técnicas
+
+### Entrypoint Inteligente
+O arquivo `entrypoint.sh` foi aprimorado com:
+
+- **🔍 Verificação Robusta**: Usa `netcat` para verificar se a porta PostgreSQL (5432) está aberta
+- **🔄 Fallback Python**: Se `netcat` não estiver disponível, usa verificação Python nativa
+- **⏱️ Timing Otimizado**: Aguarda tempo adicional após porta abrir para garantir readiness completo
+- **📝 Logs Informativos**: Fornece feedback claro sobre o processo de inicialização
+
+### Benefícios
+- ✅ **Zero Erros de Conexão**: Elimina erros de timing durante startup
+- ✅ **Startup Confiável**: Garante que migrações só executem quando banco estiver pronto  
+- ✅ **Compatibilidade**: Funciona com ou sem netcat instalado
+- ✅ **Desenvolvimento Suave**: Experiência consistente ao subir containers
+
+## Troubleshooting
+
+### Problemas Comuns
+
+#### Container não consegue conectar ao PostgreSQL
+**Solução**: O entrypoint já resolve este problema automaticamente aguardando o banco estar disponível.
+
+#### Erro "database is being accessed by other users"
+```bash
+# Parar todos os containers e remover volumes
+docker-compose down -v
+docker-compose up --build
+```
+
+#### Ver logs detalhados
+```bash
+# Logs de todos os serviços
+docker-compose logs -f
+
+# Logs apenas do Django
+docker-compose logs -f web
+
+# Logs apenas do PostgreSQL
+docker-compose logs -f db
+```
+
+#### Resetar banco de dados completamente
+```bash
+docker-compose down -v
+docker volume rm webreceptivo_postgres_data
+docker-compose up --build
 ```
 
 ## Desenvolvimento
