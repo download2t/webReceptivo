@@ -1,0 +1,158 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - WebReceptivo{% endblock %}
+
+{% block content %}
+<div class="dashboard-container fade-in">
+    <!-- Messages -->
+    {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{{ message.tags|yesno:'check-circle,exclamation-triangle,info-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="h2 mb-2 fw-bold">Dashboard</h1>
+                    <p class="text-muted mb-0 fs-5">Bem-vindo ao WebReceptivo, {{ user.get_full_name|default:user.username }}!</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="bi bi-circle-fill me-2"></i>Sistema Online
+                    </span>
+                    <span class="badge bg-info fs-6 px-3 py-2">
+                        <i class="bi bi-clock me-2"></i>{{ system_uptime }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Row -->
+    <div class="row dashboard-content g-4">
+            <!-- System Info -->
+            <div class="card dashboard-card mt-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Informações do Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="small text-muted">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Versão:</span>
+                            <span class="fw-bold">1.1.0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Último Login:</span>
+                            <span class="fw-bold">{{ user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Status:</span>
+                            <span class="text-success fw-bold">
+                                <i class="bi bi-circle-fill me-1"></i>Online
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Uptime:</span>
+                            <span class="fw-bold">{{ system_uptime|default:"--" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2.25rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--primary-color);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update stats periodically (every 5 minutes)
+    setInterval(refreshStats, 5 * 60 * 1000);
+    
+    // Add hover effects to stat cards
+    const statCards = document.querySelectorAll('.stat-card, .dashboard-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    console.log('Dashboard initialized');
+});
+
+function refreshStats() {
+    // This would normally fetch updated stats from the server
+    console.log('Refreshing dashboard stats...');
+    
+    // Example: fetch('/api/dashboard/stats/')
+    //   .then(response => response.json())
+    //   .then(data => updateStatsDisplay(data));
+}
+
+function updateStatsDisplay(stats) {
+    // Update stat cards with new data
+    console.log('Updating stats display', stats);
+}
+</script>
+{% endblock %}

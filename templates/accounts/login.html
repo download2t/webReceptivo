@@ -1,0 +1,169 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Login - WebReceptivo{% endblock %}
+
+{% block body_class %}{% endblock %}
+
+{% block content %}
+<div class="login-container d-flex align-items-center justify-content-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 d-flex justify-content-center">
+            <div class="card login-card">
+                <div class="login-header">
+                    <h2 class="mb-0">
+                        <i class="bi bi-building me-2"></i>
+                        WebReceptivo
+                    </h2>
+                    <p class="mb-0 mt-2 opacity-75">Sistema de Gestão Receptiva</p>
+                </div>
+                
+                <div class="login-body">
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+                                <i class="bi bi-{{ message.tags|yesno:'check-circle,exclamation-triangle,info-circle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" class="login-form" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="form-floating mb-3">
+                            <input 
+                                type="text" 
+                                class="form-control{% if form.username.errors %} is-invalid{% endif %}" 
+                                id="id_username" 
+                                name="username" 
+                                placeholder="Digite seu usuário"
+                                value="{{ form.username.value|default:'' }}"
+                                required
+                                autocomplete="username"
+                                autofocus>
+                            <label for="id_username">
+                                <i class="bi bi-person me-2"></i>Usuário
+                            </label>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-floating mb-4">
+                            <input 
+                                type="password" 
+                                class="form-control{% if form.password.errors %} is-invalid{% endif %}" 
+                                id="id_password" 
+                                name="password" 
+                                placeholder="Digite sua senha"
+                                required
+                                autocomplete="current-password">
+                            <label for="id_password">
+                                <i class="bi bi-lock me-2"></i>Senha
+                            </label>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+                                <label class="form-check-label" for="remember_me">
+                                    Lembrar-me
+                                </label>
+                            </div>
+                            <a href="#" class="text-decoration-none small">
+                                Esqueceu a senha?
+                            </a>
+                        </div>
+                        
+                        <button 
+                            type="submit" 
+                            class="btn btn-primary btn-login w-100"
+                            data-loading="Entrando...">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Entrar
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <small class="text-muted">
+                            © {% now "Y" %} WebReceptivo. Sistema seguro e profissional.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced login form behavior
+    const form = document.querySelector('.login-form');
+    const usernameInput = document.getElementById('id_username');
+    const passwordInput = document.getElementById('id_password');
+    
+    // Auto-focus on page load
+    if (usernameInput.value) {
+        passwordInput.focus();
+    } else {
+        usernameInput.focus();
+    }
+    
+    // Enter key handling
+    usernameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            passwordInput.focus();
+        }
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Clear previous validation
+        [usernameInput, passwordInput].forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        
+        // Validate username
+        if (!usernameInput.value.trim()) {
+            usernameInput.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate password
+        if (!passwordInput.value) {
+            passwordInput.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            WebReceptivo.showNotification('Por favor, preencha todos os campos obrigatórios.', 'danger');
+        }
+    });
+});
+</script>
+{% endblock %}

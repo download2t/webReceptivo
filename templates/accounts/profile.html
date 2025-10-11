@@ -1,0 +1,379 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Meu Perfil - WebReceptivo{% endblock %}
+
+{% block content %}
+<div class="dashboard-container fade-in">
+    <!-- Messages -->
+    {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{{ message.tags|yesno:'check-circle,exclamation-triangle,info-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <div class="mb-3 mb-md-0">
+                    <h1 class="h2 mb-2 fw-bold">
+                        <i class="bi bi-person-circle me-2"></i>Meu Perfil
+                    </h1>
+                    <p class="text-muted mb-0 fs-5">Gerencie suas informações pessoais e configurações</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-key me-2"></i>Alterar Senha
+                    </a>
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Profile Card -->
+        <div class="col-lg-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-transparent">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-image me-2"></i>Foto do Perfil
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <img 
+                            src="{{ profile.avatar_url }}" 
+                            alt="Avatar" 
+                            class="rounded-circle avatar-large mb-3"
+                            id="avatar-preview"
+                            style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--border-color);">
+                    </div>
+                    <h5 class="mb-1">{{ profile.nome_completo }}</h5>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        Membro desde {{ user.date_joined|date:"M/Y" }}
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card dashboard-card mt-4">
+                <div class="card-header bg-transparent">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Estatísticas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Último login:</span>
+                        <strong>{{ user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Perfil atualizado:</span>
+                        <strong>{{ profile.updated_at|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Tema:</span>
+                        <strong>{{ profile.get_tema_preferido_display }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Form -->
+        <div class="col-lg-8">
+            <form method="post" enctype="multipart/form-data" class="profile-form">
+                {% csrf_token %}
+                
+                <!-- Personal Information -->
+                <div class="card dashboard-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-badge me-2"></i>Informações Pessoais
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="id_first_name" class="form-label fw-semibold">
+                                    <i class="bi bi-person me-1"></i>Nome *
+                                </label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_last_name" class="form-label fw-semibold">
+                                    <i class="bi bi-person me-1"></i>Sobrenome *
+                                </label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_email" class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-1"></i>E-mail *
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_cpf" class="form-label fw-semibold">
+                                    <i class="bi bi-card-text me-1"></i>CPF
+                                </label>
+                                {{ form.cpf }}
+                                {% if form.cpf.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.cpf.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_telefone" class="form-label fw-semibold">
+                                    <i class="bi bi-telephone me-1"></i>Telefone
+                                </label>
+                                {{ form.telefone }}
+                                {% if form.telefone.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.telefone.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_celular" class="form-label fw-semibold">
+                                    <i class="bi bi-phone me-1"></i>Celular
+                                </label>
+                                {{ form.celular }}
+                                {% if form.celular.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.celular.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_data_nascimento" class="form-label fw-semibold">
+                                    <i class="bi bi-calendar me-1"></i>Data de Nascimento
+                                </label>
+                                {{ form.data_nascimento }}
+                                {% if form.data_nascimento.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.data_nascimento.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_avatar" class="form-label fw-semibold">
+                                    <i class="bi bi-camera me-1"></i>Foto do Perfil
+                                </label>
+                                {{ form.avatar }}
+                                {% if form.avatar.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.avatar.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Formatos aceitos: JPG, PNG. Tamanho máximo: 2MB.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Address Information -->
+                <div class="card dashboard-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-geo-alt me-2"></i>Endereço
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="id_endereco" class="form-label fw-semibold">
+                                    <i class="bi bi-house me-1"></i>Endereço Completo
+                                </label>
+                                {{ form.endereco }}
+                                {% if form.endereco.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.endereco.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="id_cep" class="form-label fw-semibold">
+                                    <i class="bi bi-mailbox me-1"></i>CEP
+                                </label>
+                                {{ form.cep }}
+                                {% if form.cep.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.cep.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <label for="id_cidade" class="form-label fw-semibold">
+                                    <i class="bi bi-building me-1"></i>Cidade
+                                </label>
+                                {{ form.cidade }}
+                                {% if form.cidade.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.cidade.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="id_estado" class="form-label fw-semibold">
+                                    <i class="bi bi-map me-1"></i>Estado
+                                </label>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.estado.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preferences -->
+                <div class="card dashboard-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-gear me-2"></i>Preferências
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="id_tema_preferido" class="form-label fw-semibold">
+                                    <i class="bi bi-palette me-1"></i>Tema Preferido
+                                </label>
+                                {{ form.tema_preferido }}
+                                {% if form.tema_preferido.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.tema_preferido.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Define o tema padrão do sistema para sua conta.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="d-flex justify-content-end gap-3">
+                    <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary" data-loading="Salvando...">
+                        <i class="bi bi-check-circle me-2"></i>Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.avatar-large {
+    transition: var(--transition);
+}
+
+.avatar-large:hover {
+    transform: scale(1.05);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.profile-form .card {
+    transition: var(--transition);
+}
+
+.profile-form .card:hover {
+    box-shadow: var(--box-shadow-lg);
+}
+
+.form-label.fw-semibold {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+[data-bs-theme="dark"] .avatar-large {
+    border-color: var(--border-color) !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview da imagem do avatar
+    const avatarInput = document.getElementById('id_avatar');
+    const avatarPreview = document.getElementById('avatar-preview');
+    
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                    avatarPreview.style.animation = 'fadeIn 0.3s ease';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Máscara de input
+    const inputs = document.querySelectorAll('[data-mask]');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const mask = this.getAttribute('data-mask');
+            let value = this.value.replace(/\D/g, '');
+            
+            if (mask === '(00) 0000-0000') {
+                value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+            } else if (mask === '(00) 00000-0000') {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (mask === '000.000.000-00') {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            } else if (mask === '00000-000') {
+                value = value.replace(/(\d{5})(\d{3})/, '$1-$2');
+            }
+            
+            this.value = value;
+        });
+    });
+    
+    console.log('Profile page initialized');
+});
+</script>
+{% endblock %}
