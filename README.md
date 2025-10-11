@@ -7,6 +7,7 @@ Um sistema web desenvolvido em Django para gestão receptiva.
 ### Pré-requisitos
 - Python 3.12+
 - Git
+- Docker e Docker Compose (para execução em containers)
 
 ### Instalação Local
 
@@ -53,6 +54,8 @@ python manage.py runserver
 O sistema estará disponível em `http://127.0.0.1:8000/`
 
 ### Instalação com Docker
+
+**Certifique-se de que o Docker Desktop está executando antes de continuar.**
 
 #### Desenvolvimento
 ```bash
