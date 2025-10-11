@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('dashboard/', include('core.urls')),
+    path('users/', include('user_management.urls')),
     path('', lambda request: redirect('core:dashboard') if request.user.is_authenticated else redirect('accounts:login')),
 ]
 
