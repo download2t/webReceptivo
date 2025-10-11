@@ -117,6 +117,8 @@ docker-compose down
 
 > **🚀 Melhorias Implementadas**: O entrypoint foi otimizado para aguardar automaticamente o PostgreSQL estar disponível antes de executar migrações, eliminando erros de conexão durante o startup.
 
+> **📚 Documentação Completa**: Para comandos detalhados, backup, restore e troubleshooting do Docker, consulte [DOCKER_COMANDOS.md](./DOCKER_COMANDOS.md)
+
 #### Produção
 ```bash
 # Executar em produção

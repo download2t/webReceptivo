@@ -160,3 +160,15 @@ static/
 # Secret key and sensitive data
 secret_key.txt
 .secret
+
+# Database backups (local backups should not be versioned)
+backups/
+*.sql
+*.sql.gz
+
+# Docker volumes backup
+docker-volumes-backup/
+
+# Temporary files
+*.tmp
+*.temp
