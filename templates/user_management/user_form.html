@@ -4,47 +4,7 @@
 {% block title %}{{ title }} - WebReceptivo{% endblock %}
 
 {% block extra_css %}
-<style>
-.form-section {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.form-section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--primary-color);
-}
-
-.permission-group {
-    background: var(--bg-body);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.permission-group-title {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.75rem;
-}
-
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.required-field {
-    color: var(--danger-color);
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
 {% endblock %}
 
 {% block content %}

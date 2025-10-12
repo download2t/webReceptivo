@@ -3,6 +3,10 @@
 
 {% block title %}Gerenciar Permissões - {{ user_obj.username }} - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- Breadcrumb -->

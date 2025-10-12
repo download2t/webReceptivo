@@ -4,69 +4,7 @@
 {% block title %}Gerenciamento de Usuários - WebReceptivo{% endblock %}
 
 {% block extra_css %}
-<style>
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.user-status {
-    font-size: 0.85rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-}
-
-.status-active {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #28a745;
-    border: 1px solid rgba(40, 167, 69, 0.2);
-}
-
-.status-inactive {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: #dc3545;
-    border: 1px solid rgba(220, 53, 69, 0.2);
-}
-
-.status-staff {
-    background-color: rgba(0, 123, 255, 0.1);
-    color: #007bff;
-    border: 1px solid rgba(0, 123, 255, 0.2);
-}
-
-.filter-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.stats-row {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.stat-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/users.css' %}">
 {% endblock %}
 
 {% block content %}
