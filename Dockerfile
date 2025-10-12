@@ -10,6 +10,13 @@ RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     pkg-config \
     netcat-openbsd \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libwebp-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia os arquivos de requisitos
@@ -20,6 +27,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código da aplicação
 COPY . .
+
+# Cria diretórios para media files
+RUN mkdir -p /app/media/avatars \
+    && mkdir -p /app/staticfiles
 
 # Torna o script de entrada executável
 RUN chmod +x entrypoint.sh

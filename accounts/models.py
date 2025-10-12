@@ -2,14 +2,25 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError
 import os
+
+
+def validate_avatar_size(value):
+    """
+    Valida o tamanho do arquivo de avatar (máximo 12MB)
+    """
+    filesize = value.size
+    if filesize > 12 * 1024 * 1024:  # 12MB em bytes
+        raise ValidationError("O arquivo não pode ser maior que 12MB.")
+    return value
 
 
 def user_avatar_path(instance, filename):
     """
     Gera o caminho para upload da foto do usuário
     """
-    ext = filename.split('.')[-1]
+    ext = filename.split('.')[-1].lower()
     filename = f'user_{instance.user.id}_avatar.{ext}'
     return os.path.join('avatars', filename)
 
@@ -33,7 +44,14 @@ class UserProfile(models.Model):
     cep = models.CharField('CEP', max_length=10, blank=True)
     
     # Avatar
-    avatar = models.ImageField('Foto do Perfil', upload_to=user_avatar_path, blank=True, null=True)
+    avatar = models.ImageField(
+        'Foto do Perfil',
+        upload_to=user_avatar_path,
+        blank=True,
+        null=True,
+        validators=[validate_avatar_size],
+        help_text='Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 12MB.'
+    )
     
     # Configurações
     tema_preferido = models.CharField(

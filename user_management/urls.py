@@ -16,6 +16,7 @@ urlpatterns = [
     # Ações AJAX
     path('<int:pk>/toggle-active/', views.user_toggle_active, name='user_toggle_active'),
     
-    # Gerenciamento de permissões
+    # Gerenciamento de senhas e permissões
+    path('<int:pk>/change-password/', views.user_change_password, name='user_change_password'),
     path('<int:pk>/permissions/', views.permissions_manage, name='permissions_manage'),
 ]

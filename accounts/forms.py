@@ -44,11 +44,21 @@ class UserProfileForm(forms.ModelForm):
         }, format='%Y-%m-%d')
     )
     
+    avatar = forms.ImageField(
+        label='Foto do Perfil',
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*'
+        }),
+        help_text='Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 12MB.'
+    )
+
     class Meta:
         model = UserProfile
         fields = [
-            'telefone', 'celular', 'cpf',
-            'endereco', 'cidade', 'estado', 'cep', 'avatar', 'tema_preferido'
+            'avatar', 'telefone', 'celular', 'cpf',
+            'endereco', 'cidade', 'estado', 'cep', 'tema_preferido'
         ]
         
         widgets = {
@@ -93,10 +103,7 @@ class UserProfileForm(forms.ModelForm):
                 'placeholder': '00000-000',
                 'data-mask': '00000-000'
             }),
-            'avatar': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
+
             'tema_preferido': forms.Select(attrs={
                 'class': 'form-select'
             })
@@ -115,6 +122,28 @@ class UserProfileForm(forms.ModelForm):
             if hasattr(user, 'profile') and user.profile.data_nascimento:
                 self.fields['data_nascimento'].initial = user.profile.data_nascimento
     
+    def clean_avatar(self):
+        """
+        Validação personalizada para o campo avatar
+        """
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            # Validar extensão
+            valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+            ext = avatar.name.lower().split('.')[-1]
+            if f'.{ext}' not in valid_extensions:
+                raise forms.ValidationError(
+                    'Formato de arquivo não suportado. Use JPG, PNG ou GIF.'
+                )
+            
+            # Validar tamanho (12MB)
+            if avatar.size > 12 * 1024 * 1024:
+                raise forms.ValidationError(
+                    'O arquivo é muito grande. Tamanho máximo permitido: 12MB.'
+                )
+        
+        return avatar
+
     def save(self, commit=True):
         profile = super().save(commit=False)
         

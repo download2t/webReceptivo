@@ -414,3 +414,50 @@ def permissions_manage(request, pk):
     }
     
     return render(request, 'user_management/permissions_manage.html', context)
+
+
+@login_required
+@permission_required('auth.change_user', raise_exception=True)
+def user_change_password(request, pk):
+    """Alterar senha de um usuário específico"""
+    
+    user_obj = get_object_or_404(User, pk=pk)
+    
+    # Não permitir alterar senha do próprio usuário por esta interface
+    if user_obj == request.user:
+        messages.error(request, 'Para alterar sua própria senha, use o perfil do usuário.')
+        return redirect('user_management:user_detail', pk=pk)
+    
+    # Proteger usuário admin principal
+    if (user_obj.id == 1 or user_obj.username == 'admin') and user_obj.is_superuser:
+        if not request.user.is_superuser:
+            messages.error(request, 'Apenas superusuários podem alterar a senha do administrador principal.')
+            return redirect('user_management:user_detail', pk=pk)
+    
+    # Verificar se pode alterar senha de superusuário
+    if user_obj.is_superuser and not request.user.is_superuser:
+        messages.error(request, 'Apenas superusuários podem alterar senhas de outros superusuários.')
+        return redirect('user_management:user_detail', pk=pk)
+    
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if not new_password:
+            messages.error(request, 'A nova senha é obrigatória.')
+        elif len(new_password) < 8:
+            messages.error(request, 'A senha deve ter pelo menos 8 caracteres.')
+        elif new_password != confirm_password:
+            messages.error(request, 'As senhas não coincidem.')
+        else:
+            user_obj.set_password(new_password)
+            user_obj.save()
+            messages.success(request, f'Senha do usuário {user_obj.username} alterada com sucesso!')
+            return redirect('user_management:user_detail', pk=pk)
+    
+    context = {
+        'user_obj': user_obj,
+        'title': f'Alterar Senha: {user_obj.username}'
+    }
+    
+    return render(request, 'user_management/user_change_password.html', context)

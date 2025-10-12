@@ -127,11 +127,7 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    {% if user.profile.avatar %}
-                                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="user-avatar me-3">
-                                    {% else %}
-                                        <img src="{% static 'images/default-avatar.svg' %}" alt="{{ user.get_full_name }}" class="user-avatar me-3">
-                                    {% endif %}
+                                    <img src="{% static 'images/default-avatar.svg' %}" alt="{{ user.get_full_name }}" class="user-avatar me-3">
                                     <div>
                                         <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
                                         <div class="text-muted small">
@@ -185,6 +181,10 @@
                                     <a href="{% url 'user_management:user_edit' user.pk %}" 
                                        class="btn btn-sm btn-outline-secondary" title="Editar">
                                         <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'user_management:user_change_password' user.pk %}" 
+                                       class="btn btn-sm btn-outline-info" title="Alterar Senha">
+                                        <i class="bi bi-key"></i>
                                     </a>
                                     <button type="button" class="btn btn-sm btn-outline-warning toggle-active-btn" 
                                             data-user-id="{{ user.pk }}" 
