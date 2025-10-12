@@ -78,12 +78,29 @@ class UserManagementForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.is_editing = kwargs.pop('is_editing', False)
         self.is_protected_admin = kwargs.pop('is_protected_admin', False)
+        
+        # IMPORTANTE: Para edição, precisamos definir os valores iniciais ANTES de chamar super()
+        if self.is_editing and 'instance' in kwargs and kwargs['instance'].pk:
+            instance = kwargs['instance']
+            
+            # Obter grupos e permissões atuais do usuário
+            current_groups = list(instance.groups.values_list('pk', flat=True))
+            current_permissions = list(instance.user_permissions.values_list('pk', flat=True))
+            
+            # Se não há dados de POST, definir os valores iniciais
+            if 'data' not in kwargs or not kwargs['data']:
+                if 'initial' not in kwargs:
+                    kwargs['initial'] = {}
+                kwargs['initial']['groups'] = current_groups
+                kwargs['initial']['user_permissions'] = current_permissions
+        
         super().__init__(*args, **kwargs)
         
-        # Se estiver editando, preencher grupos e permissões atuais
+        # Configurações adicionais após super().__init__
         if self.is_editing and self.instance.pk:
-            self.fields['groups'].initial = self.instance.groups.all()
-            self.fields['user_permissions'].initial = self.instance.user_permissions.all()
+            self.fields['groups'].queryset = Group.objects.all()
+            self.fields['user_permissions'].queryset = Permission.objects.all()
+            
             self.fields['password1'].help_text = 'Deixe em branco para manter a senha atual'
             
             # Proteção para admin principal
@@ -111,6 +128,18 @@ class UserManagementForm(forms.ModelForm):
         
         return password2
     
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Debug: verificar grupos selecionados
+        groups = cleaned_data.get('groups')
+        if groups is not None:
+            print(f"DEBUG clean(): Grupos selecionados: {[g.name for g in groups]}")
+        else:
+            print("DEBUG clean(): Nenhum grupo selecionado (groups é None)")
+            
+        return cleaned_data
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         
@@ -120,7 +149,18 @@ class UserManagementForm(forms.ModelForm):
         
         if commit:
             user.save()
-            self.save_m2m()
+            
+            # Atualizar grupos manualmente
+            groups = self.cleaned_data.get('groups', [])
+            print(f"DEBUG: Grupos selecionados no formulário: {[g.name for g in groups]}")
+            user.groups.clear()  # Limpar grupos existentes primeiro
+            user.groups.set(groups)  # Definir novos grupos
+            print(f"DEBUG: Grupos após salvar: {[g.name for g in user.groups.all()]}")
+            
+            # Atualizar permissões individuais manualmente
+            user_permissions = self.cleaned_data.get('user_permissions', [])
+            user.user_permissions.clear()  # Limpar permissões existentes primeiro
+            user.user_permissions.set(user_permissions)  # Definir novas permissões
             
             # Criar perfil se não existir
             if not hasattr(user, 'profile'):
