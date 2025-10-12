@@ -77,11 +77,23 @@ class UserManagementForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         self.is_editing = kwargs.pop('is_editing', False)
+        self.is_protected_admin = kwargs.pop('is_protected_admin', False)
         super().__init__(*args, **kwargs)
         
-        # Se estiver editando, senha não é obrigatória
-        if self.is_editing:
+        # Se estiver editando, preencher grupos e permissões atuais
+        if self.is_editing and self.instance.pk:
+            self.fields['groups'].initial = self.instance.groups.all()
+            self.fields['user_permissions'].initial = self.instance.user_permissions.all()
             self.fields['password1'].help_text = 'Deixe em branco para manter a senha atual'
+            
+            # Proteção para admin principal
+            if self.is_protected_admin:
+                self.fields['is_superuser'].widget.attrs['readonly'] = True
+                self.fields['is_superuser'].help_text = 'Administrador principal não pode ter este status removido'
+                self.fields['is_active'].widget.attrs['readonly'] = True
+                self.fields['is_active'].help_text = 'Administrador principal deve permanecer ativo'
+                self.fields['username'].widget.attrs['readonly'] = True
+                self.fields['username'].help_text = 'Nome de usuário do administrador principal não pode ser alterado'
         else:
             self.fields['password1'].required = True
             self.fields['password2'].required = True
@@ -111,7 +123,7 @@ class UserManagementForm(forms.ModelForm):
             self.save_m2m()
             
             # Criar perfil se não existir
-            if not hasattr(user, 'userprofile'):
+            if not hasattr(user, 'profile'):
                 UserProfile.objects.create(user=user)
         
         return user
@@ -122,7 +134,7 @@ class UserManagementForm(forms.ModelForm):
 def user_list(request):
     """Lista todos os usuários com filtros e paginação"""
     
-    users = User.objects.select_related('userprofile').prefetch_related('groups', 'user_permissions')
+    users = User.objects.select_related('profile').prefetch_related('groups', 'user_permissions')
     
     # Filtros
     search = request.GET.get('search', '')
@@ -187,7 +199,7 @@ def user_create(request):
         if form.is_valid():
             user = form.save()
             messages.success(request, f'Usuário {user.username} criado com sucesso!')
-            return redirect('users:user_detail', pk=user.pk)
+            return redirect('user_management:user_detail', pk=user.pk)
     else:
         form = UserManagementForm(is_editing=False)
     
@@ -207,20 +219,40 @@ def user_edit(request, pk):
     
     user = get_object_or_404(User, pk=pk)
     
+    # Proteção especial para admin principal - não pode remover status de superusuário
+    is_protected_admin = (user.id == 1 or user.username == 'admin') and user.is_superuser
+    
     if request.method == 'POST':
-        form = UserManagementForm(request.POST, instance=user, is_editing=True)
+        form = UserManagementForm(request.POST, instance=user, is_editing=True, is_protected_admin=is_protected_admin)
         if form.is_valid():
+            # Validação adicional para admin principal
+            if is_protected_admin:
+                # Garantir que campos críticos não sejam alterados
+                if not form.cleaned_data.get('is_superuser'):
+                    messages.error(request, 'O usuário administrador principal deve manter o status de superusuário.')
+                    return render(request, 'user_management/user_form.html', {
+                        'form': form, 'user_obj': user, 'title': f'Editar Usuário: {user.username}',
+                        'button_text': 'Salvar Alterações', 'is_protected_admin': is_protected_admin
+                    })
+                if not form.cleaned_data.get('is_active'):
+                    messages.error(request, 'O usuário administrador principal deve permanecer ativo.')
+                    return render(request, 'user_management/user_form.html', {
+                        'form': form, 'user_obj': user, 'title': f'Editar Usuário: {user.username}',
+                        'button_text': 'Salvar Alterações', 'is_protected_admin': is_protected_admin
+                    })
+            
             user = form.save()
             messages.success(request, f'Usuário {user.username} atualizado com sucesso!')
-            return redirect('users:user_detail', pk=user.pk)
+            return redirect('user_management:user_detail', pk=user.pk)
     else:
-        form = UserManagementForm(instance=user, is_editing=True)
+        form = UserManagementForm(instance=user, is_editing=True, is_protected_admin=is_protected_admin)
     
     context = {
         'form': form,
         'user_obj': user,
         'title': f'Editar Usuário: {user.username}',
-        'button_text': 'Salvar Alterações'
+        'button_text': 'Salvar Alterações',
+        'is_protected_admin': is_protected_admin
     }
     
     return render(request, 'user_management/user_form.html', context)
@@ -265,6 +297,13 @@ def user_toggle_active(request, pk):
             'message': 'Você não pode inativar sua própria conta.'
         })
     
+    # Proteger usuário admin principal (ID 1 ou username 'admin')
+    if (user.id == 1 or user.username == 'admin') and user.is_superuser:
+        return JsonResponse({
+            'success': False,
+            'message': 'O usuário administrador principal não pode ser inativado por segurança.'
+        })
+    
     # Não permitir inativar superusuário (proteção extra)
     if user.is_superuser and not request.user.is_superuser:
         return JsonResponse({
@@ -294,18 +333,23 @@ def user_delete(request, pk):
     # Não permitir deletar o próprio usuário
     if user == request.user:
         messages.error(request, 'Você não pode deletar sua própria conta.')
-        return redirect('users:user_detail', pk=pk)
+        return redirect('user_management:user_detail', pk=pk)
+    
+    # Proteger usuário admin principal (ID 1 ou username 'admin')
+    if (user.id == 1 or user.username == 'admin') and user.is_superuser:
+        messages.error(request, 'O usuário administrador principal não pode ser deletado por segurança.')
+        return redirect('user_management:user_detail', pk=pk)
     
     # Não permitir deletar superusuário
     if user.is_superuser and not request.user.is_superuser:
         messages.error(request, 'Apenas superusuários podem deletar outros superusuários.')
-        return redirect('users:user_detail', pk=pk)
+        return redirect('user_management:user_detail', pk=pk)
     
     if request.method == 'POST':
         username = user.username
         user.delete()
         messages.success(request, f'Usuário {username} deletado com sucesso.')
-        return redirect('users:user_list')
+        return redirect('user_management:user_list')
     
     context = {
         'user_obj': user,
@@ -334,7 +378,7 @@ def permissions_manage(request, pk):
         user.user_permissions.set(selected_permissions)
         
         messages.success(request, f'Permissões do usuário {user.username} atualizadas com sucesso!')
-        return redirect('users:user_detail', pk=pk)
+        return redirect('user_management:user_detail', pk=pk)
     
     # Organizar permissões por app
     permissions_by_app = {}

@@ -25,6 +25,12 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     transform: translate(50px, -50px);
+    z-index: 1;
+}
+
+.user-header .btn {
+    position: relative;
+    z-index: 2;
 }
 
 .user-avatar-large {
@@ -95,12 +101,13 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
+    {% csrf_token %}
     <!-- Cabeçalho do Usuário -->
     <div class="user-header">
         <div class="row align-items-center">
             <div class="col-auto">
-                {% if user_obj.userprofile.avatar %}
-                    <img src="{{ user_obj.userprofile.avatar.url }}" alt="{{ user_obj.get_full_name }}" class="user-avatar-large">
+                {% if user_obj.profile.avatar %}
+                    <img src="{{ user_obj.profile.avatar.url }}" alt="{{ user_obj.get_full_name }}" class="user-avatar-large">
                 {% else %}
                     <img src="{% static 'images/default-avatar.svg' %}" alt="{{ user_obj.get_full_name }}" class="user-avatar-large">
                 {% endif %}
@@ -125,9 +132,15 @@
                     {% endif %}
                     
                     {% if user_obj.is_superuser %}
-                        <span class="badge bg-danger">
-                            <i class="bi bi-star me-1"></i>Super Admin
-                        </span>
+                        {% if user_obj.id == 1 or user_obj.username == 'admin' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-shield-lock-fill me-1"></i>Admin Principal
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-star me-1"></i>Super Admin
+                            </span>
+                        {% endif %}
                     {% elif user_obj.is_staff %}
                         <span class="badge bg-info">
                             <i class="bi bi-gear me-1"></i>Equipe
@@ -149,13 +162,24 @@
                     </a>
                     {% endif %}
                     
-                    <a href="{% url 'user_management:user_list' %}" class="btn btn-outline-light">
+                    <!-- Botão de voltar sempre visível -->
+                    <a href="{% url 'user_management:user_list' %}" class="btn btn-secondary" title="Voltar para lista de usuários" id="btn-voltar">
                         <i class="bi bi-arrow-left me-2"></i>Voltar
                     </a>
+                
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Aviso para Admin Protegido -->
+    {% if user_obj.id == 1 or user_obj.username == 'admin' and user_obj.is_superuser %}
+    <div class="alert alert-info border-0 mb-4" role="alert">
+        <i class="bi bi-shield-lock-fill me-2"></i>
+        <strong>Administrador Principal:</strong> Este usuário tem proteções especiais de segurança. 
+        Algumas ações como inativação, exclusão e remoção de privilégios de superusuário são bloqueadas.
+    </div>
+    {% endif %}
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
@@ -307,19 +331,31 @@
                 
                 <div class="d-flex gap-2 flex-wrap">
                     {% if perms.auth.change_user %}
-                    <button type="button" class="btn btn-outline-warning btn-sm toggle-active-btn" 
-                            data-user-id="{{ user_obj.pk }}" 
-                            data-username="{{ user_obj.username }}"
-                            data-current-status="{{ user_obj.is_active|yesno:'true,false' }}">
-                        <i class="bi bi-{% if user_obj.is_active %}pause{% else %}play{% endif %} me-1"></i>
-                        {% if user_obj.is_active %}Inativar Usuário{% else %}Ativar Usuário{% endif %}
-                    </button>
+                        {% if user_obj.id == 1 or user_obj.username == 'admin' and user_obj.is_superuser %}
+                            <span class="btn btn-outline-warning btn-sm disabled" title="Administrador principal protegido">
+                                <i class="bi bi-shield-lock me-1"></i>Protegido
+                            </span>
+                        {% else %}
+                            <button type="button" class="btn btn-outline-warning btn-sm toggle-active-btn" 
+                                    data-user-id="{{ user_obj.pk }}" 
+                                    data-username="{{ user_obj.username }}"
+                                    data-current-status="{{ user_obj.is_active|yesno:'true,false' }}">
+                                <i class="bi bi-{% if user_obj.is_active %}pause{% else %}play{% endif %} me-1"></i>
+                                {% if user_obj.is_active %}Inativar Usuário{% else %}Ativar Usuário{% endif %}
+                            </button>
+                        {% endif %}
                     {% endif %}
                     
                     {% if perms.auth.delete_user %}
-                    <a href="{% url 'user_management:user_delete' user_obj.pk %}" class="btn btn-outline-danger btn-sm">
-                        <i class="bi bi-trash me-1"></i>Deletar Usuário
-                    </a>
+                        {% if user_obj.id == 1 or user_obj.username == 'admin' and user_obj.is_superuser %}
+                            <span class="btn btn-outline-danger btn-sm disabled" title="Administrador principal não pode ser deletado">
+                                <i class="bi bi-shield-lock me-1"></i>Protegido
+                            </span>
+                        {% else %}
+                            <a href="{% url 'user_management:user_delete' user_obj.pk %}" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash me-1"></i>Deletar Usuário
+                            </a>
+                        {% endif %}
                     {% endif %}
                 </div>
                 
@@ -372,6 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
+    
+  
 </script>
 {% endblock %}

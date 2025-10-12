@@ -34,8 +34,8 @@
                         <div class="row">
                             <div class="col-sm-4">
                                 <div class="d-flex align-items-center">
-                                    {% if user_obj.userprofile.avatar %}
-                                        <img src="{{ user_obj.userprofile.avatar.url }}" alt="Avatar" class="rounded-circle me-3" width="50" height="50">
+                                    {% if user_obj.profile.avatar %}
+                                        <img src="{{ user_obj.profile.avatar.url }}" alt="Avatar" class="rounded-circle me-3" width="50" height="50">
                                     {% else %}
                                         <img src="{% static 'images/default-avatar.svg' %}" alt="Avatar" class="rounded-circle me-3" width="50" height="50">
                                     {% endif %}
