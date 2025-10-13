@@ -1,0 +1,297 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.permission-section {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--bg-surface);
+}
+
+.permission-section h6 {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.permission-checkbox {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s ease;
+}
+
+.permission-checkbox:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.permission-checkbox input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.form-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.protected-warning {
+    background: linear-gradient(45deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+    border: 1px solid var(--warning-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .permission-section {
+        padding: 0.75rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'user_management:group_list' %}">Grupos</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-diagram-3 me-2"></i>{{ title }}</h2>
+            <p class="text-muted">
+                Nível atual: <strong>{{ current_user_level }}</strong>
+                {% if group_obj and is_protected %}
+                | <span class="badge bg-warning text-dark">Grupo Protegido</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Aviso para grupos protegidos -->
+    {% if is_protected %}
+    <div class="protected-warning">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-shield-exclamation text-warning me-2" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Grupo Protegido</strong>
+                <p class="mb-0">Este é um grupo básico do sistema. Algumas alterações podem ser limitadas para manter a integridade do sistema.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        
+        <!-- Informações Básicas -->
+        <div class="form-section">
+            <h4 class="section-title">
+                <i class="bi bi-info-circle me-2"></i>Informações Básicas
+            </h4>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        {{ form.name }}
+                        <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                        {% if form.name.help_text %}
+                        <div class="form-text">{{ form.name.help_text }}</div>
+                        {% endif %}
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.name.errors %}
+                            <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    {% if group_obj %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Estatísticas do Grupo</h6>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="h4 mb-0 text-primary">{{ group_obj.user_set.count }}</div>
+                                    <small class="text-muted">Usuários</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h4 mb-0 text-success">{{ group_obj.permissions.count }}</div>
+                                    <small class="text-muted">Permissões</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissões -->
+        <div class="form-section">
+            <h4 class="section-title">
+                <i class="bi bi-key me-2"></i>Permissões do Grupo
+            </h4>
+            
+            {% if form.permissions.field.queryset %}
+            <div class="mb-3">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Selecione as permissões que os usuários deste grupo terão. 
+                    As permissões disponíveis são limitadas pelo seu nível de acesso.
+                </small>
+            </div>
+
+            <!-- Agrupar permissões por aplicação -->
+            {% regroup form.permissions.field.queryset by content_type.app_label as permissions_by_app %}
+            
+            <div class="row">
+                {% for app_group in permissions_by_app %}
+                <div class="col-lg-6 mb-3">
+                    <div class="permission-section">
+                        <h6>
+                            <i class="bi bi-folder me-1"></i>
+                            {{ app_group.grouper|capfirst|default:"Sistema" }}
+                        </h6>
+                        
+                        {% for permission in app_group.list %}
+                        <div class="permission-checkbox">
+                            <label class="form-check-label d-flex align-items-start">
+                                <input type="checkbox" 
+                                       name="{{ form.permissions.name }}" 
+                                       value="{{ permission.pk }}"
+                                       class="form-check-input mt-1 me-2"
+                                       {% if permission in form.permissions.value %}checked{% endif %}>
+                                <div>
+                                    <div class="fw-medium">{{ permission.name }}</div>
+                                    <small class="text-muted">{{ permission.codename }}</small>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Ações rápidas para permissões -->
+            <div class="mt-3">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="selectAllPermissions()">
+                        <i class="bi bi-check-all me-1"></i>Selecionar Todas
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="deselectAllPermissions()">
+                        <i class="bi bi-x-square me-1"></i>Desmarcar Todas
+                    </button>
+                </div>
+            </div>
+            
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Atenção:</strong> Você não tem permissão para atribuir permissões a grupos, 
+                ou não há permissões disponíveis para seu nível de acesso.
+            </div>
+            {% endif %}
+            
+            {% if form.permissions.errors %}
+            <div class="invalid-feedback d-block mt-2">
+                {% for error in form.permissions.errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Erros não específicos de campo -->
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <div><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Botões de Ação -->
+        <div class="row">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% if group_obj %}{% url 'user_management:group_detail' group_obj.pk %}{% else %}{% url 'user_management:group_list' %}{% endif %}" 
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Cancelar
+                    </a>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>{{ button_text }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function selectAllPermissions() {
+    document.querySelectorAll('input[name="{{ form.permissions.name }}"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function deselectAllPermissions() {
+    document.querySelectorAll('input[name="{{ form.permissions.name }}"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+// Adicionar indicador visual para checkboxes selecionados
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="{{ form.permissions.name }}"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const container = this.closest('.permission-checkbox');
+            if (this.checked) {
+                container.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+                container.style.borderLeft = '3px solid var(--primary-color)';
+            } else {
+                container.style.backgroundColor = '';
+                container.style.borderLeft = '';
+            }
+        });
+        
+        // Aplicar estilo inicial para checkboxes já marcados
+        if (checkbox.checked) {
+            const container = checkbox.closest('.permission-checkbox');
+            container.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+            container.style.borderLeft = '3px solid var(--primary-color)';
+        }
+    });
+});
+</script>
+{% endblock %}

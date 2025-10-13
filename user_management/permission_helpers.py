@@ -466,3 +466,217 @@ GROUP_NAMES = {
     'OPERADORES': 'Operadores',
     'USUARIOS_BASICOS': 'Usuários Básicos'
 }
+
+# ====================================
+# FUNÇÕES PARA GERENCIAMENTO DE GRUPOS
+# ====================================
+
+def can_manage_group(current_user, group):
+    """
+    Verifica se o usuário atual pode gerenciar (visualizar) um grupo específico.
+    """
+    current_level = get_user_level(current_user)
+    
+    # Admin principal pode gerenciar todos os grupos
+    if current_level == 'admin_principal':
+        return True
+    
+    # Administradores podem gerenciar grupos não-administrativos
+    if current_level == 'administrador':
+        return group.name != 'Administradores'
+    
+    # Gerentes podem gerenciar apenas grupos de nível inferior
+    if current_level == 'gerente':
+        return group.name in ['Operadores', 'Usuários Básicos']
+    
+    # Outros não podem gerenciar grupos
+    return False
+
+
+def can_create_group(current_user):
+    """
+    Verifica se o usuário atual pode criar novos grupos.
+    """
+    current_level = get_user_level(current_user)
+    
+    # Apenas gerentes e acima podem criar grupos
+    return current_level in ['admin_principal', 'administrador', 'gerente']
+
+
+def can_edit_group(current_user, group):
+    """
+    Verifica se o usuário atual pode editar um grupo específico.
+    """
+    current_level = get_user_level(current_user)
+    
+    # Verificar se pode gerenciar o grupo
+    if not can_manage_group(current_user, group):
+        return False
+    
+    # Grupos protegidos têm restrições especiais
+    if is_protected_group(group):
+        # Apenas admin principal pode editar grupos de administradores
+        if group.name == 'Administradores':
+            return current_level == 'admin_principal'
+        
+        # Administradores e acima podem editar outros grupos protegidos
+        return current_level in ['admin_principal', 'administrador']
+    
+    # Grupos não-protegidos seguem regras normais de gerenciamento
+    return True
+
+
+def can_delete_group(current_user, group):
+    """
+    Verifica se o usuário atual pode deletar um grupo específico.
+    """
+    current_level = get_user_level(current_user)
+    
+    # Grupos protegidos não podem ser deletados
+    if is_protected_group(group):
+        return False
+    
+    # Verificar se pode gerenciar o grupo
+    if not can_manage_group(current_user, group):
+        return False
+    
+    # Admin principal pode deletar qualquer grupo não-protegido
+    if current_level == 'admin_principal':
+        return True
+    
+    # Administradores podem deletar grupos de nível inferior
+    if current_level == 'administrador':
+        return group.name not in ['Administradores', 'Gerentes']
+    
+    # Gerentes podem deletar apenas grupos que criaram ou de nível muito inferior
+    if current_level == 'gerente':
+        # Verificar se o grupo foi criado por um gerente (não é grupo padrão do sistema)
+        return group.name not in ['Administradores', 'Gerentes', 'Operadores', 'Usuários Básicos']
+    
+    return False
+
+
+def can_assign_permission_to_group(current_user, group, permission):
+    """
+    Verifica se o usuário atual pode atribuir uma permissão específica a um grupo.
+    """
+    current_level = get_user_level(current_user)
+    
+    # Verificar se pode editar o grupo
+    if not can_edit_group(current_user, group):
+        return False
+    
+    # Admin principal pode atribuir qualquer permissão
+    if current_level == 'admin_principal':
+        return True
+    
+    # Permissões críticas que apenas admin principal pode atribuir
+    critical_permissions = [
+        'auth.add_user', 'auth.change_user', 'auth.delete_user',
+        'auth.add_group', 'auth.change_group', 'auth.delete_group',
+        'auth.add_permission', 'auth.change_permission', 'auth.delete_permission'
+    ]
+    
+    permission_codename = f"{permission.content_type.app_label}.{permission.codename}"
+    
+    if permission_codename in critical_permissions and current_level != 'admin_principal':
+        return False
+    
+    # Administradores podem atribuir a maioria das permissões
+    if current_level == 'administrador':
+        # Não podem dar permissões de superusuário
+        if permission.codename == 'add_user' and group.name == 'Administradores':
+            return False
+        return True
+    
+    # Gerentes podem atribuir apenas permissões básicas
+    if current_level == 'gerente':
+        basic_permissions = [
+            'auth.view_user',
+            # Adicionar outras conforme necessário
+        ]
+        return permission_codename in basic_permissions
+    
+    return False
+
+
+def get_manageable_groups_queryset(current_user):
+    """
+    Retorna um queryset com os grupos que o usuário atual pode gerenciar.
+    
+    IMPORTANTE: Esta função NÃO deve usar .union() para evitar conflitos
+    com .prefetch_related() nas views.
+    """
+    current_level = get_user_level(current_user)
+    
+    if current_level == 'admin_principal':
+        # Admin principal pode gerenciar todos os grupos
+        return Group.objects.all().order_by('name')
+    
+    elif current_level == 'administrador':
+        # Administradores podem gerenciar todos exceto grupo de administradores
+        return Group.objects.exclude(name='Administradores').order_by('name')
+    
+    elif current_level == 'gerente':
+        # Gerentes podem gerenciar apenas grupos de nível inferior e grupos customizados
+        # Usando exclude() em vez de union() para compatibilidade com prefetch_related()
+        return Group.objects.exclude(
+            name__in=['Administradores', 'Gerentes']
+        ).order_by('name')
+    
+    else:
+        # Outros níveis não podem gerenciar grupos
+        return Group.objects.none()
+
+
+def is_protected_group(group):
+    """
+    Verifica se um grupo é protegido (grupos básicos do sistema).
+    """
+    protected_groups = ['Administradores', 'Gerentes', 'Operadores', 'Usuários Básicos']
+    return group.name in protected_groups
+
+
+def validate_group_form_submission(current_user, target_group, form_data):
+    """
+    Valida se o formulário de grupo pode ser submetido com os dados fornecidos.
+    Retorna (is_valid, error_messages)
+    """
+    errors = []
+    current_level = get_user_level(current_user)
+    
+    # Se estiver editando, verificar se pode editar
+    if target_group and not can_edit_group(current_user, target_group):
+        errors.append('Você não tem permissão para editar este grupo.')
+        return False, errors
+    
+    # Verificar permissões selecionadas
+    if 'permissions' in form_data:
+        selected_permissions = form_data['permissions']
+        for permission in selected_permissions:
+            if not can_assign_permission_to_group(current_user, target_group or Group(name=form_data.get('name', '')), permission):
+                errors.append(f'Você não pode atribuir a permissão "{permission.name}" a este grupo.')
+    
+    # Verificar se está tentando criar grupo com nome protegido
+    if not target_group:  # Criação de novo grupo
+        group_name = form_data.get('name', '')
+        if is_protected_group(Group(name=group_name)) and current_level != 'admin_principal':
+            errors.append('Apenas o administrador principal pode criar grupos com nomes protegidos.')
+    
+    return len(errors) == 0, errors
+
+
+def get_group_creation_level_limit(current_user):
+    """
+    Retorna o nível máximo de grupo que o usuário atual pode criar.
+    """
+    current_level = get_user_level(current_user)
+    
+    if current_level == 'admin_principal':
+        return 'administrador'
+    elif current_level == 'administrador':
+        return 'gerente'
+    elif current_level == 'gerente':
+        return 'operador'
+    else:
+        return None

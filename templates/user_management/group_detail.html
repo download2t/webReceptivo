@@ -1,0 +1,356 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Grupo: {{ group_obj.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.permission-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    background: var(--bg-surface);
+}
+
+.permission-card .card-header {
+    background: var(--light-color);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.permission-item {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.3);
+    transition: background-color 0.2s ease;
+}
+
+.permission-item:last-child {
+    border-bottom: none;
+}
+
+.permission-item:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 0.75rem;
+}
+
+.protected-badge {
+    background: linear-gradient(45deg, var(--warning-color), #e67e22);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'user_management:group_list' %}">Grupos</a></li>
+            <li class="breadcrumb-item active">{{ group_obj.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-people-fill me-3" style="font-size: 2rem; color: var(--primary-color);"></i>
+                <div>
+                    <h2 class="mb-0">{{ group_obj.name }}</h2>
+                    <div class="mt-1">
+                        {% if is_protected %}
+                        <span class="protected-badge">
+                            <i class="bi bi-shield-check"></i>
+                            Grupo Protegido
+                        </span>
+                        {% endif %}
+                        <small class="text-muted ms-2">
+                            Visualizando como: <strong>{{ current_user_level }}</strong>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="action-buttons justify-content-end">
+                {% if can_edit %}
+                <a href="{% url 'user_management:group_edit' group_obj.pk %}" class="btn btn-success">
+                    <i class="bi bi-pencil me-1"></i>Editar Grupo
+                </a>
+                {% endif %}
+                
+                {% if can_delete %}
+                <a href="{% url 'user_management:group_delete' group_obj.pk %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i>Excluir
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div>
+                            <i class="bi bi-person-check" style="font-size: 2rem; opacity: 0.8;"></i>
+                            <h3 class="mt-2 mb-0">{{ total_users }}</h3>
+                            <p class="mb-0">
+                                {% if total_users == 1 %}Usuário{% else %}Usuários{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div>
+                            <i class="bi bi-key" style="font-size: 2rem; opacity: 0.8;"></i>
+                            <h3 class="mt-2 mb-0">{{ group_obj.permissions.count }}</h3>
+                            <p class="mb-0">
+                                {% if group_obj.permissions.count == 1 %}Permissão{% else %}Permissões{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div>
+                            <i class="bi bi-diagram-3" style="font-size: 2rem; opacity: 0.8;"></i>
+                            <h3 class="mt-2 mb-0">{{ permissions_by_app|length }}</h3>
+                            <p class="mb-0">
+                                {% if permissions_by_app|length == 1 %}Área{% else %}Áreas{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Usuários no Grupo -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-people me-2"></i>Usuários no Grupo
+                        {% if total_users > users_in_group|length %}
+                        <span class="badge bg-secondary ms-1">{{ total_users }} total</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if users_in_group %}
+                    <div class="list-group list-group-flush">
+                        {% for user in users_in_group %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar">
+                                    {{ user.first_name|first|default:user.username|first|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-medium">
+                                        {{ user.get_full_name|default:user.username }}
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ user.email }}
+                                        {% if not user.is_active %}
+                                        <span class="badge bg-warning ms-1">Inativo</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div>
+                                    <a href="{% url 'user_management:user_detail' user.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if total_users > users_in_group|length %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'user_management:user_list' %}?group={{ group_obj.pk }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            Ver todos os {{ total_users }} usuários
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-people" style="font-size: 3rem; color: var(--secondary-color); opacity: 0.5;"></i>
+                        <h6 class="mt-2 text-muted">Nenhum usuário neste grupo</h6>
+                        <p class="text-muted mb-0">
+                            Usuários podem ser adicionados ao grupo através da edição do usuário.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissões do Grupo -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-key me-2"></i>Permissões do Grupo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if permissions_by_app %}
+                    {% for app_label, permissions in permissions_by_app.items %}
+                    <div class="permission-card">
+                        <div class="card-header py-2">
+                            <i class="bi bi-folder me-1"></i>{{ app_label|capfirst|default:"Sistema" }}
+                            <span class="badge bg-primary ms-1">{{ permissions|length }}</span>
+                        </div>
+                        <div class="card-body p-0">
+                            {% for permission in permissions %}
+                            <div class="permission-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <div>
+                                        <div class="fw-medium">{{ permission.name }}</div>
+                                        <small class="text-muted">{{ permission.codename }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-key" style="font-size: 3rem; color: var(--secondary-color); opacity: 0.5;"></i>
+                        <h6 class="mt-2 text-muted">Nenhuma permissão atribuída</h6>
+                        <p class="text-muted mb-3">
+                            Este grupo ainda não possui permissões. 
+                            {% if can_edit %}
+                            Você pode adicionar permissões editando o grupo.
+                            {% endif %}
+                        </p>
+                        {% if can_edit %}
+                        <a href="{% url 'user_management:group_edit' group_obj.pk %}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus me-1"></i>Adicionar Permissões
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Adicionais -->
+    {% if is_protected %}
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-warning">
+                        <i class="bi bi-shield-exclamation me-1"></i>Grupo Protegido
+                    </h6>
+                    <p class="card-text text-muted mb-0">
+                        Este é um grupo básico do sistema. Algumas operações podem ser limitadas 
+                        para manter a integridade e segurança do sistema. 
+                        Grupos protegidos não podem ser deletados.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Botões de Ação Inferiores -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{% url 'user_management:group_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Voltar à Lista
+                </a>
+                
+                <div class="action-buttons">
+                    {% if can_edit %}
+                    <a href="{% url 'user_management:group_edit' group_obj.pk %}" class="btn btn-success">
+                        <i class="bi bi-pencil me-1"></i>Editar Grupo
+                    </a>
+                    {% endif %}
+                    
+                    {% if can_delete and not is_protected %}
+                    <a href="{% url 'user_management:group_delete' group_obj.pk %}" 
+                       class="btn btn-outline-danger"
+                       onclick="return confirm('Tem certeza que deseja excluir este grupo? Esta ação não pode ser desfeita.')">
+                        <i class="bi bi-trash me-1"></i>Excluir Grupo
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

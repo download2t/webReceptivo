@@ -1,0 +1,325 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Grupos/Cargos{% endblock %}
+
+{% block extra_css %}
+<style>
+.group-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.group-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.permission-badge {
+    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.protected-badge {
+    background: linear-gradient(45deg, var(--warning-color), #e67e22);
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+}
+
+.group-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+    .group-actions {
+        flex-direction: column;
+    }
+    
+    .group-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-diagram-3 me-2"></i>Gerenciar Grupos/Cargos</h2>
+            <p class="text-muted">
+                Gerencie grupos e cargos do sistema. Nível atual: <strong>{{ current_user_level }}</strong>
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if can_create_group %}
+            <a href="{% url 'user_management:group_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Novo Grupo/Cargo
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navegação Usuários/Grupos -->
+    <div class="row mb-4">
+        <div class="col">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'user_management:user_list' %}">
+                        <i class="bi bi-people me-1"></i>Usuários
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'user_management:group_list' %}">
+                        <i class="bi bi-diagram-3 me-1"></i>Grupos/Cargos
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Filtros e Busca -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Buscar grupos..." 
+                           value="{{ search }}"
+                           aria-label="Buscar grupos">
+                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                    {% if search %}
+                    <a href="{% url 'user_management:group_list' %}" class="btn btn-outline-danger">
+                        <i class="bi bi-x"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div class="text-muted">
+                <small>
+                    <i class="bi bi-info-circle me-1"></i>
+                    Total de grupos: <strong>{{ total_groups }}</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    {% if groups %}
+    <!-- Lista de Grupos -->
+    <div class="row">
+        {% for group in groups %}
+        <div class="col-lg-6 col-xl-4 mb-3">
+            <div class="card group-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-people-fill me-2 text-primary"></i>
+                            {{ group.name }}
+                        </h5>
+                        {% if group.is_protected %}
+                        <span class="protected-badge mt-1">
+                            <i class="bi bi-shield-check me-1"></i>Protegido
+                        </span>
+                        {% endif %}
+                    </div>
+                    <span class="permission-badge">
+                        {{ group.permission_count }} 
+                        {% if group.permission_count == 1 %}permissão{% else %}permissões{% endif %}
+                    </span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted d-block">
+                            <i class="bi bi-person me-1"></i>
+                            <strong>{{ group.user_set.count }}</strong> 
+                            {% if group.user_set.count == 1 %}usuário{% else %}usuários{% endif %}
+                        </small>
+                    </div>
+                    
+                    {% if group.permissions.all|length > 0 %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Principais permissões:</small>
+                        {% for permission in group.permissions.all|slice:":3" %}
+                        <span class="badge bg-light text-dark me-1 mb-1">{{ permission.name|truncatechars:30 }}</span>
+                        {% endfor %}
+                        {% if group.permissions.count > 3 %}
+                        <span class="badge bg-secondary">+{{ group.permissions.count|add:"-3" }} mais</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <small class="text-muted">Nenhuma permissão atribuída</small>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    <div class="group-actions">
+                        <a href="{% url 'user_management:group_detail' group.pk %}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye me-1"></i>Visualizar
+                        </a>
+                        
+                        {% if group.can_edit %}
+                        <a href="{% url 'user_management:group_edit' group.pk %}" 
+                           class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-pencil me-1"></i>Editar
+                        </a>
+                        {% endif %}
+                        
+                        {% if group.can_delete %}
+                        <a href="{% url 'user_management:group_delete' group.pk %}" 
+                           class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash me-1"></i>Excluir
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginação -->
+    {% if groups.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col">
+            <nav aria-label="Navegação de grupos">
+                <ul class="pagination justify-content-center">
+                    {% if groups.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ groups.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                    </li>
+                    {% endif %}
+
+                    {% for num in groups.paginator.page_range %}
+                    {% if groups.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > groups.number|add:'-3' and num < groups.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if groups.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ groups.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ groups.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            
+            <div class="text-center text-muted">
+                <small>
+                    Página {{ groups.number }} de {{ groups.paginator.num_pages }}
+                    ({{ groups.paginator.count }} grupos no total)
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Nenhum grupo encontrado -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-diagram-3" style="font-size: 4rem; color: var(--secondary-color); opacity: 0.5;"></i>
+                    </div>
+                    
+                    {% if search %}
+                    <h4>Nenhum grupo encontrado</h4>
+                    <p class="text-muted">
+                        Não foram encontrados grupos com o termo "{{ search }}".
+                    </p>
+                    <a href="{% url 'user_management:group_list' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-1"></i>Ver todos os grupos
+                    </a>
+                    {% else %}
+                    <h4>Nenhum grupo disponível</h4>
+                    <p class="text-muted">
+                        Você ainda não tem permissão para visualizar grupos ou não há grupos cadastrados.
+                    </p>
+                    {% if can_create_group %}
+                    <a href="{% url 'user_management:group_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Criar Primeiro Grupo
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Informações de Ajuda -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info">
+                        <i class="bi bi-info-circle me-1"></i>Sobre Grupos/Cargos
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <strong>Grupos Protegidos:</strong> São grupos básicos do sistema que não podem ser deletados.
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <strong>Permissões:</strong> Definem o que os usuários do grupo podem fazer no sistema.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

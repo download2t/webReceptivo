@@ -25,6 +25,26 @@
         {% endif %}
     </div>
 
+    <!-- Navegação Usuários/Grupos -->
+    {% if user_can_manage_groups %}
+    <div class="row mb-4">
+        <div class="col">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'user_management:user_list' %}">
+                        <i class="bi bi-people me-1"></i>Usuários
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'user_management:group_list' %}">
+                        <i class="bi bi-diagram-3 me-1"></i>Grupos/Cargos
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Estatísticas -->
     <div class="stats-row">
         <div class="row">

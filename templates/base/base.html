@@ -66,6 +66,7 @@
                                 
                                 {% if user_can_manage_users %}
                                 <li><a class="dropdown-item" href="{% url 'user_management:user_list' %}"><i class="bi bi-people me-2"></i>Gerenciar Usuários</a></li>
+                                <li><a class="dropdown-item" href="{% url 'user_management:group_list' %}"><i class="bi bi-diagram-3 me-2"></i>Gerenciar Grupos</a></li>
                                 {% endif %}
                                 
                                 {% if user_can_access_admin_panel %}
