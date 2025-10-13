@@ -164,6 +164,19 @@ document.addEventListener('DOMContentLoaded', function() {
             WebReceptivo.showNotification('Por favor, preencha todos os campos obrigatórios.', 'danger');
         }
     });
+    
+    // Clear theme preferences after logout
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'desconectado' in message.message or 'logout' in message.message %}
+            // User just logged out, clear any previous theme preferences
+            localStorage.removeItem('theme');
+            // Reset to system preference
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', systemTheme);
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 });
 </script>
 {% endblock %}

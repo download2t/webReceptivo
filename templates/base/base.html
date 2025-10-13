@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-bs-theme="light">
+<html lang="pt-br" data-bs-theme="{% if user.is_authenticated and user.profile.tema_preferido != 'auto' %}{{ user.profile.tema_preferido }}{% else %}auto{% endif %}"
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,11 @@
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <!-- User Theme Preference -->
+    {% if user.is_authenticated %}
+    <meta name="user-theme-preference" content="{{ user.profile.tema_preferido }}">
+    {% endif %}
     
     <title>{% block title %}WebReceptivo{% endblock %}</title>
     
