@@ -1,292 +1,138 @@
-# WebReceptivo
+# 🏢 WebReceptivo
 
-Sistema web profissional desenvolvido em Django para gestão receptiva, com interface moderna, responsiva e completo sistema de usuários.
+Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões hierárquicas.
 
-## ✨ Funcionalidades
+## ✨ Principais Funcionalidades
+
+### 👥 Sistema de Usuários e Permissões
+- **5 Níveis Hierárquicos**: Admin Principal, Administradores, Gerentes, Operadores, Usuários Básicos
+- **Gerenciamento Completo**: CRUD de usuários com regras de permissão robustas
+- **Gerenciamento de Grupos**: Criação e edição de cargos/funções dinâmicos
+- **Autenticação Segura**: Login/logout com validações server-side
+- **Perfis Completos**: Dados pessoais, endereço, avatar e preferências
 
 ### 🎨 Interface Moderna
-- **Design Responsivo**: Interface adaptativa para desktop, tablet e mobile
-- **Tema Claro/Escuro**: Alternância entre temas com persistência de preferências
-- **Bootstrap 5**: Framework CSS moderno com componentes otimizados
-- **Animações Suaves**: Transições e efeitos visuais aprimorados
+- **Design Responsivo**: Bootstrap 5.3.2 com tema claro/escuro
+- **Mobile-First**: Otimizado para todos os dispositivos
+- **Componentes Avançados**: Máscaras de input, upload de avatar, validação em tempo real
+- **UX Profissional**: Mensagens de feedback, animações suaves, navegação intuitiva
 
-### 👤 Sistema de Usuários Completo
-- **Autenticação Segura**: Login/logout com validação robusta
-- **Perfil de Usuário**: Edição completa de dados pessoais e profissionais
-- **Upload de Avatar**: Sistema de upload e preview de foto de perfil
-- **Alteração de Senha**: Mudança segura de credenciais
-- **Validações**: Máscaras de input e validação em tempo real
+## 🏗️ Arquitetura
 
-### 📱 Experiência Mobile
-- **Menu Responsivo**: Navegação otimizada para dispositivos móveis
-- **Touch Friendly**: Botões e áreas de toque adequadas para mobile
-- **Performance**: Carregamento rápido e interface fluida
+### 🔧 Backend
+- **Django 5.2.7** com Python 3.12+
+- **Apps Modulares**: `accounts`, `core`, `user_management`
+- **PostgreSQL** (produção) / **SQLite** (desenvolvimento)
+- **Sistema de Permissões**: Regras hierárquicas customizadas com proteção de usuários críticos
 
-## 🏗️ Arquitetura do Sistema
+### 🎨 Frontend  
+- **Bootstrap 5.3.2** com **Bootstrap Icons**
+- **JavaScript Vanilla** com funcionalidades modernas
+- **CSS Customizado** com sistema de temas persistente
 
-### Backend (Django)
-- **Framework**: Django 5.2.7 com Python 3.12+
-- **Apps Modulares**: 
-  - `accounts`: Gestão de usuários e perfis
-  - `core`: Funcionalidades principais e dashboard
-- **Banco de Dados**: PostgreSQL (produção) / SQLite (desenvolvimento)
-- **Autenticação**: Sistema Django Auth com UserProfile personalizado
+### 🐳 Infraestrutura
+- **Docker** + **Docker Compose** para containerização
+- **Entrypoint Inteligente** com verificação automática do banco
+- **Configuração Otimizada** para desenvolvimento e produção
 
-### Frontend
-- **CSS Framework**: Bootstrap 5.3.2
-- **Icons**: Bootstrap Icons 1.11.2
-- **JavaScript**: Vanilla JS com funcionalidades modernas
-- **Responsividade**: Mobile-first design
-- **Temas**: Sistema de alternância claro/escuro com LocalStorage
+## ⚡ Instalação Rápida
 
-### Infraestrutura
-- **Containerização**: Docker com Docker Compose
-- **Servidor Web**: Django Development Server (dev) / Gunicorn (prod)
-- **Arquivos Estáticos**: Configuração otimizada para servir CSS, JS e imagens
-- **Entrypoint Inteligente**: Sistema de espera automática do banco de dados
-
-## Configuração do Ambiente
-
-### Pré-requisitos
-- Python 3.12+
-- Git
-- Docker e Docker Compose (para execução em containers)
-
-### Instalação Local
-
-1. Clone o repositório:
+### 🐳 Com Docker (Recomendado)
 ```bash
 git clone <url-do-repositorio>
 cd WebReceptivo
+docker-compose up --build
 ```
+**Acesse:** `http://localhost:8000`
 
-2. Crie um ambiente virtual:
+### 🐍 Local (Python)
 ```bash
+git clone <url-do-repositorio>
+cd WebReceptivo
 python -m venv .venv
-```
-
-3. Ative o ambiente virtual:
-```bash
-# Windows
-.venv\Scripts\activate
-
-# Linux/Mac
-source .venv/bin/activate
-```
-
-4. Instale as dependências:
-```bash
+.venv\Scripts\activate  # Windows | source .venv/bin/activate (Linux/Mac)
 pip install -r requirements.txt
-```
-
-5. Execute as migrações do banco de dados:
-```bash
 python manage.py migrate
-```
-
-6. Crie um superusuário (opcional):
-```bash
-python manage.py createsuperuser
-```
-
-7. Execute o servidor de desenvolvimento:
-```bash
 python manage.py runserver
 ```
 
-O sistema estará disponível em `http://127.0.0.1:8000/`
-
-### Instalação com Docker
-
-**Certifique-se de que o Docker Desktop está executando antes de continuar.**
-
-#### Desenvolvimento
+### 🛠️ Comandos Úteis
 ```bash
-# Construir e executar os containers
-docker-compose up --build
+# Setup inicial com grupos e usuários de teste
+python manage.py setup_groups
+python manage.py create_test_users
 
-# Executar em background
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Parar os containers
-docker-compose down
+# Comandos Docker
+docker-compose up -d              # Executar em background
+docker-compose logs -f            # Ver logs
+docker-compose down -v            # Parar e limpar volumes
 ```
-
-> **🚀 Melhorias Implementadas**: O entrypoint foi otimizado para aguardar automaticamente o PostgreSQL estar disponível antes de executar migrações, eliminando erros de conexão durante o startup.
-
-> **📚 Documentação Completa**: Para comandos detalhados, backup, restore e troubleshooting do Docker, consulte [DOCKER_COMANDOS.md](./DOCKER_COMANDOS.md)
-
-#### Produção
-```bash
-# Executar em produção
-docker-compose -f docker-compose.prod.yml up --build -d
-
-# Ver logs
-docker-compose -f docker-compose.prod.yml logs -f
-
-# Parar os containers
-docker-compose -f docker-compose.prod.yml down
-```
-
-O sistema estará disponível em:
-- **Desenvolvimento**: `http://localhost:8000`
-- **Produção**: `http://localhost` (porta 80)
-
-### Comandos Docker Úteis
-
-```bash
-# Executar comandos Django no container
-docker-compose exec web python manage.py createsuperuser
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py collectstatic
-
-# Acessar o shell do container
-docker-compose exec web bash
-
-# Reconstruir apenas um serviço
-docker-compose up --build web
-
-# Ver logs de um serviço específico
-docker-compose logs -f web
-
-# Limpar volumes (cuidado - remove dados do banco)
-docker-compose down -v
-```
-
-## Estrutura do Projeto
-
-```
-WebReceptivo/
-├── manage.py
-├── webreceptivo/
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── requirements.txt
-├── .gitignore
-├── .dockerignore
-├── .env.example
-├── Dockerfile
-├── docker-compose.yml
-├── docker-compose.prod.yml
-├── nginx.conf
-├── entrypoint.sh
-└── README.md
-```
-
-## Melhorias Técnicas
-
-### Entrypoint Inteligente
-O arquivo `entrypoint.sh` foi aprimorado com:
-
-- **🔍 Verificação Robusta**: Usa `netcat` para verificar se a porta PostgreSQL (5432) está aberta
-- **🔄 Fallback Python**: Se `netcat` não estiver disponível, usa verificação Python nativa
-- **⏱️ Timing Otimizado**: Aguarda tempo adicional após porta abrir para garantir readiness completo
-- **📝 Logs Informativos**: Fornece feedback claro sobre o processo de inicialização
-
-### Benefícios
-- ✅ **Zero Erros de Conexão**: Elimina erros de timing durante startup
-- ✅ **Startup Confiável**: Garante que migrações só executem quando banco estiver pronto  
-- ✅ **Compatibilidade**: Funciona com ou sem netcat instalado
-- ✅ **Desenvolvimento Suave**: Experiência consistente ao subir containers
 
 ## 📁 Estrutura do Projeto
 
 ```
 WebReceptivo/
-├── 📁 accounts/              # App de usuários e perfis
-│   ├── 📄 models.py         # UserProfile com dados completos
-│   ├── 📄 forms.py          # Formulários com validação e máscaras
-│   ├── 📄 views.py          # Views de autenticação e perfil
-│   └── 📁 management/       # Comandos personalizados
-├── 📁 core/                 # App principal
-│   ├── 📄 views.py          # Dashboard e views principais
-│   └── 📄 urls.py           # URLs do core
-├── 📁 templates/            # Templates HTML
-│   ├── 📁 base/            # Template base responsivo
-│   ├── 📁 accounts/        # Templates de usuário
-│   └── 📁 core/            # Templates principais
-├── 📁 static/               # Arquivos estáticos
-│   ├── 📁 css/             # Estilos customizados
-│   ├── 📁 js/              # JavaScript funcional
-│   └── 📁 images/          # Imagens e ícones
-├── 📁 webreceptivo/        # Configurações Django
-├── 📄 requirements.txt     # Dependências Python
-├── 📄 Dockerfile          # Configuração Docker
-├── 📄 docker-compose.yml  # Orquestração containers
-└── 📄 entrypoint.sh       # Script de inicialização
+├── 📁 accounts/              # Autenticação e perfis
+├── 📁 core/                  # Dashboard e funcionalidades principais
+├── � user_management/       # Sistema completo de usuários e grupos
+│   ├── 📄 permission_helpers.py    # Regras de permissão hierárquicas
+│   ├── 📄 views.py                 # CRUD de usuários
+│   ├── 📄 group_views.py           # CRUD de grupos/cargos
+│   └── 📁 management/commands/     # Comandos de setup e teste
+├── 📁 templates/             # Templates HTML responsivos
+├── 📁 static/               # CSS, JS e assets
+├── 📄 requirements.txt      # Dependências Python
+├── 📄 docker-compose.yml    # Configuração Docker
+└── 📄 entrypoint.sh        # Script de inicialização inteligente
 ```
 
-## 🚀 Melhorias Técnicas Implementadas
+## � Sistema de Permissões
 
-### Interface e Experiência do Usuário
-- **✨ Navbar Responsiva**: Menu completamente reformulado para mobile e desktop
-- **🎨 Sistema de Temas**: Alternância claro/escuro com persistência
-- **🖼️ Upload de Avatar**: Preview em tempo real e validação de imagens
-- **📱 Mobile-First**: Interface otimizada para dispositivos móveis
-- **🎭 Máscaras de Input**: CPF, telefone e CEP com validação automática
+### Hierarquia de Usuários
+| Nível | Pode Gerenciar | Observações |
+|-------|----------------|-------------|
+| **Admin Principal (ID=1)** | 🌟 Todos | Protegido, intocável |
+| **Administradores** | Gerentes, Operadores, Usuários | Não mexem entre si |
+| **Gerentes** | Operadores, Usuários | Podem criar grupos customizados |
+| **Operadores** | - | Acesso ao sistema operacional |
+| **Usuários Básicos** | - | Acesso apenas ao próprio perfil |
 
-### Backend e Segurança
-- **🔐 Autenticação Robusta**: Sistema seguro com validações server-side
-- **📊 UserProfile Completo**: Dados pessoais, endereço e preferências
-- **🛡️ Validações**: Formulários com validação front-end e back-end
-- **🔄 Signals Django**: Criação automática de perfis de usuário
-- **📝 Management Commands**: Comandos para manutenção de dados
+### Grupos Protegidos vs Customizados
+- **� Protegidos**: Administradores, Gerentes, Operadores, Usuários Básicos (não podem ser deletados)
+- **✨ Customizados**: Criados dinamicamente pelos usuários com permissão (podem ser deletados)
 
-### Performance e Qualidade
-- **⚡ Assets Otimizados**: CSS e JS minificados e organizados
-- **🎯 SEO Ready**: Meta tags e estrutura HTML semântica
-- **♿ Acessibilidade**: ARIA labels e navegação por teclado
-- **🔧 Debugging**: Logs informativos e tratamento de erros
-- **📦 Dependências**: Requirements.txt atualizado com Pillow
+## 📚 Documentação Adicional
+- **[PERMISSIONS_DOCUMENTATION.md](./PERMISSIONS_DOCUMENTATION.md)** - Detalhes completos das permissões
+- **[GUIA_GRUPOS.md](./GUIA_GRUPOS.md)** - Como usar o sistema de grupos
+- **[CORRECAO_FINAL_UNION_ERROR.md](./CORRECAO_FINAL_UNION_ERROR.md)** - Histórico de correções técnicas
 
-## Troubleshooting
+## ❓ FAQ & Troubleshooting
 
 ### Problemas Comuns
-
-#### Container não consegue conectar ao PostgreSQL
-**Solução**: O entrypoint já resolve este problema automaticamente aguardando o banco estar disponível.
-
-#### Erro "database is being accessed by other users"
 ```bash
-# Parar todos os containers e remover volumes
-docker-compose down -v
-docker-compose up --build
+# Container não conecta ao PostgreSQL
+# ✅ O entrypoint já resolve automaticamente
+
+# Resetar banco completamente  
+docker-compose down -v && docker-compose up --build
+
+# Ver logs específicos
+docker-compose logs -f web    # Django
+docker-compose logs -f db     # PostgreSQL
+
+# Testar sistema de permissões
+python manage.py test_groups_queryset
 ```
 
-#### Ver logs detalhados
-```bash
-# Logs de todos os serviços
-docker-compose logs -f
+## 🚀 Próximas Funcionalidades
+- [ ] Sistema de logs/auditoria para alterações de usuários e grupos
+- [ ] API REST para integração com outros sistemas
+- [ ] Dashboard com relatórios de usuários ativos
+- [ ] Sistema de notificações internas
+- [ ] Workflow de aprovação para criação de grupos
 
-# Logs apenas do Django
-docker-compose logs -f web
+## 📄 Licença
+MIT License - Veja o arquivo LICENSE para mais detalhes.
 
-# Logs apenas do PostgreSQL
-docker-compose logs -f db
-```
-
-#### Resetar banco de dados completamente
-```bash
-docker-compose down -v
-docker volume rm webreceptivo_postgres_data
-docker-compose up --build
-```
-
-## Desenvolvimento
-
-Para contribuir com o projeto:
-
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
-
-## Licença
-
-Este projeto está sob a licença MIT.
+---
+*Desenvolvido com ❤️ usando Django 5.2.7 e Bootstrap 5*
