@@ -63,6 +63,13 @@ def logout_view(request):
     View para logout com mensagem de confirmação
     """
     user_name = request.user.get_full_name() or request.user.username
+    
+    # Limpar mensagens pendentes da sessão antes do logout
+    storage = messages.get_messages(request)
+    for message in storage:
+        pass  # Consome as mensagens para limpá-las
+    storage.used = True
+    
     logout(request)
     messages.success(request, f'Até logo, {user_name}! Você foi desconectado com segurança.')
     return redirect('accounts:login')
