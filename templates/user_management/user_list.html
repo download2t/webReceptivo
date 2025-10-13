@@ -147,7 +147,11 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="{% static 'images/default-avatar.svg' %}" alt="{{ user.get_full_name }}" class="user-avatar me-3">
+                                    {% if user.profile.avatar %}
+                                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name|default:user.username }}" class="user-avatar me-3">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.svg' %}" alt="Avatar padrão" class="user-avatar me-3">
+                                    {% endif %}
                                     <div>
                                         <div class="fw-semibold">{{ user.get_full_name|default:user.username }}</div>
                                         <div class="text-muted small">
