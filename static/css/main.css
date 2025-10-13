@@ -656,16 +656,6 @@ body {
   padding-top: 76px; /* Altura aproximada da navbar + margem */
 }
 
-/* Menu colapsável mobile */
-.navbar-collapse {
-  background: var(--primary-color);
-  border-radius: 0 0 var(--border-radius) var(--border-radius);
-  margin-top: 1rem;
-  box-shadow: var(--box-shadow-lg);
-  z-index: 1040; /* Acima da navbar */
-  position: relative;
-}
-
 [data-bs-theme="dark"] .navbar-collapse {
   background: var(--primary-dark);
 }

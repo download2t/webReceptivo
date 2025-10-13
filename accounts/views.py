@@ -9,6 +9,10 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
 from .models import UserProfile
 from .forms import UserProfileForm, ChangePasswordForm
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 
 
 class LoginView(FormView):
@@ -131,3 +135,35 @@ def change_password_view(request):
     }
     
     return render(request, 'accounts/change_password.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_theme_view(request):
+    """
+    View para atualizar a preferência de tema do usuário
+    """
+    try:
+        data = json.loads(request.body)
+        theme = data.get('theme')
+        
+        # Validar tema
+        valid_themes = ['light', 'dark', 'auto']
+        if theme not in valid_themes:
+            return JsonResponse({'error': 'Tema inválido'}, status=400)
+        
+        # Atualizar perfil do usuário
+        profile, created = UserProfile.objects.get_or_create(user=request.user)
+        profile.tema_preferido = theme
+        profile.save()
+        
+        return JsonResponse({
+            'success': True,
+            'theme': theme,
+            'message': f'Tema alterado para {theme}'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Dados JSON inválidos'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

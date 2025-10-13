@@ -1,0 +1,219 @@
+{% extends "admin/base.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}
+{% if add %}Adicionar{% else %}Alterar{% endif %} {{ opts.verbose_name }} | {{ opts.verbose_name_plural|capfirst }}
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item">{{ opts.app_label|capfirst }}</li>
+<li class="breadcrumb-item"><a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">
+    {% if add %}Adicionar{% else %}Alterar{% endif %}
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <form method="post" {% if has_file_field %}enctype="multipart/form-data"{% endif %} novalidate>
+        {% csrf_token %}
+        
+        <!-- Cabeçalho do formulário -->
+        <div class="admin-card card mb-4">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">
+                            <i class="bi bi-{% if add %}plus-circle{% else %}pencil{% endif %} me-2"></i>
+                            {% if add %}
+                                Adicionar {{ opts.verbose_name }}
+                            {% else %}
+                                Alterar {{ opts.verbose_name }}: {{ original|truncatewords:"18" }}
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{% url opts|admin_urlname:'changelist' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar à lista
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Erros do formulário -->
+        {% if errors %}
+        <div class="admin-card card mb-4">
+            <div class="card-body">
+                <div class="alert alert-danger" role="alert">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Por favor, corrija os erros abaixo:
+                    </h6>
+                    {{ adminform.form.non_field_errors }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Campos do formulário -->
+        {% if adminform %}
+            {% for fieldset in adminform %}
+            <div class="admin-card card mb-4">
+                {% if fieldset.name %}
+                <div class="card-header">
+                    <h5 class="mb-0">{{ fieldset.name }}</h5>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    {% if fieldset.description %}
+                    <p class="text-muted mb-3">{{ fieldset.description|safe }}</p>
+                    {% endif %}
+
+                    {% for line in fieldset %}
+                        {% for field in line %}
+                            {% if field.field.is_hidden %}
+                                {{ field.field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label for="{{ field.field.id_for_label }}" class="form-label">
+                                        {{ field.field.label }}
+                                        {% if field.field.field.required %}
+                                        <span class="text-danger">*</span>
+                                        {% endif %}
+                                    </label>
+                                    {{ field.field }}
+                                    {% if field.field.help_text %}
+                                    <div class="form-text">{{ field.field.help_text|safe }}</div>
+                                    {% endif %}
+                                    {% if field.field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in field.field.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Fallback - formulário simples -->
+            <div class="admin-card card">
+                <div class="card-body">
+                    {{ form.as_p }}
+                </div>
+            </div>
+        {% endif %}
+            </div>
+            
+            <!-- Rodapé com botões de ação -->
+            <div class="card-footer bg-light">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="_save" class="btn btn-admin-primary">
+                                <i class="bi bi-check-lg me-1"></i>
+                                {% if add %}Adicionar{% else %}Salvar{% endif %}
+                            </button>
+                            
+                            {% if not add %}
+                            <button type="submit" name="_saveasnew" class="btn btn-admin-secondary">
+                                <i class="bi bi-files me-1"></i>
+                                Salvar como novo
+                            </button>
+                            {% endif %}
+                            
+                            <button type="submit" name="_continue" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-right me-1"></i>
+                                Salvar e continuar editando
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if not add and has_delete_permission %}
+                    <div class="col-auto">
+                        <a href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}" 
+                           class="btn btn-outline-danger"
+                           onclick="return confirm('Tem certeza que deseja excluir este {{ opts.verbose_name|lower }}?')">
+                            <i class="bi bi-trash me-1"></i>
+                            Excluir
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% if not add and adminform.form.instance.pk %}
+    <!-- Informações adicionais -->
+    <div class="admin-card card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Informações do Registro
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>ID:</strong> {{ adminform.form.instance.pk }}
+                </div>
+                {% if adminform.form.instance.date_joined %}
+                <div class="col-md-6">
+                    <strong>Data de criação:</strong> {{ adminform.form.instance.date_joined|date:"d/m/Y H:i" }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar classes Bootstrap aos campos do formulário
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="url"], textarea, select');
+    inputs.forEach(function(input) {
+        if (!input.classList.contains('form-control') && !input.classList.contains('form-check-input')) {
+            if (input.tagName.toLowerCase() === 'select') {
+                input.classList.add('form-select');
+            } else {
+                input.classList.add('form-control');
+            }
+        }
+        
+        // Adicionar estado de erro se necessário
+        if (input.closest('.form-row').querySelector('.invalid-feedback')) {
+            input.classList.add('is-invalid');
+        }
+    });
+
+    // Checkbox e radio buttons
+    const checkboxes = document.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.classList.add('form-check-input');
+        
+        // Wrapper para checkboxes
+        if (!checkbox.closest('.form-check')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-check';
+            checkbox.parentNode.insertBefore(wrapper, checkbox);
+            wrapper.appendChild(checkbox);
+            
+            const label = checkbox.nextElementSibling;
+            if (label && label.tagName.toLowerCase() === 'label') {
+                label.classList.add('form-check-label');
+                wrapper.appendChild(label);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

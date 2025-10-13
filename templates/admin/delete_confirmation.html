@@ -1,0 +1,117 @@
+{% extends "admin/base.html" %}
+{% load i18n admin_urls %}
+
+{% block title %}Confirmar exclusão | {{ opts.verbose_name_plural|capfirst }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item">{{ opts.app_label|capfirst }}</li>
+<li class="breadcrumb-item"><a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">Excluir</li>
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Alerta de confirmação -->
+        <div class="admin-card card mb-4">
+            <div class="card-body">
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Confirmação de Exclusão</h5>
+                        <p class="mb-0">
+                            Tem certeza de que deseja excluir o {{ opts.verbose_name|lower }} 
+                            <strong>"{{ object|truncatewords:"18" }}"</strong>?
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalhes do objeto -->
+        <div class="admin-card card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Detalhes do {{ opts.verbose_name|capfirst }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>{{ opts.verbose_name|capfirst }}:</strong> {{ object }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>ID:</strong> {{ object.pk }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Objetos relacionados que serão afetados -->
+        {% if deleted_objects %}
+        <div class="admin-card card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0 text-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Objetos que serão excluídos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <p class="mb-2">A exclusão deste {{ opts.verbose_name|lower }} também irá excluir os seguintes objetos relacionados:</p>
+                    <ul class="mb-0">
+                        {% for obj in deleted_objects %}
+                        <li>{{ obj }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Botões de ação -->
+        <div class="admin-card card">
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{% url opts|admin_urlname:'changelist' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Cancelar
+                    </a>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>
+                            Editar em vez disso
+                        </a>
+                        
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>
+                            Sim, excluir definitivamente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar confirmação extra ao botão de exclusão
+    const deleteBtn = document.querySelector('button[type="submit"]');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            const confirmed = confirm('Esta ação não pode ser desfeita. Continuar?');
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

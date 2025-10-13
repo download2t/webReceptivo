@@ -104,6 +104,7 @@ WebReceptivo/
 ## 📚 Documentação Adicional
 - **[PERMISSIONS_DOCUMENTATION.md](./PERMISSIONS_DOCUMENTATION.md)** - Detalhes completos das permissões
 - **[GUIA_GRUPOS.md](./GUIA_GRUPOS.md)** - Como usar o sistema de grupos
+- **[ADMIN_INTEGRADO.md](./ADMIN_INTEGRADO.md)** - Admin Django integrado ao design
 - **[CORRECAO_FINAL_UNION_ERROR.md](./CORRECAO_FINAL_UNION_ERROR.md)** - Histórico de correções técnicas
 
 ## ❓ FAQ & Troubleshooting
@@ -124,7 +125,14 @@ docker-compose logs -f db     # PostgreSQL
 python manage.py test_groups_queryset
 ```
 
-## 🚀 Próximas Funcionalidades
+## � Admin Django Integrado
+- **🎨 Interface Unificada**: Admin Django com design do WebReceptivo
+- **📊 Dashboard Personalizado**: Estatísticas e acesso rápido
+- **🎨 Templates Customizados**: Formulários e listas com Bootstrap
+- **🔐 Acesso Hierárquico**: Integração com sistema de permissões
+- **📱 Responsivo**: Funciona perfeitamente em todos os dispositivos
+
+## �🚀 Próximas Funcionalidades
 - [ ] Sistema de logs/auditoria para alterações de usuários e grupos
 - [ ] API REST para integração com outros sistemas
 - [ ] Dashboard com relatórios de usuários ativos

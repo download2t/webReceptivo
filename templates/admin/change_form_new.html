@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}
+{% if add %}Adicionar{% else %}Alterar{% endif %} {{ opts.verbose_name }} | {{ opts.verbose_name_plural|capfirst }}
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item">{{ opts.app_label|capfirst }}</li>
+<li class="breadcrumb-item"><a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a></li>
+<li class="breadcrumb-item active" aria-current="page">
+    {% if add %}Adicionar{% else %}Alterar{% endif %}
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <!-- Cabeçalho do formulário -->
+    <div class="admin-card card mb-4">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">
+                        <i class="bi bi-{% if add %}plus-circle{% else %}pencil{% endif %} me-2"></i>
+                        {% if add %}
+                            Adicionar {{ opts.verbose_name }}
+                        {% else %}
+                            Alterar {{ opts.verbose_name }}: {{ original|truncatewords:"18" }}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url opts|admin_urlname:'changelist' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar à lista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Erros gerais do formulário -->
+    {% if errors %}
+    <div class="alert alert-danger" role="alert">
+        <h6 class="alert-heading">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Corrija os erros abaixo:
+        </h6>
+        {{ errors }}
+    </div>
+    {% endif %}
+
+    <form method="post" {% if has_file_field %}enctype="multipart/form-data"{% endif %} novalidate>
+        {% csrf_token %}
+        
+        <!-- Renderizar fieldsets usando adminform -->
+        {% for fieldset in adminform %}
+        <fieldset class="module aligned {% if fieldset.classes %}{{ fieldset.classes|join:" " }}{% endif %}">
+            {% if fieldset.name %}
+            <h2>{{ fieldset.name }}</h2>
+            {% endif %}
+            
+            {% if fieldset.description %}
+            <div class="description">{{ fieldset.description }}</div>
+            {% endif %}
+            
+            {% for line in fieldset %}
+                <div class="form-row">
+                    {% for field in line %}
+                        {% if not field.is_hidden %}
+                        <div class="field-box">
+                            {% if field.is_checkbox %}
+                                {{ field.field }}
+                                {{ field.label_tag }}
+                            {% else %}
+                                {{ field.label_tag }}
+                                {% if field.is_readonly %}
+                                    <div class="readonly">{{ field.contents }}</div>
+                                {% else %}
+                                    {{ field.field }}
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if field.field.help_text %}
+                                <div class="help">{{ field.field.help_text|safe }}</div>
+                            {% endif %}
+                            
+                            {% for error in field.field.errors %}
+                                <ul class="errorlist"><li>{{ error }}</li></ul>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                            {{ field.field }}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </fieldset>
+        {% endfor %}
+        
+        <!-- Inlines se existirem -->
+        {% if inline_admin_formsets %}
+            {% for inline_admin_formset in inline_admin_formsets %}
+                {% include inline_admin_formset.opts.template %}
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Botões de ação -->
+        <div class="submit-row">
+            <input type="submit" value="{% if add %}Salvar{% else %}Salvar{% endif %}" class="default" name="_save">
+            {% if not add %}
+                <input type="submit" value="Salvar e continuar editando" name="_continue">
+                <input type="submit" value="Salvar e adicionar outro(a)" name="_addanother">
+            {% endif %}
+            {% if show_delete_link %}
+                <p class="deletelink-box">
+                    <a href="{% url opts|admin_urlname:'delete' original.pk|admin_urlquote %}" class="deletelink">
+                        Excluir
+                    </a>
+                </p>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

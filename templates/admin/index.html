@@ -1,0 +1,156 @@
+{% extends "admin/base.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block title %}Administração{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Painel Principal</li>
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+    <div class="row">
+        <!-- Card de boas-vindas -->
+        <div class="col-12 mb-4">
+            <div class="admin-card card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-speedometer2 me-2"></i>
+                        Painel de Administração
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h6 class="text-muted mb-3">Bem-vindo, {{ user.get_full_name|default:user.username }}!</h6>
+                            <p class="mb-3">
+                                Use esta área para gerenciar os aspectos técnicos do sistema. 
+                                Aqui você pode configurar modelos, permissões avançadas e outras funcionalidades administrativas.
+                            </p>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'user_management:user_list' %}" class="btn btn-admin-primary btn-sm">
+                                    <i class="bi bi-people me-1"></i>Gerenciar Usuários
+                                </a>
+                                <a href="{% url 'user_management:group_list' %}" class="btn btn-admin-secondary btn-sm">
+                                    <i class="bi bi-person-gear me-1"></i>Gerenciar Grupos
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 text-center">
+                            <div class="bg-light rounded p-3">
+                                <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                                <h6 class="mt-2 text-muted">Área Segura</h6>
+                                <small class="text-muted">Acesso restrito a administradores</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apps do Django Admin -->
+        {% if app_list %}
+            {% for app in app_list %}
+            <div class="col-xl-6 col-lg-6 col-md-12 mb-4">
+                <div class="admin-card card h-100">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-folder me-2"></i>
+                            {{ app.name }}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if app.models %}
+                        <div class="list-group list-group-flush">
+                            {% for model in app.models %}
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ model.name }}</h6>
+                                        {% if model.object_name %}
+                                        <small class="text-muted">{{ model.object_name }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        {% if model.admin_url %}
+                                        <a href="{{ model.admin_url }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-list me-1"></i>Ver
+                                        </a>
+                                        {% endif %}
+                                        {% if model.add_url %}
+                                        <a href="{{ model.add_url }}" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-plus me-1"></i>Adicionar
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted mb-0">Nenhum modelo disponível</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="admin-card card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 text-muted">Nenhum app disponível</h5>
+                        <p class="text-muted">Você não tem permissão para administrar aplicações Django ou não há aplicações configuradas.</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Estatísticas rápidas (se disponível) -->
+{% if user.is_superuser %}
+<div class="col-12 mt-4">
+    <div class="admin-card card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="bi bi-graph-up me-2"></i>
+                Estatísticas do Sistema
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3">
+                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">{{ total_users|default:"--" }}</h5>
+                        <small class="text-muted">Usuários</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3">
+                        <i class="bi bi-person-gear text-success" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">{{ total_groups|default:"--" }}</h5>
+                        <small class="text-muted">Grupos</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3">
+                        <i class="bi bi-shield-check text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">{{ total_permissions|default:"--" }}</h5>
+                        <small class="text-muted">Permissões</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3">
+                        <i class="bi bi-activity text-info" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-1">Ativo</h5>
+                        <small class="text-muted">Status</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
