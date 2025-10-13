@@ -4,70 +4,7 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block extra_css %}
-<style>
-.permission-section {
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background: var(--bg-surface);
-}
-
-.permission-section h6 {
-    color: var(--primary-color);
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.permission-checkbox {
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    border-radius: var(--border-radius);
-    transition: background-color 0.2s ease;
-}
-
-.permission-checkbox:hover {
-    background-color: rgba(var(--primary-color-rgb), 0.05);
-}
-
-.permission-checkbox input[type="checkbox"] {
-    margin-right: 0.5rem;
-}
-
-.form-section {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.section-title {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.protected-warning {
-    background: linear-gradient(45deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
-    border: 1px solid var(--warning-color);
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
-
-@media (max-width: 768px) {
-    .permission-section {
-        padding: 0.75rem;
-    }
-    
-    .form-section {
-        padding: 1rem;
-    }
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/groups.css' %}">
 {% endblock %}
 
 {% block content %}

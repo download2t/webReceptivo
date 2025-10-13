@@ -229,7 +229,7 @@
     </div>
 
     <!-- Ações Perigosas -->
-    {% if perms.auth.change_user or perms.auth.delete_user %}
+    {% if perms.auth.change_user %}
     <div class="row">
         <div class="col-12">
             <div class="info-card border-warning">
@@ -254,17 +254,7 @@
                         {% endif %}
                     {% endif %}
                     
-                    {% if perms.auth.delete_user %}
-                        {% if user_obj.id == 1 or user_obj.username == 'admin' and user_obj.is_superuser %}
-                            <span class="btn btn-outline-danger btn-sm disabled" title="Administrador principal não pode ser deletado">
-                                <i class="bi bi-shield-lock me-1"></i>Protegido
-                            </span>
-                        {% else %}
-                            <a href="{% url 'user_management:user_delete' user_obj.pk %}" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash me-1"></i>Deletar Usuário
-                            </a>
-                        {% endif %}
-                    {% endif %}
+                    <!-- Funcionalidade de exclusão removida por segurança - apenas inativação permitida -->
                 </div>
                 
                 <div class="mt-2">
@@ -277,6 +267,17 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Aviso sobre política de não-exclusão de usuários -->
+    <div class="alert alert-info border-0 mb-3" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <small>
+                <strong>Política de Segurança:</strong> A exclusão permanente de usuários foi desativada para preservar a integridade dos dados. 
+                Para remover o acesso de um usuário, utilize a função <strong>"Inativar Usuário"</strong> abaixo.
+            </small>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

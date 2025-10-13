@@ -13,7 +13,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from accounts.models import UserProfile
 from .permission_helpers import (
-    can_access_user_management, can_view_user, can_edit_user, can_delete_user,
+    can_access_user_management, can_view_user, can_edit_user,
     can_create_user_with_level, can_change_user_groups, get_manageable_users_queryset,
     get_user_level, get_allowed_groups_for_user, validate_user_form_submission,
     is_protected_user, get_user_level_display, validate_group_assignment
@@ -404,7 +404,6 @@ def user_detail(request, pk):
     
     # Verificar ações que o usuário atual pode realizar neste usuário
     can_edit = can_edit_user(request.user, user)
-    can_delete = can_delete_user(request.user, user)
     is_protected = is_protected_user(user)
     
     context = {
@@ -415,7 +414,6 @@ def user_detail(request, pk):
         'user_level': get_user_level_display(user),
         'current_user_level': get_user_level_display(request.user),
         'can_edit': can_edit,
-        'can_delete': can_delete,
         'is_protected': is_protected,
     }
     
@@ -467,43 +465,6 @@ def user_toggle_active(request, pk):
 
 
 @login_required
-@user_management_required
-def user_delete(request, pk):
-    """
-    Deletar usuário (com confirmação).
-    Aplica todas as regras de permissão e proteção.
-    """
-    
-    user = get_object_or_404(User, pk=pk)
-    
-    # Verificar se pode deletar este usuário
-    if not can_delete_user(request.user, user):
-        messages.error(request, 'Você não tem permissão para deletar este usuário.')
-        return redirect('user_management:user_detail', pk=pk)
-    
-    # Admin principal (ID=1) nunca pode ser deletado
-    if is_protected_user(user):
-        messages.error(request, 'O administrador principal não pode ser deletado por segurança.')
-        return redirect('user_management:user_detail', pk=pk)
-    
-    # Não permitir deletar o próprio usuário
-    if user == request.user:
-        messages.error(request, 'Você não pode deletar sua própria conta.')
-        return redirect('user_management:user_detail', pk=pk)
-    
-    if request.method == 'POST':
-        username = user.username
-        user.delete()
-        messages.success(request, f'Usuário {username} deletado com sucesso.')
-        return redirect('user_management:user_list')
-    
-    context = {
-        'user_obj': user,
-        'title': f'Deletar Usuário: {user.username}'
-    }
-    
-    return render(request, 'user_management/user_delete.html', context)
-
 
 @login_required
 @user_management_required

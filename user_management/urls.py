@@ -12,11 +12,10 @@ urlpatterns = [
     # Listagem e busca de usuários
     path('', views.user_list, name='user_list'),
     
-    # CRUD de usuários
+    # CRUD de usuários (sem delete - apenas inativar)
     path('users/create/', views.user_create, name='user_create'),
     path('users/<int:pk>/', views.user_detail, name='user_detail'),
     path('users/<int:pk>/edit/', views.user_edit, name='user_edit'),
-    path('users/<int:pk>/delete/', views.user_delete, name='user_delete'),
     
     # Ações AJAX de usuários
     path('users/<int:pk>/toggle-active/', views.user_toggle_active, name='user_toggle_active'),

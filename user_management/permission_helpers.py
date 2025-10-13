@@ -140,35 +140,16 @@ def can_edit_user(current_user, target_user):
     return False
 
 
-def can_delete_user(current_user, target_user):
-    """
-    Verifica se o usuário atual pode deletar outro usuário.
-    """
-    current_level = get_user_level(current_user)
-    target_level = get_user_level(target_user)
-    
-    # Não pode deletar a si mesmo
-    if current_user.id == target_user.id:
-        return False
-    
-    # Admin principal (ID=1) nunca pode ser deletado
-    if target_user.id == 1:
-        return False
-    
-    # Admin principal pode deletar todos (exceto ID=1)
-    if current_level == 'admin_principal':
-        return True
-    
-    # Administradores podem deletar apenas operadores e usuários básicos
-    if current_level == 'administrador':
-        return target_level in ['operador', 'usuario_basico']
-    
-    # Gerentes podem deletar apenas operadores e usuários básicos
-    if current_level == 'gerente':
-        return target_level in ['operador', 'usuario_basico']
-    
-    # Outros não podem deletar ninguém
-    return False
+# FUNCIONALIDADE DE EXCLUSÃO DESATIVADA POR SEGURANÇA
+# Apenas inativação de usuários é permitida para manter integridade dos dados
+#
+# def can_delete_user(current_user, target_user):
+#     """
+#     Verifica se o usuário atual pode deletar outro usuário.
+#     DESATIVADA - Use inativação em vez de exclusão.
+#     """
+#     # Funcionalidade removida por segurança
+#     return False
 
 
 def can_create_user_with_level(current_user, target_level):
@@ -572,7 +553,7 @@ def can_assign_permission_to_group(current_user, group, permission):
     
     # Permissões críticas que apenas admin principal pode atribuir
     critical_permissions = [
-        'auth.add_user', 'auth.change_user', 'auth.delete_user',
+        'auth.add_user', 'auth.change_user', # 'auth.delete_user',  # REMOVIDO
         'auth.add_group', 'auth.change_group', 'auth.delete_group',
         'auth.add_permission', 'auth.change_permission', 'auth.delete_permission'
     ]

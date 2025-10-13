@@ -16,7 +16,7 @@ class Command(BaseCommand):
             'Administradores': [
                 'auth.add_user',
                 'auth.change_user', 
-                'auth.delete_user',
+                # 'auth.delete_user',  # REMOVIDO: Apenas inativação permitida
                 'auth.view_user',
                 'auth.add_group',
                 'auth.change_group',

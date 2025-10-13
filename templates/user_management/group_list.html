@@ -4,49 +4,7 @@
 {% block title %}Gerenciar Grupos/Cargos{% endblock %}
 
 {% block extra_css %}
-<style>
-.group-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.group-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.permission-badge {
-    background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-    color: white;
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
-    border-radius: 12px;
-    display: inline-block;
-}
-
-.protected-badge {
-    background: linear-gradient(45deg, var(--warning-color), #e67e22);
-    color: white;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 10px;
-}
-
-.group-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-@media (max-width: 576px) {
-    .group-actions {
-        flex-direction: column;
-    }
-    
-    .group-actions .btn {
-        width: 100%;
-    }
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/groups.css' %}">
 {% endblock %}
 
 {% block content %}
