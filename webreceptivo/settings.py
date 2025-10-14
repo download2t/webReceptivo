@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'core',
     'user_management',
     'audit_system',
+    'company_settings',
 ]
 
 MIDDLEWARE = [

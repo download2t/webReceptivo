@@ -1,0 +1,742 @@
+{% extends 'company_settings/base.html' %}
+
+{% block page_title_text %}Configurações de E-mail (SMTP){% endblock %}
+
+{% block page_icon %}<i class="fas fa-envelope"></i>{% endblock %}
+{% block page_main_title %}Configurações de E-mail (SMTP){% endblock %}
+{% block subtitle %}Configure o servidor de e-mail para envio de mensagens{% endblock %}
+
+{% block settings_content %}
+<form method="post" id="smtpForm" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <!-- Provider Quick Setup -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-magic text-info me-2"></i>
+                Configuração Rápida por Provedor
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <p class="text-muted mb-3">Clique em um provedor para preencher automaticamente as configurações:</p>
+            
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <button type="button" class="btn btn-outline-primary w-100 provider-btn" 
+                            data-provider="gmail">
+                        <i class="fab fa-google me-2"></i>Gmail
+                    </button>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <button type="button" class="btn btn-outline-info w-100 provider-btn" 
+                            data-provider="outlook">
+                        <i class="fab fa-microsoft me-2"></i>Outlook
+                    </button>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <button type="button" class="btn btn-outline-warning w-100 provider-btn" 
+                            data-provider="yahoo">
+                        <i class="fab fa-yahoo me-2"></i>Yahoo
+                    </button>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <button type="button" class="btn btn-outline-secondary w-100 provider-btn" 
+                            data-provider="custom">
+                        <i class="fas fa-cogs me-2"></i>Personalizado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMTP Server Settings -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-server text-primary me-2"></i>
+                Configurações do Servidor SMTP
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="form-group">
+                        <label for="{{ form.smtp_server.id_for_label }}" class="form-label">
+                            {{ form.smtp_server.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.smtp_server }}
+                        {% if form.smtp_server.errors %}
+                            <div class="invalid-feedback">{{ form.smtp_server.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Ex: smtp.gmail.com, smtp.outlook.com, mail.empresa.com
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.smtp_port.id_for_label }}" class="form-label">
+                            {{ form.smtp_port.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.smtp_port }}
+                        {% if form.smtp_port.errors %}
+                            <div class="invalid-feedback">{{ form.smtp_port.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Portas comuns: 587 (TLS), 465 (SSL), 25 (sem segurança)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            E-mail SMTP <span class="text-danger">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            E-mail único usado para login SMTP, remetente e todas as funções do sistema
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.email_backend.id_for_label }}" class="form-label">
+                            {{ form.email_backend.label }}
+                        </label>
+                        {{ form.email_backend }}
+                        {% if form.email_backend.errors %}
+                            <div class="invalid-feedback">{{ form.email_backend.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Backend de e-mail do Django (use SMTP para produção)</small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.timeout.id_for_label }}" class="form-label">
+                            {{ form.timeout.label }}
+                        </label>
+                        <div class="input-group">
+                            {{ form.timeout }}
+                            <span class="input-group-text">segundos</span>
+                        </div>
+                        {% if form.timeout.errors %}
+                            <div class="invalid-feedback">{{ form.timeout.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Tempo limite para conexão (padrão: 30s)</small>
+                    </div>
+                </div>
+            </div>
+            
+
+        </div>
+    </div>
+
+    <!-- Authentication -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-key text-warning me-2"></i>
+                Autenticação
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">
+                            {{ form.password.label }} 
+                            {% if not form.instance.pk %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        <div class="password-input-group">
+                            {{ form.password }}
+                            <button type="button" class="password-toggle" tabindex="-1">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="invalid-feedback">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">{{ form.password.help_text }}</small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.confirm_password.id_for_label }}" class="form-label">
+                            {{ form.confirm_password.label }}
+                        </label>
+                        <div class="password-input-group">
+                            {{ form.confirm_password }}
+                            <button type="button" class="password-toggle" tabindex="-1">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback">{{ form.confirm_password.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">{{ form.confirm_password.help_text }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-shield-alt text-success me-2"></i>
+                Configurações de Segurança
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="form-group">
+                        <label for="{{ form.connection_security.id_for_label }}" class="form-label">
+                            {{ form.connection_security.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.connection_security }}
+                        {% if form.connection_security.errors %}
+                            <div class="invalid-feedback">{{ form.connection_security.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            TLS (587) recomendado para maioria dos provedores. SSL (465) para alguns.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="form-group">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                <strong>{{ form.is_active.label }}</strong>
+                            </label>
+                            {% if form.is_active.errors %}
+                                <div class="invalid-feedback">{{ form.is_active.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <small class="form-text text-muted">
+                            Quando ativado, o sistema usará estas configurações para todos os envios de e-mail (recuperação de senha, notificações, etc.)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mb-3">
+                <h6><i class="fas fa-info-circle me-2"></i>Como Funciona (Simplificado)</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>1. E-mail SMTP:</strong><br>
+                        <code>suportesanma@gmail.com</code><br>
+                        <small>Um único e-mail para tudo: login, remetente, sistema</small></p>
+                        
+                        <p><strong>2. Senha:</strong><br>
+                        <code>ofdf qopt wduz ahxl</code><br>
+                        <small>Senha de app do Gmail (não a senha normal)</small></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>3. E-mail de Teste:</strong><br>
+                        <code>ti@sanmahotel.com.br</code><br>
+                        <small>Para onde enviar o teste</small></p>
+                        
+                        <p><strong>Resultado:</strong><br>
+                        <small class="text-muted">De: suportesanma@gmail.com<br>
+                        Para: ti@sanmahotel.com.br ✅</small></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Importante</h6>
+                <ul class="mb-0">
+                    <li><strong>Exemplo Gmail:</strong> Usuário: suportesanma@gmail.com / Senha: ofdf qopt wduz ahxl</li>
+                    <li>Para Gmail, use "Senhas de app" ao invés da senha normal da conta</li>
+                    <li>Verifique se a porta corresponde ao tipo de segurança (587 para TLS)</li>
+                    <li>Ative as configurações para que o sistema use automaticamente</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Test Email -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-paper-plane text-success me-2"></i>
+                Teste de Envio
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.test_email.id_for_label }}" class="form-label">
+                            E-mail de Destino (Para Teste) 
+                        </label>
+                        {{ form.test_email }}
+                        {% if form.test_email.errors %}
+                            <div class="invalid-feedback">{{ form.test_email.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            <i class="fas fa-envelope me-1"></i>
+                            Informe qualquer e-mail válido para receber o teste de envio
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-end h-100 pb-3">
+                        <button type="button" class="btn btn-success" onclick="sendTestEmail()" 
+                                id="testEmailBtn">
+                            <i class="fas fa-paper-plane"></i> Enviar E-mail de Teste
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="testResult" class="mt-3" style="display: none;">
+                <div class="alert" id="testAlert">
+                    <div id="testMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Configuration Status -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                Status da Configuração
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-item text-center p-3 bg-light rounded">
+                        <i class="fas fa-server fa-2x {% if form.instance.host %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <h6>Servidor</h6>
+                        <p class="mb-0">
+                            <span class="badge bg-{% if form.instance.host %}success{% else %}danger{% endif %}">
+                                {% if form.instance.host %}Configurado{% else %}Não Configurado{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-item text-center p-3 bg-light rounded">
+                        <i class="fas fa-key fa-2x {% if form.instance.password_hash %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <h6>Autenticação</h6>
+                        <p class="mb-0">
+                            <span class="badge bg-{% if form.instance.password_hash %}success{% else %}danger{% endif %}">
+                                {% if form.instance.password_hash %}Configurada{% else %}Não Configurada{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-item text-center p-3 bg-light rounded">
+                        <i class="fas fa-shield-alt fa-2x {% if form.instance.use_tls or form.instance.use_ssl %}text-success{% else %}text-warning{% endif %} mb-2"></i>
+                        <h6>Segurança</h6>
+                        <p class="mb-0">
+                            <span class="badge bg-{% if form.instance.use_tls or form.instance.use_ssl %}success{% else %}warning{% endif %}">
+                                {% if form.instance.use_tls %}TLS
+                                {% elif form.instance.use_ssl %}SSL
+                                {% else %}Nenhuma
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-item text-center p-3 bg-light rounded">
+                        <i class="fas fa-check-circle fa-2x {% if form.instance.is_configured %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <h6>Status Geral</h6>
+                        <p class="mb-0">
+                            <span class="badge bg-{% if form.instance.is_configured %}success{% else %}danger{% endif %}">
+                                {% if form.instance.is_configured %}Completo{% else %}Incompleto{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salvar Configurações
+        </button>
+        
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            <i class="fas fa-undo"></i> Resetar
+        </button>
+        
+        <a href="{% url 'company_settings:overview' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+        
+        <button type="button" class="btn btn-outline-info ms-auto" onclick="showSMTPHelp()">
+            <i class="fas fa-question-circle"></i> Ajuda
+        </button>
+    </div>
+</form>
+
+<!-- SMTP Help Modal -->
+<div class="modal fade" id="smtpHelpModal" tabindex="-1" aria-labelledby="smtpHelpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="smtpHelpModalLabel">
+                    <i class="fas fa-question-circle me-2"></i>Ajuda - Configuração SMTP
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fab fa-google me-2"></i>Gmail</h6>
+                        <ul class="small">
+                            <li>Servidor: smtp.gmail.com</li>
+                            <li>Porta: 587 (TLS) ou 465 (SSL)</li>
+                            <li>Use "Senhas de app" (não a senha normal)</li>
+                            <li>Ative a verificação em 2 etapas primeiro</li>
+                        </ul>
+                        
+                        <h6><i class="fab fa-microsoft me-2"></i>Outlook/Hotmail</h6>
+                        <ul class="small">
+                            <li>Servidor: smtp-mail.outlook.com</li>
+                            <li>Porta: 587 (TLS)</li>
+                            <li>Use sua senha normal</li>
+                            <li>Pode precisar habilitar SMTP nas configurações</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6><i class="fab fa-yahoo me-2"></i>Yahoo</h6>
+                        <ul class="small">
+                            <li>Servidor: smtp.mail.yahoo.com</li>
+                            <li>Porta: 587 (TLS) ou 465 (SSL)</li>
+                            <li>Use "Senhas de app"</li>
+                            <li>Ative a verificação em 2 etapas primeiro</li>
+                        </ul>
+                        
+                        <h6><i class="fas fa-cog me-2"></i>Como Funciona</h6>
+                        <ul class="small">
+                            <li><strong>E-mail SMTP:</strong> Suas credenciais para login (ex: suportesanma@gmail.com)</li>
+                            <li><strong>Remetente:</strong> Quem aparece enviando (normalmente o mesmo e-mail SMTP)</li>
+                            <li><strong>Destino (Teste):</strong> Qualquer e-mail para receber o teste</li>
+                            <li><strong>Exemplo:</strong> De: suportesanma@gmail.com → Para: cliente@empresa.com</li>
+                        </ul>
+                        
+                        <h6><i class="fas fa-lightbulb me-2"></i>Dicas</h6>
+                        <ul class="small">
+                            <li>Teste sempre após configurar</li>
+                            <li>Use TLS (porta 587) sempre que possível</li>
+                            <li>Para Gmail/Yahoo, use "Senhas de app"</li>
+                            <li>Verifique firewall se não funcionar</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block settings_extra_js %}
+<script>
+    // Provider configurations
+    const providerConfigs = {
+        gmail: {
+            smtp_server: 'smtp.gmail.com',
+            smtp_port: 587,
+            connection_security: 'tls'
+        },
+        outlook: {
+            smtp_server: 'smtp-mail.outlook.com',
+            smtp_port: 587,
+            connection_security: 'tls'
+        },
+        yahoo: {
+            smtp_server: 'smtp.mail.yahoo.com',
+            smtp_port: 587,
+            connection_security: 'tls'
+        },
+        custom: {
+            smtp_server: '',
+            smtp_port: 587,
+            connection_security: 'tls'
+        }
+    };
+
+    // Setup provider buttons
+    function setupProviderButtons() {
+        document.querySelectorAll('.provider-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const provider = this.dataset.provider;
+                const config = providerConfigs[provider];
+                
+                if (config) {
+                    // Fill form fields
+                    document.getElementById('{{ form.smtp_server.id_for_label }}').value = config.smtp_server;
+                    document.getElementById('{{ form.smtp_port.id_for_label }}').value = config.smtp_port;
+                    document.getElementById('{{ form.connection_security.id_for_label }}').value = config.connection_security;
+                    
+                    // Remove validation classes
+                    document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                        el.classList.remove('is-invalid', 'is-valid');
+                    });
+                    
+                    // Show success message with helpful text
+                    let providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+                    showToast(`Configurações do ${providerName} aplicadas! Agora preencha seu e-mail e senha.`, 'success');
+                    
+                    // Focus on email field
+                    document.getElementById('{{ form.email.id_for_label }}').focus();
+                }
+            });
+        });
+    }
+
+    // Send test email
+    function sendTestEmail() {
+        const testEmailField = document.getElementById('{{ form.test_email.id_for_label }}');
+        const testEmail = testEmailField.value.trim();
+        
+        if (!testEmail) {
+            showToast('Digite um e-mail para teste.', 'warning');
+            testEmailField.focus();
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(testEmail)) {
+            showToast('Digite um e-mail válido.', 'error');
+            testEmailField.focus();
+            return;
+        }
+
+        const button = document.getElementById('testEmailBtn');
+        showLoading(button);
+        
+        // Hide previous result
+        document.getElementById('testResult').style.display = 'none';
+
+        const formData = {
+            test_email: testEmail,
+            smtp_server: document.getElementById('{{ form.smtp_server.id_for_label }}').value,
+            smtp_port: document.getElementById('{{ form.smtp_port.id_for_label }}').value,
+            email: document.getElementById('{{ form.email.id_for_label }}').value,
+            smtp_password: document.getElementById('{{ form.password.id_for_label }}').value,
+            connection_security: document.getElementById('{{ form.connection_security.id_for_label }}').value,
+            timeout: document.getElementById('{{ form.timeout.id_for_label }}').value
+        };
+
+        fetch('{% url "company_settings:test_smtp" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading(button);
+            
+            const resultDiv = document.getElementById('testResult');
+            const alertDiv = document.getElementById('testAlert');
+            const messageDiv = document.getElementById('testMessage');
+            
+            if (data.success) {
+                alertDiv.className = 'alert alert-success';
+                messageDiv.innerHTML = `
+                    <h6><i class="fas fa-check-circle me-2"></i>Teste realizado com sucesso!</h6>
+                    <p class="mb-0">E-mail de teste enviado para <strong>${testEmail}</strong></p>
+                `;
+                showToast('E-mail de teste enviado com sucesso!', 'success');
+            } else {
+                alertDiv.className = 'alert alert-danger';
+                messageDiv.innerHTML = `
+                    <h6><i class="fas fa-times-circle me-2"></i>Falha no teste</h6>
+                    <p class="mb-0"><strong>Erro:</strong> ${data.error || 'Erro desconhecido'}</p>
+                    <small class="text-muted">Verifique suas configurações e tente novamente.</small>
+                `;
+                showToast('Erro no teste de e-mail: ' + (data.error || 'Erro desconhecido'), 'error');
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        })
+        .catch(error => {
+            hideLoading(button);
+            console.error('Error:', error);
+            showToast('Erro ao testar configurações de e-mail', 'error');
+        });
+    }
+
+    // Show SMTP help modal
+    function showSMTPHelp() {
+        const modal = new bootstrap.Modal(document.getElementById('smtpHelpModal'));
+        modal.show();
+    }
+
+    // Reset form
+    function resetForm() {
+        if (confirm('Tem certeza que deseja resetar todas as configurações de e-mail?')) {
+            document.getElementById('smtpForm').reset();
+            
+            // Hide test result
+            document.getElementById('testResult').style.display = 'none';
+            
+            // Remove validation classes
+            document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
+            
+            showToast('Formulário resetado.', 'info');
+        }
+    }
+
+    // Cross-field validation for TLS/SSL
+    function setupSecurityValidation() {
+        const tlsField = document.getElementById('{{ form.use_tls.id_for_label }}');
+        const sslField = document.getElementById('{{ form.use_ssl.id_for_label }}');
+        
+        function validateSecurity() {
+            if (tlsField.checked && sslField.checked) {
+                showToast('Não é possível usar TLS e SSL simultaneamente.', 'warning');
+                return false;
+            }
+            return true;
+        }
+        
+        tlsField.addEventListener('change', function() {
+            if (this.checked) {
+                sslField.checked = false;
+            }
+            validateSecurity();
+        });
+        
+        sslField.addEventListener('change', function() {
+            if (this.checked) {
+                tlsField.checked = false;
+            }
+            validateSecurity();
+        });
+    }
+
+    // Port suggestions based on security
+    function setupPortSuggestions() {
+        const portField = document.getElementById('{{ form.port.id_for_label }}');
+        const tlsField = document.getElementById('{{ form.use_tls.id_for_label }}');
+        const sslField = document.getElementById('{{ form.use_ssl.id_for_label }}');
+        
+        tlsField.addEventListener('change', function() {
+            if (this.checked && portField.value === '465') {
+                portField.value = '587';
+                showToast('Porta alterada para 587 (TLS padrão)', 'info');
+            }
+        });
+        
+        sslField.addEventListener('change', function() {
+            if (this.checked && portField.value === '587') {
+                portField.value = '465';
+                showToast('Porta alterada para 465 (SSL padrão)', 'info');
+            }
+        });
+    }
+
+    // Form validation
+    function setupFormValidation() {
+        const form = document.getElementById('smtpForm');
+        
+        form.addEventListener('submit', function(event) {
+            // Check TLS/SSL conflict
+            const tlsChecked = document.getElementById('{{ form.use_tls.id_for_label }}').checked;
+            const sslChecked = document.getElementById('{{ form.use_ssl.id_for_label }}').checked;
+            
+            if (tlsChecked && sslChecked) {
+                event.preventDefault();
+                event.stopPropagation();
+                showToast('Não é possível usar TLS e SSL simultaneamente.', 'error');
+                return;
+            }
+            
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    showToast('Por favor, corrija os campos destacados.', 'warning');
+                }
+            } else {
+                const submitButton = form.querySelector('button[type="submit"]');
+                showLoading(submitButton);
+            }
+            
+            form.classList.add('was-validated');
+        });
+
+        // Real-time validation
+        form.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('blur', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        });
+    }
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', function() {
+        setupProviderButtons();
+        setupSecurityValidation();
+        setupPortSuggestions();
+        setupFormValidation();
+        
+        // Add fade-in animation
+        document.querySelectorAll('.content-card').forEach((card, index) => {
+            card.style.animationDelay = (index * 0.1) + 's';
+            card.classList.add('fade-in');
+        });
+    });
+</script>
+{% endblock %}

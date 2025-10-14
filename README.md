@@ -3,7 +3,46 @@
 [![Versão](https://img.shields.io/badge/versão-1.2.0-blue.svg)](https://github.com/your-repo/WebReceptivo/releases)
 [![Django](https://img.shields.io/badge/Django-5.2.7-green## 📚 Documentação
 
-Toda a documentação técnica está organizada na pasta [`docs/`](docs/README.md):
+Toda a documentação técnica e## 🔗 Acesso Rápido às Funcionalidades
+
+### 🏢 **Configurações da Empresa** 
+```
+URL: http://127.0.0.1:8000/configuracoes/
+Login: admin / admin123
+```
+- **Visão Geral**: `/configuracoes/` - Dashboard das configurações
+- **Dados da Empresa**: `/configuracoes/empresa/` - Formulário completo
+- **Sistema**: `/configuracoes/sistema/` - Data/hora/fuso horário  
+- **E-mail SMTP**: `/configuracoes/smtp/` - Configuração e teste
+
+### 📊 **Sistema de Auditoria**
+```
+URL: http://127.0.0.1:8000/audit/
+Login: admin (necessário)
+```
+- **Dashboard**: `/audit/` - Estatísticas e gráficos
+- **Lista de Logs**: `/audit/logs/` - Busca e filtros
+- **Exportação**: `/audit/export-csv/` - Relatório CSV
+
+### 👥 **Gerenciamento de Usuários**
+```
+URL: http://127.0.0.1:8000/usuarios/
+Login: admin ou gerente
+```
+- **Lista**: `/usuarios/` - Todos os usuários
+- **Grupos**: `/usuarios/groups/` - Cargos e funções
+- **Criar**: `/usuarios/create/` - Novo usuário
+
+## 🚀 Próximas Funcionalidades
+- [ ] API REST para integração com outros sistemas
+- [ ] Sistema de notificações internas em tempo real
+- [ ] Workflow de aprovação para criação de grupos
+- [ ] Integração com sistemas externos de RH
+- [ ] Dashboard executivo com KPIsganizada na pasta [`docs/`](docs/README.md):
+
+### 🏢 **Sistema de Configurações da Empresa (NOVO!)**
+- **[📋 Guia Completo](docs/COMPANY_SETTINGS_GUIDE.md)** - Manual do usuário e funcionalidades
+- **[⚙️ Setup Técnico](docs/SETUP_CONFIG.md)** - Instalação, configuração e troubleshooting
 
 ### 🔍 **Sistema de Auditoria**
 - **[Visão Geral](docs/RESUMO_EXECUTIVO_AUDITORIA.md)** - Dashboard, funcionalidades e acesso
@@ -39,6 +78,14 @@ Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**
 - [x] **👤 Histórico Individual**: Perfil completo de atividades por usuário
 - [x] **⚡ Performance Otimizada**: Comandos automáticos de manutenção e limpeza
 
+### ✅ **Implementadas na v1.4.0 (MAIS NOVO!)**
+- [x] **🏢 Sistema de Configurações da Empresa**: Módulo completo para gerenciar parâmetros empresariais
+- [x] **📧 SMTP Dinâmico**: Configuração de e-mail por cliente com aplicação automática ao Django
+- [x] **🌍 Fuso Horário Configurável**: Sistema de data/hora com preview em tempo real
+- [x] **🏠 Validação CEP Automática**: Preenchimento automático de endereço via API ViaCEP
+- [x] **🆔 Validação CNPJ/CPF**: Validação matemática completa com exceção para CNPJ da empresa
+- [x] **📱 Interface Responsiva**: Design moderno com templates rápidos para Gmail/Outlook/Yahoo
+
 ### 📋 **Roadmap Futuro**
 - [ ] API REST para integração com outros sistemas
 - [ ] Sistema de notificações internas em tempo real
@@ -49,6 +96,13 @@ Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**
 
 ## ✨ Principais Funcionalidades
 
+### 🏢 **Sistema de Configurações da Empresa (v1.4.0)**
+- **📋 Dados da Empresa**: CNPJ/CPF, endereço completo, logo, contatos
+- **⏰ Sistema Data/Hora**: Fuso horário configurável com preview em tempo real
+- **📧 SMTP Dinâmico**: Configuração por cliente, aplicação automática, teste em tempo real
+- **🌍 Integração APIs**: CEP automático (ViaCEP), validação CNPJ/CPF matemática
+- **🔐 Segurança Total**: Senhas criptografadas, acesso admin-only, auditoria completa
+
 ### 👥 Sistema de Usuários e Permissões
 - **5 Níveis Hierárquicos**: Admin Principal, Administradores, Gerentes, Operadores, Usuários Básicos
 - **Gerenciamento Completo**: CRUD de usuários com regras de permissão robustas
@@ -56,8 +110,15 @@ Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**
 - **Autenticação Segura**: Login/logout com validações server-side
 - **Perfis Completos**: Dados pessoais, endereço, avatar e preferências
 
-### 🎨 Interface Moderna
-- **Design Responsivo**: Bootstrap 5.3.2 com tema claro/escuro
+### 📊 **Sistema de Auditoria (v1.3.0)**
+- **🔍 Monitoramento Total**: Captura automática de todas as ações do sistema
+- **📈 Dashboard Interativo**: Estatísticas e gráficos em tempo real
+- **� Relatórios Avançados**: Filtros complexos, busca textual, exportação CSV
+- **👤 Histórico Individual**: Perfil completo de atividades por usuário
+- **⚡ Performance Otimizada**: Comandos de manutenção e limpeza automática
+
+### �🎨 Interface Moderna
+- **Design Responsivo**: Bootstrap 5.3.2 com tema claro/escuro por usuário
 - **Mobile-First**: Otimizado para todos os dispositivos
 - **Componentes Avançados**: Máscaras de input, upload de avatar, validação em tempo real
 - **UX Profissional**: Mensagens de feedback, animações suaves, navegação intuitiva

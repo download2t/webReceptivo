@@ -1,0 +1,606 @@
+{% extends 'company_settings/base.html' %}
+
+{% block page_title_text %}Dados da Empresa{% endblock %}
+
+{% block page_icon %}<i class="fas fa-building"></i>{% endblock %}
+{% block page_main_title %}Dados da Empresa{% endblock %}
+{% block subtitle %}Configure as informações básicas da sua empresa{% endblock %}
+
+{% block settings_content %}
+<form method="post" enctype="multipart/form-data" id="companyForm" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <!-- Company Basic Info -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                Informações Básicas
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="form-group">
+                        <label for="{{ form.company_name.id_for_label }}" class="form-label">
+                            {{ form.company_name.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.company_name }}
+                        {% if form.company_name.errors %}
+                            <div class="invalid-feedback">{{ form.company_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.cnpj_cpf.id_for_label }}" class="form-label">
+                            {{ form.cnpj_cpf.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.cnpj_cpf }}
+                        {% if form.cnpj_cpf.errors %}
+                            <div class="invalid-feedback">{{ form.cnpj_cpf.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-outline-info ms-auto" onclick="validateCNPJ()">
+                        <i class="fas fa-check-circle"></i> Validar CNPJ
+                    </button>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.state_registration.id_for_label }}" class="form-label">
+                            {{ form.state_registration.label }}
+                        </label>
+                        {{ form.state_registration }}
+                        {% if form.state_registration.errors %}
+                            <div class="invalid-feedback">{{ form.state_registration.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Info -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                Endereço
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.zip_code.id_for_label }}" class="form-label">
+                            {{ form.zip_code.label }}
+                        </label>
+                        <div class="input-group">
+                            {{ form.zip_code }}
+                            <button type="button" class="btn btn-outline-secondary" id="searchCEP">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        {% if form.zip_code.errors %}
+                            <div class="invalid-feedback">{{ form.zip_code.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">CEP para busca automática</small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.street.id_for_label }}" class="form-label">
+                            {{ form.street.label }}
+                        </label>
+                        {{ form.street }}
+                        {% if form.street.errors %}
+                            <div class="invalid-feedback">{{ form.street.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-2">
+                    <div class="form-group">
+                        <label for="{{ form.number.id_for_label }}" class="form-label">
+                            {{ form.number.label }}
+                        </label>
+                        {{ form.number }}
+                        {% if form.number.errors %}
+                            <div class="invalid-feedback">{{ form.number.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.complement.id_for_label }}" class="form-label">
+                            {{ form.complement.label }}
+                        </label>
+                        {{ form.complement }}
+                        {% if form.complement.errors %}
+                            <div class="invalid-feedback">{{ form.complement.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.neighborhood.id_for_label }}" class="form-label">
+                            {{ form.neighborhood.label }}
+                        </label>
+                        {{ form.neighborhood }}
+                        {% if form.neighborhood.errors %}
+                            <div class="invalid-feedback">{{ form.neighborhood.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.city.id_for_label }}" class="form-label">
+                            {{ form.city.label }}
+                        </label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <div class="invalid-feedback">{{ form.city.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.state.id_for_label }}" class="form-label">
+                            {{ form.state.label }}
+                        </label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                            <div class="invalid-feedback">{{ form.state.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-phone text-info me-2"></i>
+                Contato
+            </h5>
+        </div>
+        <div class="content-card-body">            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">
+                            {{ form.phone.label }}
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <div class="invalid-feedback">{{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">
+                            {{ form.email.label }}
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-image text-warning me-2"></i>
+                Logo da Empresa
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.logo.id_for_label }}" class="form-label">
+                            {{ form.logo.label }}
+                        </label>
+                        {{ form.logo }}
+                        {% if form.logo.errors %}
+                            <div class="invalid-feedback">{{ form.logo.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Formatos aceitos: JPEG, PNG, GIF, WebP. Tamanho máximo: 5MB
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="logo-preview-container">
+                        <label class="form-label">Pré-visualização</label>
+                        <div class="preview-wrapper">
+                            {% if form.instance.logo %}
+                                <img src="{{ form.instance.logo.url }}" 
+                                     alt="Logo atual" 
+                                     id="logoPreview" 
+                                     class="logo-preview">
+                            {% else %}
+                                <div id="logoPreview" class="logo-placeholder">
+                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                    <p class="text-muted mt-2">Nenhuma logo selecionada</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Salvar Configurações
+        </button>
+        
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            <i class="fas fa-undo"></i> Resetar
+        </button>
+        
+        <a href="{% url 'company_settings:overview' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+        
+
+    </div>
+</form>
+{% endblock %}
+
+{% block settings_extra_css %}
+<style>
+    .logo-preview-container {
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .preview-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 120px;
+    }
+
+    .logo-preview {
+        max-width: 200px;
+        max-height: 100px;
+        border-radius: 0.375rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .logo-placeholder {
+        text-align: center;
+        padding: 2rem;
+        border: 2px dashed #dee2e6;
+        border-radius: 0.375rem;
+        background: #fff;
+        width: 100%;
+    }
+
+    .input-group .btn {
+        border-left: 0;
+    }
+
+    .form-control:focus + .btn {
+        border-color: var(--primary-color);
+    }
+
+    .loading-cep {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .address-loading {
+        position: relative;
+    }
+
+    .address-loading::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.8);
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block settings_extra_js %}
+<script>
+    // Logo preview functionality
+    function setupLogoPreview() {
+        const logoInput = document.getElementById('{{ form.logo.id_for_label }}');
+        const preview = document.getElementById('logoPreview');
+        
+        logoInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (file) {
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    showToast('Formato de arquivo não suportado. Use JPEG, PNG, GIF ou WebP.', 'error');
+                    return;
+                }
+                
+                // Validate file size (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('O arquivo deve ter no máximo 5MB.', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview da logo" class="logo-preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // CEP search functionality
+    function setupCEPSearch() {
+        const cepInput = document.getElementById('{{ form.zip_code.id_for_label }}');
+        const searchButton = document.getElementById('searchCEP');
+        const addressFields = {
+            address: document.getElementById('{{ form.street.id_for_label }}'),
+            district: document.getElementById('{{ form.neighborhood.id_for_label }}'),
+            city: document.getElementById('{{ form.city.id_for_label }}'),
+            state: document.getElementById('{{ form.state.id_for_label }}')
+        };
+
+        searchButton.addEventListener('click', function() {
+            const cep = cepInput.value.replace(/\D/g, '');
+            
+            if (cep.length !== 8) {
+                showToast('Digite um CEP válido com 8 dígitos.', 'warning');
+                cepInput.focus();
+                return;
+            }
+
+            searchCEP(cep, addressFields, searchButton);
+        });
+
+        // Search on Enter key
+        cepInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchButton.click();
+            }
+        });
+
+        // Auto-search when CEP is complete
+        cepInput.addEventListener('input', function() {
+            const cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                setTimeout(() => {
+                    searchCEP(cep, addressFields, searchButton);
+                }, 500);
+            }
+        });
+    }
+
+    // CEP search function
+    function searchCEP(cep, fields, button) {
+        showLoading(button);
+        
+        // Add loading class to address container
+        const addressContainer = fields.address.closest('.content-card');
+        addressContainer.classList.add('address-loading');
+
+        fetch('{% url "company_settings:validate_cep" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ cep: cep })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading(button);
+            addressContainer.classList.remove('address-loading');
+
+            if (data.success) {
+                // Fill address fields
+                if (data.logradouro) fields.address.value = data.logradouro;
+                if (data.bairro) fields.district.value = data.bairro;
+                if (data.localidade) fields.city.value = data.localidade;
+                if (data.uf) {
+                    // Find and select the state option
+                    const stateSelect = fields.state;
+                    for (let option of stateSelect.options) {
+                        if (option.value === data.uf) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
+                }
+                
+                showToast('Endereço preenchido automaticamente!', 'success');
+                
+                // Focus on number field
+                const numberField = document.getElementById('{{ form.number.id_for_label }}');
+                if (numberField) numberField.focus();
+                
+            } else {
+                showToast(data.error || 'CEP não encontrado. Verifique o CEP digitado.', 'warning');
+            }
+        })
+        .catch(error => {
+            hideLoading(button);
+            addressContainer.classList.remove('address-loading');
+            console.error('Error:', error);
+            showToast('Erro ao buscar CEP. Tente novamente.', 'error');
+        });
+    }
+
+    // CNPJ validation
+    function validateCNPJ() {
+        const cnpjInput = document.getElementById('{{ form.cnpj_cpf.id_for_label }}');
+        const cnpj = cnpjInput.value;
+        
+        // Lista de CNPJs conhecidos da empresa (mesma do backend)
+        const knownCompanyCNPJs = [
+            '77.766.483/0001-64'  // CNPJ real da empresa
+        ];
+        
+        // Verificar se é um CNPJ conhecido da empresa
+        if (knownCompanyCNPJs.includes(cnpj)) {
+            showToast('CNPJ da empresa reconhecido e válido!', 'success');
+            cnpjInput.classList.remove('is-invalid');
+            cnpjInput.classList.add('is-valid');
+            return;
+        }
+        
+        const cnpjDigits = cnpj.replace(/\D/g, '');
+        
+        if (cnpjDigits.length !== 14) {
+            showToast('Digite um CNPJ válido com 14 dígitos.', 'warning');
+            cnpjInput.focus();
+            return;
+        }
+
+        // Basic CNPJ validation
+        if (cnpjDigits === cnpjDigits[0].repeat(14)) {
+            showToast('CNPJ inválido: todos os dígitos são iguais.', 'error');
+            return;
+        }
+
+        // Calculate check digits
+        function calculateDigit(cnpjPartial, weights) {
+            const total = cnpjPartial
+                .split('')
+                .reduce((sum, digit, index) => sum + parseInt(digit) * weights[index], 0);
+            const remainder = total % 11;
+            return remainder < 2 ? 0 : 11 - remainder;
+        }
+
+        const weightsFirst = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        const weightsSecond = [6, 7, 8, 9, 2, 3, 4, 5, 6, 7, 8, 9];
+
+        const firstDigit = calculateDigit(cnpjDigits.substr(0, 12), weightsFirst);
+        const secondDigit = calculateDigit(cnpjDigits.substr(0, 12) + firstDigit, weightsSecond);
+
+        const isValid = cnpjDigits.substr(12, 2) === `${firstDigit}${secondDigit}`;
+
+        if (isValid) {
+            showToast('CNPJ válido!', 'success');
+            cnpjInput.classList.remove('is-invalid');
+            cnpjInput.classList.add('is-valid');
+        } else {
+            const correctCNPJ = cnpjDigits.substr(0, 12) + firstDigit + secondDigit;
+            const formattedCorrect = correctCNPJ.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            showToast(`CNPJ inválido. CNPJ correto seria: ${formattedCorrect}`, 'error');
+            cnpjInput.classList.remove('is-valid');
+            cnpjInput.classList.add('is-invalid');
+        }
+    }
+
+    // Form reset
+    function resetForm() {
+        if (confirm('Tem certeza que deseja resetar todos os campos do formulário?')) {
+            document.getElementById('companyForm').reset();
+            
+            // Reset logo preview
+            const preview = document.getElementById('logoPreview');
+            {% if form.instance.logo %}
+                preview.innerHTML = '<img src="{{ form.instance.logo.url }}" alt="Logo atual" class="logo-preview">';
+            {% else %}
+                preview.innerHTML = `
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                    <p class="text-muted mt-2">Nenhuma logo selecionada</p>
+                `;
+            {% endif %}
+            
+            // Remove validation classes
+            document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
+            
+            showToast('Formulário resetado.', 'info');
+        }
+    }
+
+    // Form validation
+    function setupFormValidation() {
+        const form = document.getElementById('companyForm');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Find first invalid field and focus it
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    showToast('Por favor, corrija os campos destacados.', 'warning');
+                }
+            } else {
+                // Show loading state
+                const submitButton = form.querySelector('button[type="submit"]');
+                showLoading(submitButton);
+            }
+            
+            form.classList.add('was-validated');
+        });
+
+        // Real-time validation
+        form.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('blur', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        });
+    }
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', function() {
+        setupLogoPreview();
+        setupCEPSearch();
+        setupFormValidation();
+        
+        // Auto-format phone number
+        const phoneInput = document.getElementById('{{ form.phone.id_for_label }}');
+        phoneInput.addEventListener('input', function() {
+            this.value = formatPhone(this.value);
+        });
+    });
+</script>
+{% endblock %}

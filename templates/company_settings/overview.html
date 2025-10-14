@@ -1,0 +1,442 @@
+{% extends 'company_settings/base.html' %}
+
+{% block page_title_text %}Visão Geral das Configurações{% endblock %}
+
+{% block page_icon %}<i class="fas fa-home"></i>{% endblock %}
+{% block page_main_title %}Visão Geral{% endblock %}
+{% block subtitle %}Resumo das configurações da empresa{% endblock %}
+
+{% block settings_content %}
+<div class="row">
+    <!-- Company Info Card -->
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="content-card h-100">
+            <div class="content-card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        Dados da Empresa
+                    </h5>
+                    <a href="{% url 'company_settings:company' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+                
+                {% if company_settings %}
+                    <div class="company-info">
+                        <div class="mb-3">
+                            {% if company_settings.logo %}
+                                <img src="{{ company_settings.logo.url }}" 
+                                     alt="Logo" class="logo-preview mb-2" style="max-height: 60px;">
+                            {% endif %}
+                            <h6 class="fw-bold">{{ company_settings.name|default:"Nome não configurado" }}</h6>
+                            {% if company_settings.trading_name and company_settings.trading_name != company_settings.name %}
+                                <small class="text-muted d-block">{{ company_settings.trading_name }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>CNPJ:</strong> 
+                            <span class="text-muted">{{ company_settings.cnpj|default:"Não configurado" }}</span>
+                        </div>
+                        
+                        {% if company_settings.phone %}
+                            <div class="info-item mb-2">
+                                <strong>Telefone:</strong> 
+                                <span class="text-muted">{{ company_settings.phone }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if company_settings.email %}
+                            <div class="info-item mb-2">
+                                <strong>E-mail:</strong> 
+                                <span class="text-muted">{{ company_settings.email }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if company_settings.city and company_settings.state %}
+                            <div class="info-item">
+                                <strong>Localização:</strong> 
+                                <span class="text-muted">{{ company_settings.city }}/{{ company_settings.state }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Dados da empresa não configurados</p>
+                        <a href="{% url 'company_settings:company' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Configurar Agora
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Settings Card -->
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="content-card h-100">
+            <div class="content-card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">
+                        <i class="fas fa-desktop text-success me-2"></i>
+                        Sistema
+                    </h5>
+                    <a href="{% url 'company_settings:system' %}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+                
+                {% if system_settings %}
+                    <div class="system-info">
+                        <div class="info-item mb-2">
+                            <strong>Nome do Sistema:</strong> 
+                            <span class="text-muted">{{ system_settings.system_name|default:"WebReceptivo" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Fuso Horário:</strong> 
+                            <span class="text-muted">{{ system_settings.timezone|default:"America/Sao_Paulo" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Formato de Data:</strong> 
+                            <span class="text-muted">{{ system_settings.get_date_format_display|default:"dd/mm/yyyy" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Formato de Hora:</strong> 
+                            <span class="text-muted">{{ system_settings.get_time_format_display|default:"24h" }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <strong>Idioma:</strong> 
+                            <span class="text-muted">{{ system_settings.get_language_display|default:"Português (BR)" }}</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Configurações do sistema não definidas</p>
+                        <a href="{% url 'company_settings:system' %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus"></i> Configurar Agora
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- SMTP Settings Card -->
+    <div class="col-lg-12 col-xl-4 mb-4">
+        <div class="content-card h-100">
+            <div class="content-card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title">
+                        <i class="fas fa-envelope text-info me-2"></i>
+                        E-mail (SMTP)
+                    </h5>
+                    <a href="{% url 'company_settings:smtp' %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+                
+                {% if smtp_settings %}
+                    <div class="smtp-info">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-{% if smtp_settings.is_configured %}success{% else %}warning{% endif %}">
+                                {% if smtp_settings.is_configured %}
+                                    <i class="fas fa-check-circle"></i> Configurado
+                                {% else %}
+                                    <i class="fas fa-exclamation-triangle"></i> Incompleto
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Servidor:</strong> 
+                            <span class="text-muted">{{ smtp_settings.host|default:"Não configurado" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Porta:</strong> 
+                            <span class="text-muted">{{ smtp_settings.port|default:"Não configurado" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Usuário:</strong> 
+                            <span class="text-muted">{{ smtp_settings.username|default:"Não configurado" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Segurança:</strong> 
+                            <span class="text-muted">
+                                {% if smtp_settings.use_tls %}TLS
+                                {% elif smtp_settings.use_ssl %}SSL
+                                {% else %}Nenhuma
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        {% if smtp_settings.is_configured %}
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="testSMTP()">
+                                    <i class="fas fa-paper-plane"></i> Testar Envio
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <p>Configurações de e-mail não definidas</p>
+                        <a href="{% url 'company_settings:smtp' %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-plus"></i> Configurar Agora
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Status Row -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="content-card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-chart-line text-warning me-2"></i>
+                    Status do Sistema
+                </h5>
+                
+                <div class="row">
+                    <!-- Current Time -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="status-item text-center p-3 bg-light rounded">
+                            <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                            <h6>Data e Hora Atual</h6>
+                            <p class="mb-0" id="currentDateTime">Carregando...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Configuration Status -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="status-item text-center p-3 bg-light rounded">
+                            <i class="fas fa-cog fa-2x {% if config_complete %}text-success{% else %}text-warning{% endif %} mb-2"></i>
+                            <h6>Configuração</h6>
+                            <p class="mb-0">
+                                <span class="badge bg-{% if config_complete %}success{% else %}warning{% endif %}">
+                                    {% if config_complete %}Completa{% else %}Incompleta{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Status -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="status-item text-center p-3 bg-light rounded">
+                            <i class="fas fa-envelope fa-2x {% if smtp_settings.is_configured %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                            <h6>E-mail</h6>
+                            <p class="mb-0">
+                                <span class="badge bg-{% if smtp_settings.is_configured %}success{% else %}danger{% endif %}">
+                                    {% if smtp_settings.is_configured %}Ativo{% else %}Inativo{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Last Update -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="status-item text-center p-3 bg-light rounded">
+                            <i class="fas fa-sync-alt fa-2x text-info mb-2"></i>
+                            <h6>Última Atualização</h6>
+                            <p class="mb-0 small">{{ last_updated|default:"Nunca" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="content-card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-bolt text-primary me-2"></i>
+                    Ações Rápidas
+                </h5>
+                
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'company_settings:company' %}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="fas fa-building fa-2x d-block mb-2"></i>
+                            <span>Dados da Empresa</span>
+                        </a>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'company_settings:system' %}" class="btn btn-outline-success w-100 py-3">
+                            <i class="fas fa-desktop fa-2x d-block mb-2"></i>
+                            <span>Configurações do Sistema</span>
+                        </a>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'company_settings:smtp' %}" class="btn btn-outline-info w-100 py-3">
+                            <i class="fas fa-envelope fa-2x d-block mb-2"></i>
+                            <span>Configurar E-mail</span>
+                        </a>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button type="button" class="btn btn-outline-warning w-100 py-3" onclick="testAllSettings()">
+                            <i class="fas fa-check-circle fa-2x d-block mb-2"></i>
+                            <span>Testar Configurações</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block settings_extra_js %}
+<script>
+    // Update current date and time
+    function updateDateTime() {
+        fetch('{% url "company_settings:current_datetime" %}')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('currentDateTime').textContent = data.datetime || 'Erro ao carregar';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('currentDateTime').textContent = 'Erro ao carregar';
+            });
+    }
+
+    // Test SMTP configuration
+    function testSMTP() {
+        const email = prompt('Digite um e-mail para teste:');
+        if (!email) return;
+
+        const button = event.target;
+        showLoading(button);
+
+        fetch('{% url "company_settings:test_smtp" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                test_email: email
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading(button);
+            if (data.success) {
+                showToast('E-mail de teste enviado com sucesso!', 'success');
+            } else {
+                showToast('Erro ao enviar e-mail de teste: ' + (data.error || 'Erro desconhecido'), 'error');
+            }
+        })
+        .catch(error => {
+            hideLoading(button);
+            console.error('Error:', error);
+            showToast('Erro ao testar configurações de e-mail', 'error');
+        });
+    }
+
+    // Test all settings
+    function testAllSettings() {
+        const button = event.target;
+        showLoading(button);
+
+        Promise.all([
+            // Test current datetime
+            fetch('{% url "company_settings:current_datetime" %}')
+                .then(response => response.json()),
+            
+            // Add other tests as needed
+        ])
+        .then(results => {
+            hideLoading(button);
+            
+            let allPassed = true;
+            let messages = [];
+
+            // Check datetime test
+            if (results[0] && results[0].datetime) {
+                messages.push('✓ Data e hora do sistema: OK');
+            } else {
+                messages.push('✗ Data e hora do sistema: Erro');
+                allPassed = false;
+            }
+
+            // Check configuration completeness
+            const configComplete = {{ config_complete|yesno:"true,false" }};
+            if (configComplete) {
+                messages.push('✓ Configurações básicas: OK');
+            } else {
+                messages.push('✗ Configurações básicas: Incompletas');
+                allPassed = false;
+            }
+
+            // Check SMTP configuration
+            const smtpConfigured = {{ smtp_settings.is_configured|yesno:"true,false" }};
+            if (smtpConfigured) {
+                messages.push('✓ Configuração de e-mail: OK');
+            } else {
+                messages.push('✗ Configuração de e-mail: Não configurado');
+                allPassed = false;
+            }
+
+            const resultMessage = messages.join('\n');
+            
+            if (allPassed) {
+                alert('Teste de Configurações\n\n' + resultMessage + '\n\n✓ Todos os testes passaram!');
+                showToast('Todas as configurações estão funcionando corretamente!', 'success');
+            } else {
+                alert('Teste de Configurações\n\n' + resultMessage + '\n\n⚠ Algumas configurações precisam de atenção.');
+                showToast('Algumas configurações precisam ser revisadas', 'warning');
+            }
+        })
+        .catch(error => {
+            hideLoading(button);
+            console.error('Error:', error);
+            showToast('Erro ao testar configurações', 'error');
+        });
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update datetime immediately and then every minute
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+        
+        // Add CSRF token for AJAX requests
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            const token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = 'csrfmiddlewaretoken';
+            token.value = '{{ csrf_token }}';
+            document.body.appendChild(token);
+        }
+        
+        // Add fade-in animation to cards
+        document.querySelectorAll('.content-card').forEach((card, index) => {
+            card.style.animationDelay = (index * 0.1) + 's';
+            card.classList.add('fade-in');
+        });
+    });
+</script>
+{% endblock %}

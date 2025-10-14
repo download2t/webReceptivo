@@ -4,6 +4,10 @@ Este diretório contém toda a documentação técnica e guias do sistema WebRec
 
 ## 📋 Índice
 
+### 🏢 **Sistema de Configurações da Empresa (NOVO!)**
+- **[📋 Guia Completo](COMPANY_SETTINGS_GUIDE.md)** - Manual do usuário completo
+- **[⚙️ Setup Técnico](SETUP_CONFIG.md)** - Instalação e configuração técnica
+
 ### 🔍 **Sistema de Auditoria**
 - **[Visão Geral](RESUMO_EXECUTIVO_AUDITORIA.md)** - O que foi implementado e como usar
 - **[Documentação Técnica](SISTEMA_AUDITORIA_COMPLETO.md)** - Guia técnico detalhado

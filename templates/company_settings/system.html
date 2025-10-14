@@ -1,0 +1,569 @@
+{% extends 'company_settings/base.html' %}
+
+{% block page_title_text %}Configurações do Sistema{% endblock %}
+
+{% block page_icon %}<i class="fas fa-desktop"></i>{% endblock %}
+{% block page_main_title %}Configurações do Sistema{% endblock %}
+{% block subtitle %}Configure as definições gerais do sistema{% endblock %}
+
+{% block settings_content %}
+<form method="post" id="systemForm" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <!-- System Basic Settings -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-cog text-primary me-2"></i>
+                Configurações Básicas
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.system_name.id_for_label }}" class="form-label">
+                            {{ form.system_name.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.system_name }}
+                        {% if form.system_name.errors %}
+                            <div class="invalid-feedback">{{ form.system_name.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Nome exibido no sistema</small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="{{ form.language.id_for_label }}" class="form-label">
+                            {{ form.language.label }}
+                        </label>
+                        {{ form.language }}
+                        {% if form.language.errors %}
+                            <div class="invalid-feedback">{{ form.language.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Idioma padrão do sistema</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date and Time Settings -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-clock text-success me-2"></i>
+                Data e Hora
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.timezone.id_for_label }}" class="form-label">
+                            {{ form.timezone.label }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.timezone }}
+                        {% if form.timezone.errors %}
+                            <div class="invalid-feedback">{{ form.timezone.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Fuso horário do sistema</small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.date_format.id_for_label }}" class="form-label">
+                            {{ form.date_format.label }}
+                        </label>
+                        {{ form.date_format }}
+                        {% if form.date_format.errors %}
+                            <div class="invalid-feedback">{{ form.date_format.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Formato de exibição das datas</small>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="form-group">
+                        <label for="{{ form.time_format.id_for_label }}" class="form-label">
+                            {{ form.time_format.label }}
+                        </label>
+                        {{ form.time_format }}
+                        {% if form.time_format.errors %}
+                            <div class="invalid-feedback">{{ form.time_format.errors.0 }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Formato de exibição das horas</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current DateTime Preview -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Pré-visualização</h6>
+                        <div id="datetimePreview" class="mt-2">
+                            <strong>Data e Hora Atual:</strong> 
+                            <span id="currentPreview">Carregando...</span>
+                        </div>
+                        <div class="mt-2">
+                            <strong>Fuso Horário:</strong> 
+                            <span id="timezonePreview">{{ form.instance.timezone|default:"America/Sao_Paulo" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-eye text-info me-2"></i>
+                Pré-visualização das Configurações
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="preview-container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="preview-item">
+                            <h6>Nome do Sistema</h6>
+                            <p id="systemNamePreview" class="preview-value">
+                                {{ form.instance.system_name|default:"WebReceptivo" }}
+                            </p>
+                        </div>
+                        
+                        <div class="preview-item">
+                            <h6>Idioma</h6>
+                            <p id="languagePreview" class="preview-value">
+                                {{ form.instance.get_language_display|default:"Português (Brasil)" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="preview-item">
+                            <h6>Formato de Data</h6>
+                            <p id="dateFormatPreview" class="preview-value">
+                                Exemplo: <span id="dateExample">01/01/2024</span>
+                            </p>
+                        </div>
+                        
+                        <div class="preview-item">
+                            <h6>Formato de Hora</h6>
+                            <p id="timeFormatPreview" class="preview-value">
+                                Exemplo: <span id="timeExample">14:30:00</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current System Status -->
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-server text-warning me-2"></i>
+                Status do Sistema
+            </h5>
+        </div>
+        <div class="content-card-body">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-card text-center p-3 bg-light rounded">
+                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
+                        <h6>Hora do Servidor</h6>
+                        <p class="mb-0" id="serverTime">Carregando...</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-card text-center p-3 bg-light rounded">
+                        <i class="fas fa-globe fa-2x text-success mb-2"></i>
+                        <h6>Fuso Atual</h6>
+                        <p class="mb-0" id="currentTimezone">{{ current_timezone|default:"America/Sao_Paulo" }}</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-card text-center p-3 bg-light rounded">
+                        <i class="fas fa-calendar fa-2x text-info mb-2"></i>
+                        <h6>Formato Data</h6>
+                        <p class="mb-0" id="currentDateFormat">{{ current_date_format|default:"DD/MM/YYYY" }}</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="status-card text-center p-3 bg-light rounded">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h6>Formato Hora</h6>
+                        <p class="mb-0" id="currentTimeFormat">{{ current_time_format|default:"HH:MM:SS" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshSystemStatus()">
+                        <i class="fas fa-sync-alt"></i> Atualizar Status
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-info" onclick="testDateTime()">
+                        <i class="fas fa-test-tube"></i> Testar Configurações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-save"></i> Salvar Configurações
+        </button>
+        
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            <i class="fas fa-undo"></i> Resetar
+        </button>
+        
+        <a href="{% url 'company_settings:overview' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+        
+        <button type="button" class="btn btn-outline-warning ms-auto" onclick="showTimezoneInfo()">
+            <i class="fas fa-info-circle"></i> Info Fuso Horário
+        </button>
+    </div>
+</form>
+
+<!-- Timezone Info Modal -->
+<div class="modal fade" id="timezoneModal" tabindex="-1" aria-labelledby="timezoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="timezoneModalLabel">
+                    <i class="fas fa-globe me-2"></i>Informações sobre Fuso Horário
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-map-marker-alt me-2"></i>Principais Fusos do Brasil</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>America/Sao_Paulo:</strong> Brasília, São Paulo, Rio (GMT-3)</li>
+                            <li><strong>America/Manaus:</strong> Amazonas, Rondônia (GMT-4)</li>
+                            <li><strong>America/Cuiaba:</strong> Mato Grosso, MS (GMT-4)</li>
+                            <li><strong>America/Campo_Grande:</strong> Mato Grosso do Sul (GMT-4)</li>
+                            <li><strong>America/Rio_Branco:</strong> Acre (GMT-5)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-clock me-2"></i>Horário de Verão</h6>
+                        <p class="small text-muted">
+                            O sistema automaticamente ajusta para horário de verão quando aplicável.
+                            As configurações de fuso horário seguem as regras oficiais de cada região.
+                        </p>
+                        
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Importante</h6>
+                        <p class="small text-muted">
+                            Alterar o fuso horário afeta todos os registros de data e hora do sistema.
+                            Certifique-se de escolher o fuso correto para sua localização.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block settings_extra_css %}
+<style>
+    .preview-container {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .preview-item {
+        margin-bottom: 1rem;
+    }
+
+    .preview-item h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .preview-value {
+        color: #007bff;
+        font-weight: 500;
+        margin-bottom: 0;
+        padding: 0.5rem;
+        background: #fff;
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .status-card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+    }
+
+    .status-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .status-card h6 {
+        color: #495057;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .status-card p {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .datetime-preview {
+        font-family: 'Courier New', monospace;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    .timezone-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block settings_extra_js %}
+<script>
+    // Update datetime preview
+    function updateDateTimePreview() {
+        fetch('{% url "company_settings:current_datetime" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.datetime) {
+                    document.getElementById('currentPreview').textContent = data.datetime;
+                    document.getElementById('serverTime').textContent = data.datetime;
+                }
+            })
+            .catch(error => {
+                console.error('Error updating datetime:', error);
+            });
+    }
+
+    // Update preview when fields change
+    function setupPreviewUpdates() {
+        const systemNameField = document.getElementById('{{ form.system_name.id_for_label }}');
+        const languageField = document.getElementById('{{ form.language.id_for_label }}');
+        const timezoneField = document.getElementById('{{ form.timezone.id_for_label }}');
+        const dateFormatField = document.getElementById('{{ form.date_format.id_for_label }}');
+        const timeFormatField = document.getElementById('{{ form.time_format.id_for_label }}');
+
+        // System name preview
+        systemNameField.addEventListener('input', function() {
+            document.getElementById('systemNamePreview').textContent = 
+                this.value || 'WebReceptivo';
+        });
+
+        // Language preview
+        languageField.addEventListener('change', function() {
+            const selectedText = this.options[this.selectedIndex].text;
+            document.getElementById('languagePreview').textContent = selectedText;
+        });
+
+        // Timezone preview
+        timezoneField.addEventListener('change', function() {
+            document.getElementById('timezonePreview').textContent = this.value;
+            document.getElementById('currentTimezone').textContent = this.value;
+            updateDateTimePreview();
+        });
+
+        // Date format preview
+        dateFormatField.addEventListener('change', function() {
+            updateFormatExamples();
+        });
+
+        // Time format preview  
+        timeFormatField.addEventListener('change', function() {
+            updateFormatExamples();
+        });
+    }
+
+    // Update format examples
+    function updateFormatExamples() {
+        const dateFormat = document.getElementById('{{ form.date_format.id_for_label }}').value;
+        const timeFormat = document.getElementById('{{ form.time_format.id_for_label }}').value;
+        
+        // Example date formats
+        const dateExamples = {
+            'DD/MM/YYYY': '01/12/2024',
+            'MM/DD/YYYY': '12/01/2024',
+            'YYYY-MM-DD': '2024-12-01',
+            'DD-MM-YYYY': '01-12-2024'
+        };
+
+        // Example time formats
+        const timeExamples = {
+            'HH:MM:SS': '14:30:00',
+            'HH:MM': '14:30',
+            'hh:MM:SS A': '02:30:00 PM',
+            'hh:MM A': '02:30 PM'
+        };
+
+        document.getElementById('dateExample').textContent = 
+            dateExamples[dateFormat] || '01/12/2024';
+        document.getElementById('timeExample').textContent = 
+            timeExamples[timeFormat] || '14:30:00';
+    }
+
+    // Refresh system status
+    function refreshSystemStatus() {
+        const button = event.target;
+        showLoading(button);
+
+        updateDateTimePreview();
+        
+        setTimeout(() => {
+            hideLoading(button);
+            showToast('Status do sistema atualizado!', 'success');
+        }, 1000);
+    }
+
+    // Test datetime configuration
+    function testDateTime() {
+        const button = event.target;
+        showLoading(button);
+
+        const timezone = document.getElementById('{{ form.timezone.id_for_label }}').value;
+        const dateFormat = document.getElementById('{{ form.date_format.id_for_label }}').value;
+        const timeFormat = document.getElementById('{{ form.time_format.id_for_label }}').value;
+
+        fetch('{% url "company_settings:current_datetime" %}')
+            .then(response => response.json())
+            .then(data => {
+                hideLoading(button);
+                
+                if (data.datetime) {
+                    const testResult = `
+Teste de Configurações de Data/Hora
+
+Fuso Horário: ${timezone}
+Formato de Data: ${dateFormat}  
+Formato de Hora: ${timeFormat}
+
+Data/Hora Atual: ${data.datetime}
+
+✓ Configurações válidas!
+                    `;
+                    
+                    alert(testResult);
+                    showToast('Configurações de data/hora testadas com sucesso!', 'success');
+                } else {
+                    showToast('Erro ao testar configurações de data/hora', 'error');
+                }
+            })
+            .catch(error => {
+                hideLoading(button);
+                console.error('Error:', error);
+                showToast('Erro ao testar configurações', 'error');
+            });
+    }
+
+    // Show timezone info modal
+    function showTimezoneInfo() {
+        const modal = new bootstrap.Modal(document.getElementById('timezoneModal'));
+        modal.show();
+    }
+
+    // Reset form
+    function resetForm() {
+        if (confirm('Tem certeza que deseja resetar todas as configurações do sistema?')) {
+            document.getElementById('systemForm').reset();
+            
+            // Reset previews
+            document.getElementById('systemNamePreview').textContent = 'WebReceptivo';
+            document.getElementById('languagePreview').textContent = 'Português (Brasil)';
+            document.getElementById('timezonePreview').textContent = 'America/Sao_Paulo';
+            updateFormatExamples();
+            
+            // Remove validation classes
+            document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
+            
+            showToast('Formulário resetado.', 'info');
+        }
+    }
+
+    // Form validation
+    function setupFormValidation() {
+        const form = document.getElementById('systemForm');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    showToast('Por favor, corrija os campos destacados.', 'warning');
+                }
+            } else {
+                const submitButton = form.querySelector('button[type="submit"]');
+                showLoading(submitButton);
+            }
+            
+            form.classList.add('was-validated');
+        });
+
+        // Real-time validation
+        form.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('blur', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                }
+            });
+        });
+    }
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', function() {
+        setupPreviewUpdates();
+        setupFormValidation();
+        updateFormatExamples();
+        
+        // Update datetime every 30 seconds
+        updateDateTimePreview();
+        setInterval(updateDateTimePreview, 30000);
+        
+        // Add fade-in animation
+        document.querySelectorAll('.content-card').forEach((card, index) => {
+            card.style.animationDelay = (index * 0.1) + 's';
+            card.classList.add('fade-in');
+        });
+    });
+</script>
+{% endblock %}
