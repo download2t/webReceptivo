@@ -1,7 +1,25 @@
 # � WebReceptivo
 
 [![Versão](https://img.shields.io/badge/versão-1.2.0-blue.svg)](https://github.com/your-repo/WebReceptivo/releases)
-[![Django](https://img.shields.io/badge/Django-5.2.7-green.svg)](https://djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-5.2.7-green## 📚 Documentação
+
+Toda a documentação técnica está organizada na pasta [`docs/`](docs/README.md):
+
+### 🔍 **Sistema de Auditoria**
+- **[Visão Geral](docs/RESUMO_EXECUTIVO_AUDITORIA.md)** - Dashboard, funcionalidades e acesso
+- **[Custom Actions](docs/GUIA_CUSTOM_ACTIONS_AUDITORIA.md)** - Estender para novas funcionalidades
+
+### 👥 **Usuários e Administração**
+- **[Sistema de Permissões](docs/PERMISSIONS_DOCUMENTATION.md)** - 5 níveis hierárquicos
+- **[Guia de Grupos](docs/GUIA_GRUPOS.md)** - Gerenciar cargos e funções
+- **[Deploy Docker](docs/DOCKER_COMANDOS.md)** - Comandos seguros para produção
+
+## 🚀 Próximas Funcionalidades
+- [ ] API REST para integração com outros sistemas
+- [ ] Sistema de notificações internas em tempo real
+- [ ] Workflow de aprovação para criação de grupos
+- [ ] Alertas automáticos para ações suspeitas
+- [ ] Machine Learning para detecção de anomalias//djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org/)
 
 Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões hierárquicas.🏢 WebReceptivo
@@ -77,16 +95,12 @@ Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**
 - **Avatar Consistente**: Exibição de avatar idêntica em ambos os contextos
 - **Zero Duplicação**: Eliminação completa de código duplicado
 
-### 📊 **Sistema de Auditoria (NOVO na v1.3.0)**
-- **🔍 Monitoramento Total**: Captura automática de todas as ações via signals Django
-- **📈 Dashboard Interativo**: Estatísticas em tempo real com gráficos Chart.js
-- **🎯 Rastreamento Detalhado**: IP, User-Agent, sessão, alterações antes/depois
-- **👤 Perfis Individuais**: Histórico completo de ações por usuário
-- **🔎 Busca Avançada**: Filtros por ação, usuário, data, status com exportação CSV
-- **⚡ Performance Otimizada**: Índices de banco, resumos pré-calculados, limpeza automática
-- **🛡️ Segurança Total**: Logs somente-leitura, acesso controlado apenas para staff
-- **🔧 Extensível**: Decoradores e signals para auditoria de novos módulos
-- **📱 Interface Responsiva**: CSS modular com suporte completo a temas
+### 📊 **Sistema de Auditoria (v1.3.0)**
+- **🔍 Monitoramento Total**: Captura automática de usuários, grupos, login/logout
+- **📈 Dashboard Interativo**: `/audit/` - Estatísticas e gráficos em tempo real  
+- **🎯 Custom Actions**: Sistema extensível para auditar qualquer ação
+- **🔎 Busca Avançada**: Filtros completos com exportação CSV
+- **📚 Documentação Completa**: Guias técnicos em [`docs/`](docs/README.md)
 
 ## �🏗️ Arquitetura
 
