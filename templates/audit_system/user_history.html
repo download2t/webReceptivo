@@ -1,0 +1,228 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - WebReceptivo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/audit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="user-audit-history">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-user-clock"></i> Histórico de {{ target_user.get_full_name|default:target_user.username }}</h1>
+            <p class="text-muted">Todas as ações realizadas por e sobre este usuário</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'audit_system:logs_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar aos Logs
+            </a>
+        </div>
+    </div>
+
+    <!-- Informações do usuário -->
+    <div class="card user-info-card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-2 text-center">
+                    <div class="user-avatar">
+                        {% if target_user.userprofile.avatar %}
+                        <img src="{{ target_user.userprofile.avatar.url }}" alt="{{ target_user.username }}" class="rounded-circle">
+                        {% else %}
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user fa-3x"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <div class="user-details">
+                        <h4>{{ target_user.get_full_name|default:target_user.username }}</h4>
+                        <p class="text-muted">@{{ target_user.username }} • {{ target_user.email }}</p>
+                        <div class="user-stats">
+                            <span class="stat-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                Membro desde {{ target_user.date_joined|date:"d/m/Y" }}
+                            </span>
+                            <span class="stat-item">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Último login: {{ target_user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}
+                            </span>
+                            <span class="stat-item">
+                                {% if target_user.is_active %}
+                                <i class="fas fa-check-circle text-success"></i> Ativo
+                                {% else %}
+                                <i class="fas fa-times-circle text-danger"></i> Inativo
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Ações realizadas pelo usuário -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-edit"></i> Ações Realizadas pelo Usuário</h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                    <div class="logs-timeline">
+                        {% for log in page_obj %}
+                        <div class="timeline-item {% if not log.success %}timeline-error{% endif %}">
+                            <div class="timeline-marker">
+                                {% if log.success %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-danger"></i>
+                                {% endif %}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <span class="action-name">{{ log.get_action_display }}</span>
+                                    <span class="timestamp">{{ log.timestamp|timesince }} atrás</span>
+                                </div>
+                                <div class="timeline-body">
+                                    <p class="object-info">{{ log.object_repr }}</p>
+                                    {% if log.changes %}
+                                    <div class="changes-summary">
+                                        <small class="text-muted">
+                                            <i class="fas fa-edit"></i> {{ log.get_changes_display|truncatechars:100 }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                    {% if log.ip_address %}
+                                    <div class="ip-info">
+                                        <small class="text-muted">
+                                            <i class="fas fa-map-marker-alt"></i> {{ log.ip_address }}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="timeline-actions">
+                                    <a href="{% url 'audit_system:log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Paginação -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Paginação do histórico">
+                        <ul class="pagination justify-content-center mt-4">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="empty-state text-center">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Este usuário ainda não realizou nenhuma ação registrada.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações realizadas no usuário -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-user-cog"></i> Alterações no Usuário</h5>
+                </div>
+                <div class="card-body">
+                    {% if about_user_logs %}
+                    <div class="user-changes-list">
+                        {% for log in about_user_logs %}
+                        <div class="change-item {% if not log.success %}change-error{% endif %}">
+                            <div class="change-header">
+                                <span class="change-action">{{ log.get_action_display }}</span>
+                                {% if log.success %}
+                                <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times-circle text-danger"></i>
+                                {% endif %}
+                            </div>
+                            <div class="change-details">
+                                {% if log.user %}
+                                <small class="text-muted">por {{ log.user.username }}</small>
+                                {% else %}
+                                <small class="text-muted">pelo sistema</small>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">{{ log.timestamp|timesince }} atrás</small>
+                            </div>
+                            <div class="change-actions">
+                                <a href="{% url 'audit_system:log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state text-center">
+                        <i class="fas fa-shield-alt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Nenhuma alteração registrada neste usuário.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Estatísticas rápidas -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Estatísticas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="stats-list">
+                        <div class="stat-item">
+                            <span class="stat-label">Total de Ações:</span>
+                            <span class="stat-value">{{ page_obj.paginator.count|default:0 }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Alterações Recebidas:</span>
+                            <span class="stat-value">{{ about_user_logs|length }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Último Acesso:</span>
+                            <span class="stat-value">{{ target_user.last_login|date:"d/m/Y"|default:"Nunca" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

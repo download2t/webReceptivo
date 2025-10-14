@@ -1,0 +1,237 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - WebReceptivo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/audit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="audit-log-detail">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-search"></i> Detalhes do Log #{{ log.pk }}</h1>
+            <p class="text-muted">Informações completas sobre esta ação</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'audit_system:logs_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar à Lista
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações principais -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-info-circle"></i> Informações da Ação</h5>
+                </div>
+                <div class="card-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Data/Hora:</label>
+                            <span class="value">{{ log.timestamp|date:"d/m/Y H:i:s" }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label>Ação:</label>
+                            <span class="value">
+                                <span class="action-badge action-{{ log.action|lower }}">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label>Status:</label>
+                            <span class="value">
+                                {% if log.success %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check"></i> Sucesso
+                                </span>
+                                {% else %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-times"></i> Erro
+                                </span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        {% if log.error_message %}
+                        <div class="info-item full-width">
+                            <label>Mensagem de Erro:</label>
+                            <span class="value error-message">{{ log.error_message }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="info-item">
+                            <label>Usuário:</label>
+                            <span class="value">
+                                {% if log.user %}
+                                <a href="{% url 'audit_system:user_history' log.user.pk %}" class="user-link">
+                                    <i class="fas fa-user"></i> {{ log.user.get_full_name|default:log.user.username }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">Sistema</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <label>Objeto Afetado:</label>
+                            <span class="value object-repr">{{ log.object_repr }}</span>
+                        </div>
+                        
+                        {% if log.content_type %}
+                        <div class="info-item">
+                            <label>Tipo de Objeto:</label>
+                            <span class="value">{{ log.content_type.model|capfirst }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if log.object_id %}
+                        <div class="info-item">
+                            <label>ID do Objeto:</label>
+                            <span class="value">{{ log.object_id }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alterações -->
+            {% if log.changes %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-edit"></i> Alterações Realizadas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="changes-list">
+                        {% for field, change in log.changes.items %}
+                        <div class="change-item">
+                            <div class="field-name">
+                                <i class="fas fa-arrow-right"></i>
+                                <strong>{{ field|capfirst }}:</strong>
+                            </div>
+                            <div class="change-values">
+                                {% if change.old is not None %}
+                                <div class="old-value">
+                                    <span class="label">Valor Anterior:</span>
+                                    <span class="value">{{ change.old|default:"(vazio)" }}</span>
+                                </div>
+                                {% endif %}
+                                {% if change.new is not None %}
+                                <div class="new-value">
+                                    <span class="label">Novo Valor:</span>
+                                    <span class="value">{{ change.new|default:"(vazio)" }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Dados extras -->
+            {% if log.extra_data %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-database"></i> Dados Adicionais</h5>
+                </div>
+                <div class="card-body">
+                    <div class="extra-data">
+                        {% for key, value in log.extra_data.items %}
+                        <div class="data-item">
+                            <strong>{{ key|capfirst }}:</strong>
+                            <span class="data-value">{{ value }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Informações técnicas -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-cog"></i> Informações Técnicas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="tech-info">
+                        <div class="tech-item">
+                            <label>Endereço IP:</label>
+                            <span class="value">
+                                <code>{{ log.ip_address|default:"-" }}</code>
+                            </span>
+                        </div>
+                        
+                        <div class="tech-item">
+                            <label>Chave da Sessão:</label>
+                            <span class="value">
+                                <code class="session-key">{{ log.session_key|default:"-" }}</code>
+                            </span>
+                        </div>
+                        
+                        {% if log.user_agent %}
+                        <div class="tech-item">
+                            <label>User Agent:</label>
+                            <span class="value user-agent" title="{{ log.user_agent }}">
+                                {{ log.user_agent|truncatechars:80 }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="tech-item">
+                            <label>Registro Criado:</label>
+                            <span class="value">{{ log.created_at|date:"d/m/Y H:i:s" }}</span>
+                        </div>
+                        
+                        <div class="tech-item">
+                            <label>ID do Log:</label>
+                            <span class="value">{{ log.pk }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações relacionadas -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-link"></i> Ações Relacionadas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="related-actions">
+                        {% if log.user %}
+                        <a href="{% url 'audit_system:user_history' log.user.pk %}" class="btn btn-sm btn-outline-primary btn-block">
+                            <i class="fas fa-history"></i> Histórico do Usuário
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'audit_system:logs_list' %}?action={{ log.action }}" class="btn btn-sm btn-outline-secondary btn-block">
+                            <i class="fas fa-filter"></i> Logs da Mesma Ação
+                        </a>
+                        
+                        {% if log.timestamp %}
+                        <a href="{% url 'audit_system:logs_list' %}?date_from={{ log.timestamp|date:'Y-m-d' }}&date_to={{ log.timestamp|date:'Y-m-d' }}" class="btn btn-sm btn-outline-info btn-block">
+                            <i class="fas fa-calendar"></i> Logs do Mesmo Dia
+                        </a>
+                        {% endif %}
+                        
+                        {% if log.ip_address %}
+                        <a href="{% url 'audit_system:logs_list' %}?search={{ log.ip_address }}" class="btn btn-sm btn-outline-warning btn-block">
+                            <i class="fas fa-search"></i> Logs do Mesmo IP
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

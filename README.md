@@ -1,6 +1,33 @@
-# 🏢 WebReceptivo
+# � WebReceptivo
 
-Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões hierárquicas.
+[![Versão](https://img.shields.io/badge/versão-1.2.0-blue.svg)](https://github.com/your-repo/WebReceptivo/releases)
+[![Django](https://img.shields.io/badge/Django-5.2.7-green.svg)](https://djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org/)
+
+Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões hierárquicas.🏢 WebReceptivo
+
+Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões ## 🚀 Próximas Funcionalidades
+
+### ✅ **Implementadas na v1.2.0**
+- [x] **Sistema de Tema Personalizado**: Preferência individual de tema por usuário
+- [x] **Melhorias nos Avatares**: Exibição consistente em todo o sistema
+- [x] **Segurança Aprimorada**: Remoção da exclusão permanente de usuários
+- [x] **Admin Integrado**: Unificação completa entre admin e site principal
+
+### ✅ **Implementadas na v1.3.0 (NOVO!)**
+- [x] **📊 Sistema de Auditoria Completo**: Rastreamento total de todas as ações do sistema
+- [x] **🔍 Dashboard de Monitoramento**: Estatísticas em tempo real com gráficos dinâmicos
+- [x] **📈 Relatórios Avançados**: Filtros, busca e exportação de dados de auditoria
+- [x] **👤 Histórico Individual**: Perfil completo de atividades por usuário
+- [x] **⚡ Performance Otimizada**: Comandos automáticos de manutenção e limpeza
+
+### 📋 **Roadmap Futuro**
+- [ ] API REST para integração com outros sistemas
+- [ ] Sistema de notificações internas em tempo real
+- [ ] Workflow de aprovação para criação de grupos
+- [ ] Alertas automáticos para ações suspeitas
+- [ ] Integração com sistemas SIEM externos
+- [ ] Machine Learning para detecção de anomaliasquicas.
 
 ## ✨ Principais Funcionalidades
 
@@ -17,13 +44,58 @@ Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**
 - **Componentes Avançados**: Máscaras de input, upload de avatar, validação em tempo real
 - **UX Profissional**: Mensagens de feedback, animações suaves, navegação intuitiva
 
-## 🏗️ Arquitetura
+## � Últimas Atualizações (v1.2.0)
+
+### 🎨 **Sistema de Tema Personalizado**
+- **Tema Automático por Usuário**: Cada usuário tem sua preferência salva (claro/escuro/auto)
+- **Aplicação Instantânea**: Tema aplicado automaticamente ao fazer login
+- **Sincronização Inteligente**: Mudanças salvas em tempo real no perfil do usuário
+- **Modo Auto**: Segue automaticamente a preferência do sistema operacional
+- **Limpeza Automática**: Reset para tema do sistema após logout
+
+### 👤 **Melhorias nos Avatares**
+- **Menu Principal**: Avatar do usuário exibido ao lado do nome na navbar
+- **Lista de Usuários**: Miniaturas dos avatares na listagem de usuários
+- **Avatar Padrão**: Fallback elegante para usuários sem foto
+- **Consistência Visual**: Mesmo estilo entre admin e site principal
+
+### 🔒 **Segurança Aprimorada**
+- **Exclusão Removida**: Funcionalidade de exclusão permanente de usuários desabilitada
+- **Apenas Inativação**: Preservação da integridade dos dados com inativação segura
+- **Política Documentada**: Avisos claros sobre política de não-exclusão
+- **Proteção de Dados**: Manutenção do histórico e relacionamentos
+
+### 🎯 **Organização de Código**
+- **CSS Modularizado**: Separação do CSS de grupos em arquivo dedicado (`static/css/groups.css`)
+- **Templates Limpos**: Remoção de CSS inline dos templates
+- **Manutenibilidade**: Estrutura mais organizada e fácil de manter
+- **Temas Unificados**: Suporte completo a temas claro/escuro em todos os componentes
+
+### 🔧 **Integração Admin-Site**
+- **Menu Unificado**: Admin Django usa exatamente o mesmo menu do site principal
+- **Tema Sincronizado**: Sistema de tema compartilhado entre admin e site
+- **Avatar Consistente**: Exibição de avatar idêntica em ambos os contextos
+- **Zero Duplicação**: Eliminação completa de código duplicado
+
+### 📊 **Sistema de Auditoria (NOVO na v1.3.0)**
+- **🔍 Monitoramento Total**: Captura automática de todas as ações via signals Django
+- **📈 Dashboard Interativo**: Estatísticas em tempo real com gráficos Chart.js
+- **🎯 Rastreamento Detalhado**: IP, User-Agent, sessão, alterações antes/depois
+- **👤 Perfis Individuais**: Histórico completo de ações por usuário
+- **🔎 Busca Avançada**: Filtros por ação, usuário, data, status com exportação CSV
+- **⚡ Performance Otimizada**: Índices de banco, resumos pré-calculados, limpeza automática
+- **🛡️ Segurança Total**: Logs somente-leitura, acesso controlado apenas para staff
+- **🔧 Extensível**: Decoradores e signals para auditoria de novos módulos
+- **📱 Interface Responsiva**: CSS modular com suporte completo a temas
+
+## �🏗️ Arquitetura
 
 ### 🔧 Backend
 - **Django 5.2.7** com Python 3.12+
-- **Apps Modulares**: `accounts`, `core`, `user_management`
+- **Apps Modulares**: `accounts`, `core`, `user_management`, `audit_system`
 - **PostgreSQL** (produção) / **SQLite** (desenvolvimento)
 - **Sistema de Permissões**: Regras hierárquicas customizadas com proteção de usuários críticos
+- **Sistema de Auditoria**: Captura automática via signals, middleware de contexto, comandos de manutenção
 
 ### 🎨 Frontend  
 - **Bootstrap 5.3.2** com **Bootstrap Icons**

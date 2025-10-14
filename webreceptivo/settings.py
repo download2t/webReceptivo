@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts',
     'core',
     'user_management',
+    'audit_system',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'audit_system.middleware.AuditMiddleware',  # Middleware de auditoria
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

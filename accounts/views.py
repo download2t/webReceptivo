@@ -13,6 +13,8 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
+# Import para auditoria
+from audit_system.signals import log_custom_action
 
 
 class LoginView(FormView):
@@ -91,6 +93,19 @@ def profile_view(request):
         
         if form.is_valid():
             form.save()
+            
+            # Log da atualização do perfil
+            log_custom_action(
+                action_name='profile_update',
+                obj=request.user,
+                user=request.user,
+                request=request,
+                extra_data={
+                    'updated_fields': list(form.changed_data),
+                    'has_avatar': bool(profile.avatar),
+                }
+            )
+            
             messages.success(request, 'Perfil atualizado com sucesso!')
             return redirect('accounts:profile')
         else:

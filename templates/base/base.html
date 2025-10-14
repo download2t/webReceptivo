@@ -78,6 +78,10 @@
                                 <li><a class="dropdown-item" href="{% url 'user_management:group_list' %}"><i class="bi bi-diagram-3 me-2"></i>Gerenciar Grupos</a></li>
                                 {% endif %}
                                 
+                                {% if user.is_staff %}
+                                <li><a class="dropdown-item" href="{% url 'audit_system:dashboard' %}"><i class="bi bi-graph-up me-2"></i>Sistema de Auditoria</a></li>
+                                {% endif %}
+                                
                                 {% if user_can_access_admin_panel %}
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Admin Django</a></li>
                                 {% endif %}

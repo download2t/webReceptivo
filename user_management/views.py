@@ -12,6 +12,11 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from accounts.models import UserProfile
+# Imports para auditoria
+from audit_system.signals import (
+    log_user_activation, log_group_membership_change, 
+    log_password_change, log_custom_action
+)
 from .permission_helpers import (
     can_access_user_management, can_view_user, can_edit_user,
     can_create_user_with_level, can_change_user_groups, get_manageable_users_queryset,
@@ -290,6 +295,20 @@ def user_create(request):
                     form.add_error('groups', group_error)
                 else:
                     user = form.save()
+                    
+                    # Log da criação do usuário
+                    log_custom_action(
+                        action_name='user_creation',
+                        obj=user,
+                        user=request.user,
+                        request=request,
+                        extra_data={
+                            'created_groups': [g.name for g in user.groups.all()],
+                            'is_staff': user.is_staff,
+                            'is_active': user.is_active,
+                        }
+                    )
+                    
                     messages.success(request, f'Usuário {user.username} criado com sucesso!')
                     return redirect('user_management:user_detail', pk=user.pk)
     else:
@@ -360,7 +379,48 @@ def user_edit(request, pk):
                     
                     # Se não há erros, salvar
                     if not form.errors:
+                        # Capturar mudanças antes de salvar
+                        old_groups = set(user.groups.values_list('name', flat=True))
+                        old_active = user.is_active
+                        
                         saved_user = form.save()
+                        
+                        # Verificar se a senha foi alterada
+                        password_changed = form.cleaned_data.get('password1')
+                        if password_changed:
+                            log_password_change(saved_user, request)
+                        
+                        # Log de mudanças nos grupos
+                        new_groups = set(saved_user.groups.values_list('name', flat=True))
+                        added_groups = new_groups - old_groups
+                        removed_groups = old_groups - new_groups
+                        
+                        for group_name in added_groups:
+                            group = Group.objects.get(name=group_name)
+                            log_group_membership_change(saved_user, group, True, request)
+                        
+                        for group_name in removed_groups:
+                            group = Group.objects.get(name=group_name)
+                            log_group_membership_change(saved_user, group, False, request)
+                        
+                        # Log de mudança de status ativo
+                        if old_active != saved_user.is_active:
+                            log_user_activation(saved_user, saved_user.is_active, request)
+                        
+                        # Log geral da edição
+                        log_custom_action(
+                            action_name='user_edition',
+                            obj=saved_user,
+                            user=request.user,
+                            request=request,
+                            extra_data={
+                                'password_changed': bool(password_changed),
+                                'groups_added': list(added_groups),
+                                'groups_removed': list(removed_groups),
+                                'status_changed': old_active != saved_user.is_active,
+                            }
+                        )
+                        
                         messages.success(request, f'Usuário {saved_user.username} atualizado com sucesso!')
                         return redirect('user_management:user_detail', pk=saved_user.pk)
     else:
@@ -455,6 +515,9 @@ def user_toggle_active(request, pk):
     user.is_active = not user.is_active
     user.save()
     
+    # Log da mudança de status
+    log_user_activation(user, user.is_active, request)
+    
     status = 'ativado' if user.is_active else 'inativado'
     
     return JsonResponse({
@@ -504,6 +567,19 @@ def permissions_manage(request, pk):
         
         # Atualizar permissões individuais
         user.user_permissions.set(selected_permissions)
+        
+        # Log da mudança de permissões
+        log_custom_action(
+            action_name='permissions_update',
+            obj=user,
+            user=request.user,
+            request=request,
+            extra_data={
+                'new_groups': [g.name for g in user.groups.all()],
+                'permissions_count': user.user_permissions.count(),
+                'updated_by_admin': True
+            }
+        )
         
         messages.success(request, f'Permissões do usuário {user.username} atualizadas com sucesso!')
         return redirect('user_management:user_detail', pk=pk)
@@ -570,6 +646,10 @@ def user_change_password(request, pk):
         else:
             user_obj.set_password(new_password)
             user_obj.save()
+            
+            # Log da mudança de senha
+            log_password_change(user_obj, request)
+            
             messages.success(request, f'Senha do usuário {user_obj.username} alterada com sucesso!')
             return redirect('user_management:user_detail', pk=pk)
     

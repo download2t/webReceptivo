@@ -1,0 +1,225 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - WebReceptivo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/audit.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="audit-logs">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-list-alt"></i> Logs de Auditoria</h1>
+            <p class="text-muted">Visualize e filtre todos os logs do sistema</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'audit_system:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+            <a href="{% url 'audit_system:export_csv' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success">
+                <i class="fas fa-download"></i> Exportar CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card filters-card">
+        <div class="card-body">
+            <form method="get" class="filters-form">
+                <div class="row">
+                    <div class="col-md-2">
+                        <label for="action">Ação:</label>
+                        <select name="action" id="action" class="form-control form-control-sm">
+                            <option value="">Todas</option>
+                            {% for value, label in action_choices %}
+                            <option value="{{ value }}" {% if current_filters.action == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="user">Usuário:</label>
+                        <input type="text" name="user" id="user" class="form-control form-control-sm" 
+                               value="{{ current_filters.user }}" placeholder="Nome do usuário">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_from">Data Inicial:</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control form-control-sm" 
+                               value="{{ current_filters.date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_to">Data Final:</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control form-control-sm" 
+                               value="{{ current_filters.date_to }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="success">Status:</label>
+                        <select name="success" id="success" class="form-control form-control-sm">
+                            <option value="">Todos</option>
+                            <option value="true" {% if current_filters.success == 'true' %}selected{% endif %}>Sucesso</option>
+                            <option value="false" {% if current_filters.success == 'false' %}selected{% endif %}>Erro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="search">Busca:</label>
+                        <input type="text" name="search" id="search" class="form-control form-control-sm" 
+                               value="{{ current_filters.search }}" placeholder="Buscar...">
+                    </div>
+                </div>
+                <div class="filters-actions mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'audit_system:logs_list' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-times"></i> Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de logs -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Status</th>
+                            <th>Ação</th>
+                            <th>Usuário</th>
+                            <th>Objeto</th>
+                            <th>IP</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in page_obj %}
+                        <tr class="{% if not log.success %}table-danger{% endif %}">
+                            <td>
+                                <span class="timestamp">{{ log.timestamp|date:"d/m/Y H:i:s" }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if log.success %}
+                                <span class="badge badge-success" title="Sucesso">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                {% else %}
+                                <span class="badge badge-danger" title="{{ log.error_message }}">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="action-badge action-{{ log.action|lower }}">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if log.user %}
+                                <a href="{% url 'audit_system:user_history' log.user.pk %}" class="user-link">
+                                    <i class="fas fa-user"></i> {{ log.user.username }}
+                                </a>
+                                {% else %}
+                                <span class="text-muted">Sistema</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="object-repr" title="{{ log.object_repr }}">
+                                    {{ log.object_repr|truncatechars:50 }}
+                                </span>
+                            </td>
+                            <td>
+                                <code class="ip-address">{{ log.ip_address|default:"-" }}</code>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'audit_system:log_detail' log.pk %}" 
+                                       class="btn btn-outline-primary btn-sm" title="Ver detalhes">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                Nenhum log encontrado com os filtros aplicados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Paginação dos logs">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Última</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            <!-- Informações da paginação -->
+            <div class="pagination-info text-center text-muted mt-3">
+                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} logs
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submissão do formulário quando os filtros mudam
+    const filters = document.querySelectorAll('.filters-form select, .filters-form input[type="date"]');
+    filters.forEach(filter => {
+        filter.addEventListener('change', function() {
+            if (this.type !== 'text') {
+                this.form.submit();
+            }
+        });
+    });
+
+    // Submissão por Enter no campo de busca
+    document.getElementById('search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}
