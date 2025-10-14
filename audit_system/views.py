@@ -49,6 +49,14 @@ def audit_dashboard(request):
                      .annotate(count=Count('id'))
                      .order_by('timestamp__date'))
     
+    # Converter para formato JSON-friendly
+    daily_activity_json = []
+    for item in daily_activity:
+        daily_activity_json.append({
+            'timestamp__date': item['timestamp__date'].strftime('%Y-%m-%d'),
+            'count': item['count']
+        })
+    
     # Logs recentes
     recent_logs = AuditLog.objects.select_related('user', 'content_type')[:20]
     
@@ -56,7 +64,7 @@ def audit_dashboard(request):
         'stats': stats,
         'common_actions': common_actions,
         'active_users': active_users,
-        'daily_activity': list(daily_activity),
+        'daily_activity': daily_activity_json,
         'recent_logs': recent_logs,
         'title': 'Dashboard de Auditoria',
     }
@@ -241,6 +249,16 @@ def audit_api_stats(request):
                   )
                   .order_by('timestamp__date'))
     
+    # Converter datas para formato JSON-friendly
+    daily_stats_json = []
+    for item in daily_stats:
+        daily_stats_json.append({
+            'timestamp__date': item['timestamp__date'].strftime('%Y-%m-%d'),
+            'total': item['total'],
+            'successful': item['successful'],
+            'failed': item['failed']
+        })
+    
     # Ações por tipo
     action_stats = (AuditLog.objects
                    .filter(timestamp__date__gte=start_date)
@@ -256,7 +274,7 @@ def audit_api_stats(request):
                  .order_by('-count')[:10])
     
     data = {
-        'daily_activity': list(daily_stats),
+        'daily_activity': daily_stats_json,
         'action_distribution': list(action_stats),
         'top_users': list(user_stats),
     }

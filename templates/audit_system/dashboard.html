@@ -10,7 +10,7 @@
 {% block content %}
 <div class="audit-dashboard">
     <div class="dashboard-header">
-        <h1><i class="fas fa-chart-line"></i> Dashboard de Auditoria</h1>
+        <h1><i class="bi bi-graph-up"></i> Dashboard de Auditoria</h1>
         <p class="text-muted">Monitore todas as atividades do sistema em tempo real</p>
     </div>
 
@@ -18,7 +18,7 @@
     <div class="stats-cards">
         <div class="stat-card">
             <div class="stat-icon bg-primary">
-                <i class="fas fa-list-alt"></i>
+                <i class="bi bi-list-ul"></i>
             </div>
             <div class="stat-info">
                 <div class="stat-number">{{ stats.total_logs }}</div>
@@ -28,7 +28,7 @@
 
         <div class="stat-card">
             <div class="stat-icon bg-success">
-                <i class="fas fa-calendar-day"></i>
+                <i class="bi bi-calendar-day"></i>
             </div>
             <div class="stat-info">
                 <div class="stat-number">{{ stats.today_logs }}</div>
@@ -38,7 +38,7 @@
 
         <div class="stat-card">
             <div class="stat-icon bg-info">
-                <i class="fas fa-calendar-week"></i>
+                <i class="bi bi-calendar-week"></i>
             </div>
             <div class="stat-info">
                 <div class="stat-number">{{ stats.week_logs }}</div>
@@ -48,7 +48,7 @@
 
         <div class="stat-card">
             <div class="stat-icon bg-warning">
-                <i class="fas fa-calendar-alt"></i>
+                <i class="bi bi-calendar-month"></i>
             </div>
             <div class="stat-info">
                 <div class="stat-number">{{ stats.month_logs }}</div>
@@ -58,7 +58,7 @@
 
         <div class="stat-card">
             <div class="stat-icon bg-danger">
-                <i class="fas fa-exclamation-triangle"></i>
+                <i class="bi bi-exclamation-triangle"></i>
             </div>
             <div class="stat-info">
                 <div class="stat-number">{{ stats.failed_actions }}</div>
@@ -71,10 +71,10 @@
         <!-- Gráfico de atividade -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-chart-area"></i> Atividade dos Últimos 30 Dias</h5>
+                <h5><i class="bi bi-graph-up"></i> Atividade dos Últimos 30 Dias</h5>
                 <div class="card-tools">
                     <button class="btn btn-sm btn-outline-secondary" id="refresh-chart">
-                        <i class="fas fa-sync-alt"></i> Atualizar
+                        <i class="bi bi-arrow-clockwise"></i> Atualizar
                     </button>
                 </div>
             </div>
@@ -88,7 +88,7 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="fas fa-list"></i> Ações Mais Comuns</h5>
+                        <h5><i class="bi bi-list-check"></i> Ações Mais Comuns</h5>
                     </div>
                     <div class="card-body">
                         <div class="action-list">
@@ -109,7 +109,7 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5><i class="fas fa-users"></i> Usuários Mais Ativos</h5>
+                        <h5><i class="bi bi-people"></i> Usuários Mais Ativos</h5>
                     </div>
                     <div class="card-body">
                         <div class="user-list">
@@ -130,10 +130,10 @@
         <!-- Logs recentes -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="fas fa-clock"></i> Atividade Recente</h5>
+                <h5><i class="bi bi-clock"></i> Atividade Recente</h5>
                 <div class="card-tools">
                     <a href="{% url 'audit_system:logs_list' %}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-list"></i> Ver Todos os Logs
+                        <i class="bi bi-list-ul"></i> Ver Todos os Logs
                     </a>
                 </div>
             </div>
@@ -144,9 +144,9 @@
                         <div class="log-info">
                             <div class="log-action">
                                 {% if log.success %}
-                                <i class="fas fa-check-circle text-success"></i>
+                                <i class="bi bi-check-circle text-success"></i>
                                 {% else %}
-                                <i class="fas fa-times-circle text-danger"></i>
+                                <i class="bi bi-x-circle text-danger"></i>
                                 {% endif %}
                                 <span class="action-name">{{ log.get_action_display }}</span>
                             </div>
@@ -160,7 +160,7 @@
                         </div>
                         <div class="log-actions">
                             <a href="{% url 'audit_system:log_detail' log.pk %}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye"></i>
+                                <i class="bi bi-eye"></i>
                             </a>
                         </div>
                     </div>
@@ -179,23 +179,45 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Dados do gráfico
-    const dailyActivity = {{ daily_activity|safe }};
+    let dailyActivity;
+    try {
+        dailyActivity = {{ daily_activity|safe }};
+    } catch (e) {
+        console.error('Erro ao carregar dados de atividade:', e);
+        dailyActivity = [];
+    }
+    console.log('Daily Activity Data:', dailyActivity);
     
     // Configuração do gráfico
     const ctx = document.getElementById('activityChart').getContext('2d');
+    
+    // Preparar dados com fallback para dados vazios
+    let chartLabels = [];
+    let chartData = [];
+    
+    if (dailyActivity && dailyActivity.length > 0) {
+        chartLabels = dailyActivity.map(item => {
+            const date = new Date(item.timestamp__date);
+            return date.toLocaleDateString('pt-BR');
+        });
+        chartData = dailyActivity.map(item => item.count);
+    } else {
+        // Dados de exemplo se não houver dados reais
+        chartLabels = ['Sem dados'];
+        chartData = [0];
+    }
+    
     const chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dailyActivity.map(item => {
-                const date = new Date(item.timestamp__date);
-                return date.toLocaleDateString('pt-BR');
-            }),
+            labels: chartLabels,
             datasets: [{
                 label: 'Ações por Dia',
-                data: dailyActivity.map(item => item.count),
+                data: chartData,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.1
+                tension: 0.1,
+                fill: true
             }]
         },
         options: {
@@ -219,17 +241,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Atualizar gráfico
     document.getElementById('refresh-chart').addEventListener('click', function() {
+        const button = this;
+        const originalHTML = button.innerHTML;
+        
+        // Mostrar loading
+        button.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Atualizando...';
+        button.disabled = true;
+        
         fetch('{% url "audit_system:api_stats" %}')
             .then(response => response.json())
             .then(data => {
-                chart.data.labels = data.daily_activity.map(item => {
-                    const date = new Date(item.timestamp__date);
-                    return date.toLocaleDateString('pt-BR');
-                });
-                chart.data.datasets[0].data = data.daily_activity.map(item => item.total);
+                console.log('API Response:', data);
+                
+                if (data.daily_activity && data.daily_activity.length > 0) {
+                    chart.data.labels = data.daily_activity.map(item => {
+                        const date = new Date(item.timestamp__date);
+                        return date.toLocaleDateString('pt-BR');
+                    });
+                    chart.data.datasets[0].data = data.daily_activity.map(item => item.total || item.count);
+                } else {
+                    chart.data.labels = ['Sem dados'];
+                    chart.data.datasets[0].data = [0];
+                }
+                
                 chart.update();
+                
+                // Restaurar botão
+                button.innerHTML = originalHTML;
+                button.disabled = false;
             })
-            .catch(error => console.error('Erro ao atualizar gráfico:', error));
+            .catch(error => {
+                console.error('Erro ao atualizar gráfico:', error);
+                
+                // Restaurar botão em caso de erro
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+                
+                // Mostrar erro visual
+                button.classList.add('btn-outline-danger');
+                setTimeout(() => {
+                    button.classList.remove('btn-outline-danger');
+                }, 3000);
+            });
     });
 
     // Auto-refresh a cada 5 minutos
