@@ -1,0 +1,72 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{% block settings_title %}Configurações da Empresa{% endblock %} - WebReceptivo{% endblock %}
+
+{% block extra_css %}
+    <!-- CSS das Configurações -->
+    <link rel="stylesheet" href="{% static 'css/configuracoes/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/configuracoes/sidebar.css' %}">
+    {% block settings_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <!-- Sidebar Modular -->
+    {% include 'partials/settings_sidebar.html' %}
+    
+    <!-- Conteúdo Principal -->
+    <main class="settings-main-content" role="main">
+        <!-- Header da Página -->
+        <header class="settings-page-header settings-fade-in">
+            <h1 class="settings-page-title">
+                {% block page_icon %}<i class="fas fa-cogs"></i>{% endblock %}
+                {% block page_title %}Configurações da Empresa{% endblock %}
+            </h1>
+            {% block page_description %}
+                <p class="settings-page-description">
+                    Gerencie as configurações e parâmetros da sua empresa
+                </p>
+            {% endblock %}
+        </header>
+
+        <!-- Mensagens de Sistema -->
+        {% if messages %}
+            <div class="settings-messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} settings-alert alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' or message.tags == 'danger' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Conteúdo Específico da Página -->
+        <section class="settings-content">
+            {% block settings_content %}
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <h2 class="settings-card-title">
+                                <i class="fas fa-info-circle"></i>
+                                Bem-vindo às Configurações
+                            </h2>
+                        </div>
+                        <div class="settings-card-body">
+                            <p>Selecione uma opção no menu lateral para começar.</p>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- JavaScript das Configurações -->
+    <script src="{% static 'js/configuracoes/sidebar.js' %}"></script>
+    {% block settings_js %}{% endblock %}
+{% endblock %}
