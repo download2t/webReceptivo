@@ -7,8 +7,9 @@ from django.views.generic import FormView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.models import User
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView, PasswordResetDoneView, PasswordResetCompleteView
 from .models import UserProfile
-from .forms import UserProfileForm, ChangePasswordForm
+from .forms import UserProfileForm, ChangePasswordForm, CustomAuthenticationForm, CustomPasswordResetForm, CustomSetPasswordForm
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -22,7 +23,7 @@ class LoginView(FormView):
     View profissional para login com validação e segurança aprimorada
     """
     template_name = 'accounts/login.html'
-    form_class = AuthenticationForm
+    form_class = CustomAuthenticationForm
     success_url = reverse_lazy('core:dashboard')
     
     def dispatch(self, request, *args, **kwargs):
@@ -35,6 +36,16 @@ class LoginView(FormView):
         username = form.cleaned_data['username']
         password = form.cleaned_data['password']
         remember_me = self.request.POST.get('remember_me')
+        
+        # Verificar se o usuário existe e está inativo antes de autenticar
+        try:
+            user_check = User.objects.get(username=username)
+            if not user_check.is_active:
+                # Adicionar erro ao formulário em vez de mensagem
+                form.add_error(None, 'Usuário inativo. Entre em contato com o administrador.')
+                return self.form_invalid(form)
+        except User.DoesNotExist:
+            pass  # Continua para o authenticate que dará a mensagem de credenciais inválidas
         
         user = authenticate(self.request, username=username, password=password)
         
@@ -55,11 +66,12 @@ class LoginView(FormView):
             # Sempre redirecionar para o dashboard (home)
             return redirect(self.success_url)
         else:
-            messages.error(self.request, 'Credenciais inválidas. Tente novamente.')
+            # Adicionar erro ao formulário
+            form.add_error(None, 'Credenciais inválidas. Tente novamente.')
             return self.form_invalid(form)
     
     def form_invalid(self, form):
-        messages.error(self.request, 'Por favor, corrija os erros abaixo.')
+        # Não adicionar mensagem duplicada - as mensagens específicas já foram adicionadas
         return super().form_invalid(form)
 
 
@@ -182,3 +194,53 @@ def update_theme_view(request):
         return JsonResponse({'error': 'Dados JSON inválidos'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+# ========== RECUPERAÇÃO DE SENHA ========== #
+
+class CustomPasswordResetView(PasswordResetView):
+    """
+    View para solicitar recuperação de senha
+    """
+    template_name = 'accounts/password_reset.html'
+    email_template_name = 'accounts/password_reset_email.html'
+    subject_template_name = 'accounts/password_reset_subject.txt'
+    form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('accounts:password_reset_done')
+    
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            'Instruções de recuperação de senha foram enviadas para seu e-mail.'
+        )
+        return super().form_valid(form)
+
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    """
+    View de confirmação de envio do email de recuperação
+    """
+    template_name = 'accounts/password_reset_done.html'
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    """
+    View para redefinir a senha
+    """
+    template_name = 'accounts/password_reset_confirm.html'
+    form_class = CustomSetPasswordForm
+    success_url = reverse_lazy('accounts:password_reset_complete')
+    
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            'Sua senha foi redefinida com sucesso! Você já pode fazer login.'
+        )
+        return super().form_valid(form)
+
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    """
+    View de confirmação final da recuperação
+    """
+    template_name = 'accounts/password_reset_complete.html'

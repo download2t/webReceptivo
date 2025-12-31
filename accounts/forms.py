@@ -1,7 +1,23 @@
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.forms import UserChangeForm, AuthenticationForm, PasswordResetForm, SetPasswordForm
+from django.core.exceptions import ValidationError
 from .models import UserProfile
+
+
+class CustomAuthenticationForm(AuthenticationForm):
+    """
+    Formulário de autenticação customizado que permite verificar usuários inativos
+    separadamente das credenciais inválidas.
+    """
+    def confirm_login_allowed(self, user):
+        """
+        Sobrescreve o método para não bloquear usuários inativos aqui.
+        A verificação será feita na view para mostrar mensagem apropriada.
+        """
+        # Não faz nada - permite que usuários inativos passem pela validação
+        # A view irá verificar e mostrar a mensagem apropriada
+        pass
 
 
 class UserProfileForm(forms.ModelForm):
@@ -212,3 +228,54 @@ class ChangePasswordForm(forms.Form):
                 raise forms.ValidationError('As senhas não coincidem.')
         
         return cleaned_data
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    """
+    Formulário customizado para recuperação de senha
+    """
+    email = forms.EmailField(
+        label='E-mail',
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Digite seu e-mail cadastrado',
+            'autofocus': True
+        }),
+        help_text='Digite o e-mail associado à sua conta'
+    )
+    
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        # Verifica se existe usuário com este email
+        if not User.objects.filter(email=email, is_active=True).exists():
+            raise ValidationError(
+                'Não existe uma conta ativa associada a este e-mail.'
+            )
+        return email
+
+
+class CustomSetPasswordForm(SetPasswordForm):
+    """
+    Formulário customizado para redefinir senha
+    """
+    new_password1 = forms.CharField(
+        label='Nova Senha',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Digite a nova senha',
+            'autocomplete': 'new-password'
+        }),
+        strip=False,
+        help_text='Mínimo de 8 caracteres'
+    )
+    
+    new_password2 = forms.CharField(
+        label='Confirmar Nova Senha',
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Digite a nova senha novamente',
+            'autocomplete': 'new-password'
+        })
+    )

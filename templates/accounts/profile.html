@@ -337,6 +337,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Preview de mudança de tema em tempo real
+    const themeSelect = document.getElementById('id_tema_preferido');
+    if (themeSelect) {
+        themeSelect.addEventListener('change', function() {
+            const selectedTheme = this.value;
+            let theme;
+            
+            if (selectedTheme === 'auto') {
+                // Se auto, usar preferência do sistema
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            } else {
+                theme = selectedTheme;
+            }
+            
+            // Aplicar tema imediatamente para preview
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            console.log('Preview de tema aplicado:', theme);
+        });
+    }
+    
     // Máscara de input
     const inputs = document.querySelectorAll('[data-mask]');
     inputs.forEach(input => {
