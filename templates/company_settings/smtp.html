@@ -335,7 +335,7 @@
         <div class="content-card-body">
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-item text-center p-3 bg-light rounded">
+                    <div class="status-item text-center p-3 rounded">
                         <i class="fas fa-server fa-2x {% if form.instance.host %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Servidor</h6>
                         <p class="mb-0">
@@ -347,7 +347,7 @@
                 </div>
                 
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-item text-center p-3 bg-light rounded">
+                    <div class="status-item text-center p-3 rounded">
                         <i class="fas fa-key fa-2x {% if form.instance.password_hash %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Autenticação</h6>
                         <p class="mb-0">
@@ -359,7 +359,7 @@
                 </div>
                 
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-item text-center p-3 bg-light rounded">
+                    <div class="status-item text-center p-3 rounded">
                         <i class="fas fa-shield-alt fa-2x {% if form.instance.use_tls or form.instance.use_ssl %}text-success{% else %}text-warning{% endif %} mb-2"></i>
                         <h6>Segurança</h6>
                         <p class="mb-0">
@@ -374,7 +374,7 @@
                 </div>
                 
                 <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-item text-center p-3 bg-light rounded">
+                    <div class="status-item text-center p-3 rounded">
                         <i class="fas fa-check-circle fa-2x {% if form.instance.is_configured %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Status Geral</h6>
                         <p class="mb-0">
@@ -473,8 +473,53 @@
 </div>
 {% endblock %}
 
-{% block settings_extra_js %}
+{% block settings_js %}
 <script>
+    // Helper functions
+    function showToast(message, type = 'info') {
+        const toastHTML = `
+            <div class="toast align-items-center text-bg-${type === 'error' ? 'danger' : type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        const toastElement = toastContainer.lastElementChild;
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+        
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+    
+    function showLoading(button) {
+        const originalHTML = button.innerHTML;
+        button.dataset.originalHtml = originalHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+    }
+    
+    function hideLoading(button) {
+        button.disabled = false;
+        if (button.dataset.originalHtml) {
+            button.innerHTML = button.dataset.originalHtml;
+        }
+    }
+
     // Provider configurations
     const providerConfigs = {
         gmail: {
@@ -584,16 +629,18 @@
                 messageDiv.innerHTML = `
                     <h6><i class="fas fa-check-circle me-2"></i>Teste realizado com sucesso!</h6>
                     <p class="mb-0">E-mail de teste enviado para <strong>${testEmail}</strong></p>
+                    ${data.message ? `<small class="text-muted">${data.message}</small>` : ''}
                 `;
                 showToast('E-mail de teste enviado com sucesso!', 'success');
             } else {
+                const errorMessage = data.error || data.message || 'Erro desconhecido';
                 alertDiv.className = 'alert alert-danger';
                 messageDiv.innerHTML = `
                     <h6><i class="fas fa-times-circle me-2"></i>Falha no teste</h6>
-                    <p class="mb-0"><strong>Erro:</strong> ${data.error || 'Erro desconhecido'}</p>
+                    <p class="mb-0"><strong>Erro:</strong> ${errorMessage}</p>
                     <small class="text-muted">Verifique suas configurações e tente novamente.</small>
                 `;
-                showToast('Erro no teste de e-mail: ' + (data.error || 'Erro desconhecido'), 'error');
+                showToast('Erro no teste de e-mail: ' + errorMessage, 'error');
             }
             
             resultDiv.style.display = 'block';
@@ -602,6 +649,18 @@
         .catch(error => {
             hideLoading(button);
             console.error('Error:', error);
+            const resultDiv = document.getElementById('testResult');
+            const alertDiv = document.getElementById('testAlert');
+            const messageDiv = document.getElementById('testMessage');
+            
+            alertDiv.className = 'alert alert-danger';
+            messageDiv.innerHTML = `
+                <h6><i class="fas fa-times-circle me-2"></i>Erro de Conexão</h6>
+                <p class="mb-0"><strong>Erro:</strong> Não foi possível conectar ao servidor</p>
+                <small class="text-muted">${error.toString()}</small>
+            `;
+            resultDiv.style.display = 'block';
+            
             showToast('Erro ao testar configurações de e-mail', 'error');
         });
     }
