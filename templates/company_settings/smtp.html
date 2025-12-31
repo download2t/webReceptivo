@@ -3,53 +3,94 @@
 {% block page_title_text %}Configurações de E-mail (SMTP){% endblock %}
 
 {% block page_icon %}<i class="fas fa-envelope"></i>{% endblock %}
-{% block page_main_title %}Configurações de E-mail (SMTP){% endblock %}
-{% block subtitle %}Configure o servidor de e-mail para envio de mensagens{% endblock %}
+{% block page_title %}Configurações de E-mail (SMTP){% endblock %}
+{% block page_description %}
+    <p class="settings-page-description">Configure o servidor de e-mail para envio de mensagens</p>
+{% endblock %}
 
 {% block settings_content %}
 <form method="post" id="smtpForm" class="needs-validation" novalidate>
     {% csrf_token %}
     
-    <!-- Provider Quick Setup -->
+    <!-- Status Atual -->
     <div class="content-card mb-4">
         <div class="content-card-header">
             <h5 class="mb-0">
-                <i class="fas fa-magic text-info me-2"></i>
-                Configuração Rápida por Provedor
+                <i class="fas fa-info-circle text-info me-2"></i>
+                Status das Configurações SMTP
             </h5>
         </div>
         <div class="content-card-body">
-            <p class="text-muted mb-3">Clique em um provedor para preencher automaticamente as configurações:</p>
-            
             <div class="row">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <button type="button" class="btn btn-outline-primary w-100 provider-btn" 
-                            data-provider="gmail">
-                        <i class="fab fa-google me-2"></i>Gmail
-                    </button>
+                <div class="col-md-3 mb-3">
+                    <div class="status-item p-3 rounded text-center">
+                        <i class="fas fa-database fa-2x mb-2 {% if form.instance.pk %}text-success{% else %}text-muted{% endif %}"></i>
+                        <h6 class="mb-0">Configuração</h6>
+                        <small class="{% if form.instance.pk %}text-success{% else %}text-muted{% endif %}">
+                            {% if form.instance.pk %}
+                                <i class="fas fa-check-circle me-1"></i>Configurada
+                            {% else %}
+                                <i class="fas fa-times-circle me-1"></i>Não Configurada
+                            {% endif %}
+                        </small>
+                    </div>
                 </div>
                 
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <button type="button" class="btn btn-outline-info w-100 provider-btn" 
-                            data-provider="outlook">
-                        <i class="fab fa-microsoft me-2"></i>Outlook
-                    </button>
+                <div class="col-md-3 mb-3">
+                    <div class="status-item p-3 rounded text-center">
+                        <i class="fas fa-toggle-{% if form.instance.is_active %}on text-success{% else %}off text-muted{% endif %} fa-2x mb-2"></i>
+                        <h6 class="mb-0">Status</h6>
+                        <small class="{% if form.instance.is_active %}text-success{% else %}text-muted{% endif %}">
+                            {% if form.instance.is_active %}
+                                <i class="fas fa-check-circle me-1"></i>Ativo
+                            {% else %}
+                                <i class="fas fa-times-circle me-1"></i>Inativo
+                            {% endif %}
+                        </small>
+                    </div>
                 </div>
                 
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <button type="button" class="btn btn-outline-warning w-100 provider-btn" 
-                            data-provider="yahoo">
-                        <i class="fab fa-yahoo me-2"></i>Yahoo
-                    </button>
+                <div class="col-md-3 mb-3">
+                    <div class="status-item p-3 rounded text-center">
+                        <i class="fas fa-vial fa-2x mb-2 {% if form.instance.last_test_success %}text-success{% elif form.instance.last_test_date %}text-warning{% else %}text-muted{% endif %}"></i>
+                        <h6 class="mb-0">Último Teste</h6>
+                        <small class="{% if form.instance.last_test_success %}text-success{% elif form.instance.last_test_date %}text-warning{% else %}text-muted{% endif %}">
+                            {% if form.instance.last_test_date %}
+                                {{ form.instance.last_test_date|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Nunca testado
+                            {% endif %}
+                        </small>
+                    </div>
                 </div>
                 
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <button type="button" class="btn btn-outline-secondary w-100 provider-btn" 
-                            data-provider="custom">
-                        <i class="fas fa-cogs me-2"></i>Personalizado
-                    </button>
+                <div class="col-md-3 mb-3">
+                    <div class="status-item p-3 rounded text-center">
+                        <i class="fas fa-server fa-2x mb-2 {% if form.instance.smtp_server %}text-primary{% else %}text-muted{% endif %}"></i>
+                        <h6 class="mb-0">Servidor</h6>
+                        <small class="{% if form.instance.smtp_server %}text-primary{% else %}text-muted{% endif %}">
+                            {{ form.instance.smtp_server|default:"Não definido" }}
+                        </small>
+                    </div>
                 </div>
             </div>
+            
+            {% if form.instance.last_test_date and not form.instance.last_test_success %}
+                <div class="alert alert-warning mb-0 mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Último teste falhou:</strong> {{ form.instance.last_test_message }}
+                </div>
+            {% elif form.instance.last_test_success %}
+                <div class="alert alert-success mb-0 mt-3">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Configurações funcionando!</strong> Último teste bem-sucedido.
+                </div>
+            {% elif not form.instance.pk %}
+                <div class="alert alert-info mb-0 mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Primeira configuração:</strong> Preencha os dados abaixo e teste antes de salvar.
+                </div>
+            {% endif %}
         </div>
     </div>
 
@@ -242,43 +283,18 @@
                 </div>
             </div>
             
-            <div class="alert alert-info mb-3">
-                <h6><i class="fas fa-info-circle me-2"></i>Como Funciona (Simplificado)</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p><strong>1. E-mail SMTP:</strong><br>
-                        <code>suportesanma@gmail.com</code><br>
-                        <small>Um único e-mail para tudo: login, remetente, sistema</small></p>
-                        
-                        <p><strong>2. Senha:</strong><br>
-                        <code>ofdf qopt wduz ahxl</code><br>
-                        <small>Senha de app do Gmail (não a senha normal)</small></p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>3. E-mail de Teste:</strong><br>
-                        <code>ti@sanmahotel.com.br</code><br>
-                        <small>Para onde enviar o teste</small></p>
-                        
-                        <p><strong>Resultado:</strong><br>
-                        <small class="text-muted">De: suportesanma@gmail.com<br>
-                        Para: ti@sanmahotel.com.br ✅</small></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="alert alert-warning">
-                <h6><i class="fas fa-exclamation-triangle me-2"></i>Importante</h6>
+            <div class="alert alert-info mb-0">
+                <h6><i class="fas fa-lightbulb me-2"></i>Dicas Importantes</h6>
                 <ul class="mb-0">
-                    <li><strong>Exemplo Gmail:</strong> Usuário: suportesanma@gmail.com / Senha: ofdf qopt wduz ahxl</li>
-                    <li>Para Gmail, use "Senhas de app" ao invés da senha normal da conta</li>
-                    <li>Verifique se a porta corresponde ao tipo de segurança (587 para TLS)</li>
-                    <li>Ative as configurações para que o sistema use automaticamente</li>
+                    <li><strong>Gmail:</strong> Use "Senhas de app" ao invés da senha normal (requer autenticação em 2 fatores)</li>
+                    <li><strong>Outlook/Hotmail:</strong> Pode usar a senha normal da conta</li>
+                    <li><strong>Porta TLS (587):</strong> Mais comum e recomendada</li>
+                    <li><strong>Porta SSL (465):</strong> Para alguns provedores específicos</li>
+                    <li>Após configurar, sempre teste antes de ativar</li>
                 </ul>
             </div>
         </div>
     </div>
-
-    
 
     <!-- Test Email -->
     <div class="content-card mb-4">
@@ -324,23 +340,23 @@
         </div>
     </div>
 
-    <!-- Current Configuration Status -->
+    <!-- Quick Status Check -->
     <div class="content-card mb-4">
         <div class="content-card-header">
             <h5 class="mb-0">
-                <i class="fas fa-info-circle text-primary me-2"></i>
-                Status da Configuração
+                <i class="fas fa-clipboard-check text-warning me-2"></i>
+                Checklist de Configuração
             </h5>
         </div>
         <div class="content-card-body">
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-server fa-2x {% if form.instance.host %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <i class="fas fa-server fa-2x {% if form.instance.smtp_server %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Servidor</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.host %}success{% else %}danger{% endif %}">
-                                {% if form.instance.host %}Configurado{% else %}Não Configurado{% endif %}
+                            <span class="badge bg-{% if form.instance.smtp_server %}success{% else %}danger{% endif %}">
+                                {% if form.instance.smtp_server %}✓ Configurado{% else %}✗ Não Configurado{% endif %}
                             </span>
                         </p>
                     </div>
@@ -348,11 +364,11 @@
                 
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-key fa-2x {% if form.instance.password_hash %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <i class="fas fa-key fa-2x {% if form.instance.smtp_password %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Autenticação</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.password_hash %}success{% else %}danger{% endif %}">
-                                {% if form.instance.password_hash %}Configurada{% else %}Não Configurada{% endif %}
+                            <span class="badge bg-{% if form.instance.smtp_password %}success{% else %}danger{% endif %}">
+                                {% if form.instance.smtp_password %}✓ Configurada{% else %}✗ Não Configurada{% endif %}
                             </span>
                         </p>
                     </div>
@@ -360,13 +376,14 @@
                 
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-shield-alt fa-2x {% if form.instance.use_tls or form.instance.use_ssl %}text-success{% else %}text-warning{% endif %} mb-2"></i>
+                        <i class="fas fa-shield-alt fa-2x {% if form.instance.connection_security and form.instance.connection_security != 'none' %}text-success{% else %}text-warning{% endif %} mb-2"></i>
                         <h6>Segurança</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.use_tls or form.instance.use_ssl %}success{% else %}warning{% endif %}">
-                                {% if form.instance.use_tls %}TLS
-                                {% elif form.instance.use_ssl %}SSL
-                                {% else %}Nenhuma
+                            <span class="badge bg-{% if form.instance.connection_security and form.instance.connection_security != 'none' %}success{% else %}warning{% endif %}">
+                                {% if form.instance.connection_security == 'tls' %}✓ TLS
+                                {% elif form.instance.connection_security == 'ssl' %}✓ SSL
+                                {% elif form.instance.connection_security == 'starttls' %}✓ STARTTLS
+                                {% else %}⚠ Nenhuma
                                 {% endif %}
                             </span>
                         </p>
@@ -375,16 +392,23 @@
                 
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-check-circle fa-2x {% if form.instance.is_configured %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <i class="fas fa-check-circle fa-2x {% if form.instance.smtp_server and form.instance.email and form.instance.smtp_password %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Status Geral</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.is_configured %}success{% else %}danger{% endif %}">
-                                {% if form.instance.is_configured %}Completo{% else %}Incompleto{% endif %}
+                            <span class="badge bg-{% if form.instance.smtp_server and form.instance.email and form.instance.smtp_password %}success{% else %}danger{% endif %}">
+                                {% if form.instance.smtp_server and form.instance.email and form.instance.smtp_password %}✓ Completo{% else %}✗ Incompleto{% endif %}
                             </span>
                         </p>
                     </div>
                 </div>
             </div>
+            
+            {% if not form.instance.smtp_server or not form.instance.email or not form.instance.smtp_password %}
+            <div class="alert alert-warning mb-0 mt-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Atenção:</strong> Preencha todos os campos obrigatórios acima antes de salvar e ativar a configuração.
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -449,10 +473,10 @@
                         
                         <h6><i class="fas fa-cog me-2"></i>Como Funciona</h6>
                         <ul class="small">
-                            <li><strong>E-mail SMTP:</strong> Suas credenciais para login (ex: suportesanma@gmail.com)</li>
-                            <li><strong>Remetente:</strong> Quem aparece enviando (normalmente o mesmo e-mail SMTP)</li>
-                            <li><strong>Destino (Teste):</strong> Qualquer e-mail para receber o teste</li>
-                            <li><strong>Exemplo:</strong> De: suportesanma@gmail.com → Para: cliente@empresa.com</li>
+                            <li><strong>E-mail SMTP:</strong> Suas credenciais para login no servidor de e-mail</li>
+                            <li><strong>Remetente:</strong> E-mail que aparece como remetente das mensagens</li>
+                            <li><strong>Destino (Teste):</strong> E-mail para onde enviar mensagem de teste</li>
+                            <li><strong>Exemplo:</strong> De: contato@webreceptivo.com.br → Para: cliente@empresa.com</li>
                         </ul>
                         
                         <h6><i class="fas fa-lightbulb me-2"></i>Dicas</h6>
@@ -518,59 +542,6 @@
         if (button.dataset.originalHtml) {
             button.innerHTML = button.dataset.originalHtml;
         }
-    }
-
-    // Provider configurations
-    const providerConfigs = {
-        gmail: {
-            smtp_server: 'smtp.gmail.com',
-            smtp_port: 587,
-            connection_security: 'tls'
-        },
-        outlook: {
-            smtp_server: 'smtp-mail.outlook.com',
-            smtp_port: 587,
-            connection_security: 'tls'
-        },
-        yahoo: {
-            smtp_server: 'smtp.mail.yahoo.com',
-            smtp_port: 587,
-            connection_security: 'tls'
-        },
-        custom: {
-            smtp_server: '',
-            smtp_port: 587,
-            connection_security: 'tls'
-        }
-    };
-
-    // Setup provider buttons
-    function setupProviderButtons() {
-        document.querySelectorAll('.provider-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const provider = this.dataset.provider;
-                const config = providerConfigs[provider];
-                
-                if (config) {
-                    // Fill form fields
-                    document.getElementById('{{ form.smtp_server.id_for_label }}').value = config.smtp_server;
-                    document.getElementById('{{ form.smtp_port.id_for_label }}').value = config.smtp_port;
-                    document.getElementById('{{ form.connection_security.id_for_label }}').value = config.connection_security;
-                    
-                    // Remove validation classes
-                    document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
-                        el.classList.remove('is-invalid', 'is-valid');
-                    });
-                    
-                    // Show success message with helpful text
-                    let providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
-                    showToast(`Configurações do ${providerName} aplicadas! Agora preencha seu e-mail e senha.`, 'success');
-                    
-                    // Focus on email field
-                    document.getElementById('{{ form.email.id_for_label }}').focus();
-                }
-            });
-        });
     }
 
     // Send test email
@@ -786,7 +757,6 @@
 
     // Initialize everything
     document.addEventListener('DOMContentLoaded', function() {
-        setupProviderButtons();
         setupSecurityValidation();
         setupPortSuggestions();
         setupFormValidation();

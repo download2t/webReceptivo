@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const action = newStatus ? 'ativar' : 'inativar';
             
             if (confirm(`Tem certeza que deseja ${action} o usuário ${username}?`)) {
-                fetch(`/users/${userId}/toggle-active/`, {
+                fetch(`/users/users/${userId}/toggle-active/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,

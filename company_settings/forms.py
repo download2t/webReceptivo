@@ -8,6 +8,18 @@ import re
 class CompanySettingsForm(forms.ModelForm):
     """Form for Company Settings configuration."""
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Adicionar classe is-invalid aos campos com erro
+        if hasattr(self, 'errors'):
+            for field_name, errors in self.errors.items():
+                if field_name != '__all__' and field_name in self.fields:
+                    field_widget = self.fields[field_name].widget
+                    if 'class' in field_widget.attrs:
+                        field_widget.attrs['class'] += ' is-invalid'
+                    else:
+                        field_widget.attrs['class'] = 'is-invalid'
+    
     class Meta:
         model = CompanySettings
         fields = [
@@ -23,9 +35,8 @@ class CompanySettingsForm(forms.ModelForm):
             }),
             'cnpj_cpf': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '00.000.000/0000-00',
-                'maxlength': 18,
-                'data-mask': '00.000.000/0000-00'
+                'placeholder': 'CNPJ ou CPF',
+                'maxlength': 20
             }),
             'state_registration': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -60,15 +71,13 @@ class CompanySettingsForm(forms.ModelForm):
             'state': forms.Select(attrs={'class': 'form-control'}),
             'zip_code': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '00000-000',
-                'maxlength': 9,
-                'data-mask': '00000-000'
+                'placeholder': 'CEP',
+                'maxlength': 10
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '(00) 0000-0000',
-                'maxlength': 15,
-                'data-mask': '(00) 0000-00000'
+                'placeholder': 'Telefone',
+                'maxlength': 20
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
@@ -81,107 +90,35 @@ class CompanySettingsForm(forms.ModelForm):
         }
 
     def clean_cnpj_cpf(self):
-        """Validate CNPJ/CPF format and digits."""
+        """Retorna CNPJ/CPF sem validação de formato."""
         cnpj_cpf = self.cleaned_data.get('cnpj_cpf', '')
-        if cnpj_cpf:
-            # Lista de CNPJs conhecidos da empresa que podem ter exceções na validação
-            # TODO: Remover após confirmar CNPJ correto com a Receita Federal
-            known_company_cnpjs = [
-                '77.766.483/0001-64',  # CNPJ real da empresa (aguardando confirmação)
-            ]
-            
-            if cnpj_cpf in known_company_cnpjs:
-                # Pular validação para CNPJs conhecidos da empresa
-                return cnpj_cpf
-            # Remove formatting
-            digits = re.sub(r'[^\d]', '', cnpj_cpf)
-            
-            # Check if it's CNPJ (14 digits) or CPF (11 digits)
-            if len(digits) == 14:
-                # CNPJ validation
-                if digits == digits[0] * 14:
-                    raise ValidationError('CNPJ inválido.')
-                
-                # Calculate check digits
-                def calculate_digit(cnpj_partial, weights):
-                    total = sum(int(digit) * weight for digit, weight in zip(cnpj_partial, weights))
-                    remainder = total % 11
-                    return 0 if remainder < 2 else 11 - remainder
-                
-                weights_first = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
-                weights_second = [6, 7, 8, 9, 2, 3, 4, 5, 6, 7, 8, 9]
-                
-                first_digit = calculate_digit(digits[:12], weights_first)
-                second_digit = calculate_digit(digits[:12] + str(first_digit), weights_second)
-                
-                if digits[12:14] != f'{first_digit}{second_digit}':
-                    calculated_digits = f'{first_digit}{second_digit}'
-                    provided_digits = digits[12:14]
-                    raise ValidationError(
-                        f'CNPJ inválido. Dígitos verificadores incorretos. '
-                        f'Esperado: {calculated_digits}, fornecido: {provided_digits}. '
-                        f'CNPJ válido seria: {digits[:12]}{calculated_digits}'
-                    )
-            
-            elif len(digits) == 11:
-                # CPF validation
-                if digits == digits[0] * 11:
-                    raise ValidationError('CPF inválido - todos os dígitos são iguais.')
-                
-                # Calculate CPF check digits
-                def calculate_cpf_digit(cpf_partial, weights):
-                    total = sum(int(digit) * weight for digit, weight in zip(cpf_partial, weights))
-                    remainder = total % 11
-                    return 0 if remainder < 2 else 11 - remainder
-                
-                weights_cpf_first = [10, 9, 8, 7, 6, 5, 4, 3, 2]
-                weights_cpf_second = [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]
-                
-                first_digit_cpf = calculate_cpf_digit(digits[:9], weights_cpf_first)
-                second_digit_cpf = calculate_cpf_digit(digits[:9] + str(first_digit_cpf), weights_cpf_second)
-                
-                if digits[9:11] != f'{first_digit_cpf}{second_digit_cpf}':
-                    calculated_digits = f'{first_digit_cpf}{second_digit_cpf}'
-                    provided_digits = digits[9:11]
-                    raise ValidationError(
-                        f'CPF inválido. Dígitos verificadores incorretos. '
-                        f'Esperado: {calculated_digits}, fornecido: {provided_digits}. '
-                        f'CPF válido seria: {digits[:9]}{calculated_digits}'
-                    )
-            
-            else:
-                raise ValidationError('CNPJ deve ter 14 dígitos ou CPF deve ter 11 dígitos.')
-        
         return cnpj_cpf
 
     def clean_email(self):
-        """Validate email format."""
+        """Retorna email sem validação rigorosa de formato."""
         email = self.cleaned_data.get('email')
-        if email:
-            validate_email(email)
         return email
 
     def clean_zip_code(self):
-        """Validate ZIP code format."""
+        """Retorna CEP sem validação de formato."""
         zip_code = self.cleaned_data.get('zip_code', '')
-        if zip_code:
-            zip_digits = re.sub(r'[^\d]', '', zip_code)
-            if len(zip_digits) != 8:
-                raise ValidationError('CEP deve ter 8 dígitos.')
         return zip_code
 
     def clean_logo(self):
         """Validate logo file."""
         logo = self.cleaned_data.get('logo')
         if logo:
-            # Check file size (max 5MB)
-            if logo.size > 5 * 1024 * 1024:
-                raise ValidationError('O arquivo da logo deve ter no máximo 5MB.')
-            
-            # Check file type
-            valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if logo.content_type not in valid_types:
-                raise ValidationError('Formato de arquivo não suportado. Use JPEG, PNG, GIF ou WebP.')
+            # Verificar se é um novo upload (tem content_type)
+            # Se for ImageFieldFile (arquivo já salvo), não validar
+            if hasattr(logo, 'content_type'):
+                # Check file size (max 5MB)
+                if logo.size > 5 * 1024 * 1024:
+                    raise ValidationError('O arquivo da logo deve ter no máximo 5MB.')
+                
+                # Check file type
+                valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                if logo.content_type not in valid_types:
+                    raise ValidationError('Formato de arquivo não suportado. Use JPEG, PNG, GIF ou WebP.')
         
         return logo
 
@@ -225,10 +162,10 @@ class SMTPSettingsForm(forms.ModelForm):
     test_email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'email@teste.com'
+            'placeholder': 'email@exemplo.com.br'
         }),
         required=False,
-        help_text='Email para teste de envio.'
+        help_text='Email para receber o teste de envio.'
     )
     
     class Meta:
@@ -254,7 +191,7 @@ class SMTPSettingsForm(forms.ModelForm):
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'suportesanma@gmail.com'
+                'placeholder': 'contato@webreceptivo.com.br'
             }),
             'connection_security': forms.Select(attrs={'class': 'form-control'}),
             'timeout': forms.NumberInput(attrs={

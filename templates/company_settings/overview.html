@@ -31,16 +31,20 @@
                                 <img src="{{ company_settings.logo.url }}" 
                                      alt="Logo" class="logo-preview mb-2" style="max-height: 60px;">
                             {% endif %}
-                            <h6 class="fw-bold">{{ company_settings.name|default:"Nome não configurado" }}</h6>
-                            {% if company_settings.trading_name and company_settings.trading_name != company_settings.name %}
-                                <small class="text-muted d-block">{{ company_settings.trading_name }}</small>
-                            {% endif %}
+                            <h6 class="fw-bold">{{ company_settings.company_name|default:"Nome não configurado" }}</h6>
                         </div>
                         
                         <div class="info-item mb-2">
-                            <strong>CNPJ:</strong> 
-                            <span class="text-muted">{{ company_settings.cnpj|default:"Não configurado" }}</span>
+                            <strong>CNPJ/CPF:</strong> 
+                            <span class="text-muted">{{ company_settings.cnpj_cpf|default:"Não configurado" }}</span>
                         </div>
+                        
+                        {% if company_settings.state_registration %}
+                            <div class="info-item mb-2">
+                                <strong>IE:</strong> 
+                                <span class="text-muted">{{ company_settings.state_registration }}</span>
+                            </div>
+                        {% endif %}
                         
                         {% if company_settings.phone %}
                             <div class="info-item mb-2">
@@ -57,9 +61,23 @@
                         {% endif %}
                         
                         {% if company_settings.city and company_settings.state %}
-                            <div class="info-item">
-                                <strong>Localização:</strong> 
+                            <div class="info-item mb-2">
+                                <strong>Cidade/UF:</strong> 
                                 <span class="text-muted">{{ company_settings.city }}/{{ company_settings.state }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if company_settings.zip_code %}
+                            <div class="info-item mb-2">
+                                <strong>CEP:</strong> 
+                                <span class="text-muted">{{ company_settings.zip_code }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if company_settings.updated_at %}
+                            <div class="info-item">
+                                <strong>Última Atualização:</strong> 
+                                <span class="text-muted">{{ company_settings.updated_at|date:"d/m/Y H:i" }}</span>
                             </div>
                         {% endif %}
                     </div>
@@ -93,29 +111,33 @@
                 {% if system_settings %}
                     <div class="system-info">
                         <div class="info-item mb-2">
-                            <strong>Nome do Sistema:</strong> 
-                            <span class="text-muted">{{ system_settings.system_name|default:"WebReceptivo" }}</span>
-                        </div>
-                        
-                        <div class="info-item mb-2">
                             <strong>Fuso Horário:</strong> 
                             <span class="text-muted">{{ system_settings.timezone|default:"America/Sao_Paulo" }}</span>
                         </div>
                         
                         <div class="info-item mb-2">
                             <strong>Formato de Data:</strong> 
-                            <span class="text-muted">{{ system_settings.get_date_format_display|default:"dd/mm/yyyy" }}</span>
+                            <span class="text-muted">{{ system_settings.get_date_format_display|default:"DD/MM/AAAA" }}</span>
                         </div>
                         
                         <div class="info-item mb-2">
                             <strong>Formato de Hora:</strong> 
-                            <span class="text-muted">{{ system_settings.get_time_format_display|default:"24h" }}</span>
+                            <span class="text-muted">{{ system_settings.get_time_format_display|default:"24 horas" }}</span>
                         </div>
                         
-                        <div class="info-item">
-                            <strong>Idioma:</strong> 
-                            <span class="text-muted">{{ system_settings.get_language_display|default:"Português (BR)" }}</span>
+                        {% if system_settings.updated_at %}
+                        <div class="info-item mb-2">
+                            <strong>Última Atualização:</strong> 
+                            <span class="text-muted">{{ system_settings.updated_at|date:"d/m/Y H:i" }}</span>
                         </div>
+                        {% endif %}
+                        
+                        {% if system_settings.updated_by %}
+                        <div class="info-item">
+                            <strong>Atualizado por:</strong> 
+                            <span class="text-muted">{{ system_settings.updated_by.get_full_name|default:system_settings.updated_by.username }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                 {% else %}
                     <div class="text-center text-muted py-3">
@@ -147,8 +169,8 @@
                 {% if smtp_settings %}
                     <div class="smtp-info">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="badge bg-{% if smtp_settings.is_configured %}success{% else %}warning{% endif %}">
-                                {% if smtp_settings.is_configured %}
+                            <span class="badge bg-{% if smtp_settings.smtp_server and smtp_settings.email and smtp_settings.smtp_password %}success{% else %}warning{% endif %}">
+                                {% if smtp_settings.smtp_server and smtp_settings.email and smtp_settings.smtp_password %}
                                     <i class="fas fa-check-circle"></i> Configurado
                                 {% else %}
                                     <i class="fas fa-exclamation-triangle"></i> Incompleto
@@ -158,30 +180,52 @@
                         
                         <div class="info-item mb-2">
                             <strong>Servidor:</strong> 
-                            <span class="text-muted">{{ smtp_settings.host|default:"Não configurado" }}</span>
+                            <span class="text-muted">{{ smtp_settings.smtp_server|default:"Não configurado" }}</span>
                         </div>
                         
                         <div class="info-item mb-2">
                             <strong>Porta:</strong> 
-                            <span class="text-muted">{{ smtp_settings.port|default:"Não configurado" }}</span>
+                            <span class="text-muted">{{ smtp_settings.smtp_port|default:"Não configurado" }}</span>
                         </div>
                         
                         <div class="info-item mb-2">
-                            <strong>Usuário:</strong> 
-                            <span class="text-muted">{{ smtp_settings.username|default:"Não configurado" }}</span>
+                            <strong>E-mail:</strong> 
+                            <span class="text-muted">{{ smtp_settings.email|default:"Não configurado" }}</span>
                         </div>
                         
                         <div class="info-item mb-2">
                             <strong>Segurança:</strong> 
-                            <span class="text-muted">
-                                {% if smtp_settings.use_tls %}TLS
-                                {% elif smtp_settings.use_ssl %}SSL
-                                {% else %}Nenhuma
-                                {% endif %}
+                            <span class="text-muted">{{ smtp_settings.get_connection_security_display|default:"Não configurado" }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-2">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{% if smtp_settings.is_active %}success{% else %}secondary{% endif %}">
+                                {% if smtp_settings.is_active %}Ativo{% else %}Inativo{% endif %}
                             </span>
                         </div>
                         
-                        {% if smtp_settings.is_configured %}
+                        {% if smtp_settings.last_test_date %}
+                        <div class="info-item mb-2">
+                            <strong>Último Teste:</strong> 
+                            <span class="text-muted">{{ smtp_settings.last_test_date|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <div class="info-item mb-2">
+                            <strong>Resultado:</strong> 
+                            <span class="badge bg-{% if smtp_settings.last_test_success %}success{% else %}danger{% endif %}">
+                                {% if smtp_settings.last_test_success %}Sucesso{% else %}Falhou{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if smtp_settings.updated_at %}
+                        <div class="info-item">
+                            <strong>Atualizado em:</strong> 
+                            <span class="text-muted">{{ smtp_settings.updated_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if smtp_settings.smtp_server and smtp_settings.email and smtp_settings.smtp_password %}
                             <div class="mt-3">
                                 <button type="button" class="btn btn-outline-info btn-sm" onclick="testSMTP()">
                                     <i class="fas fa-paper-plane"></i> Testar Envio
@@ -216,7 +260,7 @@
                 <div class="row">
                     <!-- Current Time -->
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="status-item text-center p-3 bg-light rounded">
+                        <div class="status-item text-center p-3 rounded">
                             <i class="fas fa-clock fa-2x text-primary mb-2"></i>
                             <h6>Data e Hora Atual</h6>
                             <p class="mb-0" id="currentDateTime">Carregando...</p>
@@ -225,7 +269,7 @@
                     
                     <!-- Configuration Status -->
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="status-item text-center p-3 bg-light rounded">
+                        <div class="status-item text-center p-3 rounded">
                             <i class="fas fa-cog fa-2x {% if config_complete %}text-success{% else %}text-warning{% endif %} mb-2"></i>
                             <h6>Configuração</h6>
                             <p class="mb-0">
@@ -238,12 +282,12 @@
                     
                     <!-- Email Status -->
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="status-item text-center p-3 bg-light rounded">
-                            <i class="fas fa-envelope fa-2x {% if smtp_settings.is_configured %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <div class="status-item text-center p-3 rounded">
+                            <i class="fas fa-envelope fa-2x {% if smtp_settings and smtp_settings.smtp_server and smtp_settings.is_active %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                             <h6>E-mail</h6>
                             <p class="mb-0">
-                                <span class="badge bg-{% if smtp_settings.is_configured %}success{% else %}danger{% endif %}">
-                                    {% if smtp_settings.is_configured %}Ativo{% else %}Inativo{% endif %}
+                                <span class="badge bg-{% if smtp_settings and smtp_settings.smtp_server and smtp_settings.is_active %}success{% else %}danger{% endif %}">
+                                    {% if smtp_settings and smtp_settings.smtp_server and smtp_settings.is_active %}Ativo{% else %}Inativo{% endif %}
                                 </span>
                             </p>
                         </div>
@@ -251,7 +295,7 @@
                     
                     <!-- Last Update -->
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <div class="status-item text-center p-3 bg-light rounded">
+                        <div class="status-item text-center p-3 rounded">
                             <i class="fas fa-sync-alt fa-2x text-info mb-2"></i>
                             <h6>Última Atualização</h6>
                             <p class="mb-0 small">{{ last_updated|default:"Nunca" }}</p>

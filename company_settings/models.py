@@ -16,14 +16,7 @@ class CompanySettings(models.Model):
     
     # Dados da Empresa
     company_name = models.CharField('Nome da Empresa', max_length=200)
-    cnpj_cpf = models.CharField(
-        'CNPJ/CPF', 
-        max_length=18,
-        validators=[RegexValidator(
-            regex=r'^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}|\d{3}\.\d{3}\.\d{3}\-\d{2}$',
-            message='CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX ou CPF XXX.XXX.XXX-XX'
-        )]
-    )
+    cnpj_cpf = models.CharField('CNPJ/CPF', max_length=20)
     state_registration = models.CharField('Inscrição Estadual', max_length=20, blank=True)
     
     # Endereço
@@ -43,25 +36,11 @@ class CompanySettings(models.Model):
         ('SC', 'Santa Catarina'), ('SP', 'São Paulo'), ('SE', 'Sergipe'),
         ('TO', 'Tocantins')
     ])
-    zip_code = models.CharField(
-        'CEP', 
-        max_length=9,
-        validators=[RegexValidator(
-            regex=r'^\d{5}-\d{3}$',
-            message='CEP deve estar no formato XXXXX-XXX'
-        )]
-    )
+    zip_code = models.CharField('CEP', max_length=10)
     
     # Contato
-    phone = models.CharField(
-        'Telefone Principal', 
-        max_length=15,
-        validators=[RegexValidator(
-            regex=r'^\(\d{2}\)\s\d{4,5}-\d{4}$',
-            message='Telefone deve estar no formato (XX) XXXXX-XXXX'
-        )]
-    )
-    email = models.EmailField('E-mail Principal', validators=[EmailValidator()])
+    phone = models.CharField('Telefone Principal', max_length=20)
+    email = models.EmailField('E-mail Principal')
     
     # Logotipo
     logo = models.ImageField('Logotipo', upload_to='company/logos/', blank=True, null=True)

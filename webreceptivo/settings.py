@@ -56,6 +56,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'company_settings.middleware.DynamicSMTPMiddleware',  # Carrega SMTP do banco
     'audit_system.middleware.AuditMiddleware',  # Middleware de auditoria
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -183,3 +184,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Email Configuration
+# Configurações padrão (fallback) - serão sobrescritas pelas configurações do banco de dados
+# As configurações reais são carregadas automaticamente do banco pelo CompanySettingsConfig.ready()
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desenvolvimento
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 25
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+DEFAULT_FROM_EMAIL = 'noreply@webreceptivo.com'
+EMAIL_TIMEOUT = 30

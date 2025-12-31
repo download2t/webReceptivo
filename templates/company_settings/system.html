@@ -3,8 +3,10 @@
 {% block page_title_text %}Configurações do Sistema{% endblock %}
 
 {% block page_icon %}<i class="fas fa-desktop"></i>{% endblock %}
-{% block page_main_title %}Configurações do Sistema{% endblock %}
-{% block subtitle %}Configure as definições gerais do sistema{% endblock %}
+{% block page_title %}Configurações do Sistema{% endblock %}
+{% block page_description %}
+    <p class="settings-page-description">Configure as definições gerais do sistema</p>
+{% endblock %}
 
 {% block settings_content %}
 <form method="post" id="systemForm" class="needs-validation" novalidate>
@@ -165,80 +167,17 @@
         </div>
     </div>
 
-    <!-- Current System Status -->
-    <div class="content-card mb-4">
-        <div class="content-card-header">
-            <h5 class="mb-0">
-                <i class="fas fa-server text-warning me-2"></i>
-                Status do Sistema
-            </h5>
-        </div>
-        <div class="content-card-body">
-            <div class="row">
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-card text-center p-3 bg-light rounded">
-                        <i class="fas fa-clock fa-2x text-primary mb-2"></i>
-                        <h6>Hora do Servidor</h6>
-                        <p class="mb-0" id="serverTime">Carregando...</p>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-card text-center p-3 bg-light rounded">
-                        <i class="fas fa-globe fa-2x text-success mb-2"></i>
-                        <h6>Fuso Atual</h6>
-                        <p class="mb-0" id="currentTimezone">{{ current_timezone|default:"America/Sao_Paulo" }}</p>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-card text-center p-3 bg-light rounded">
-                        <i class="fas fa-calendar fa-2x text-info mb-2"></i>
-                        <h6>Formato Data</h6>
-                        <p class="mb-0" id="currentDateFormat">{{ current_date_format|default:"DD/MM/YYYY" }}</p>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6 mb-3">
-                    <div class="status-card text-center p-3 bg-light rounded">
-                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
-                        <h6>Formato Hora</h6>
-                        <p class="mb-0" id="currentTimeFormat">{{ current_time_format|default:"HH:MM:SS" }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-12">
-                    <button type="button" class="btn btn-outline-primary" onclick="refreshSystemStatus()">
-                        <i class="fas fa-sync-alt"></i> Atualizar Status
-                    </button>
-                    
-                    <button type="button" class="btn btn-outline-info" onclick="testDateTime()">
-                        <i class="fas fa-test-tube"></i> Testar Configurações
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Form Actions -->
     <div class="form-actions">
         <button type="submit" class="btn btn-success">
             <i class="fas fa-save"></i> Salvar Configurações
         </button>
-        
-        <button type="button" class="btn btn-secondary" onclick="resetForm()">
-            <i class="fas fa-undo"></i> Resetar
-        </button>
-        
+
         <a href="{% url 'company_settings:overview' %}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Voltar
         </a>
         
-        <button type="button" class="btn btn-outline-warning ms-auto" onclick="showTimezoneInfo()">
-            <i class="fas fa-info-circle"></i> Info Fuso Horário
-        </button>
+
     </div>
 </form>
 

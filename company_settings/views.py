@@ -54,6 +54,10 @@ def company_settings_view(request):
         for field in CompanySettingsForm.Meta.fields:
             original_data[field] = getattr(settings_obj, field, None)
         
+        # Salvar logo antigo para deletar depois
+        old_logo = settings_obj.logo
+        logo_clear = request.POST.get('logo-clear') == 'on'
+        
         form = CompanySettingsForm(request.POST, request.FILES, instance=settings_obj)
         if form.is_valid():
             # Detectar mudanças
@@ -68,6 +72,24 @@ def company_settings_view(request):
             
             settings_obj = form.save(commit=False)
             settings_obj.updated_by = request.user
+            
+            # Deletar arquivo antigo e limpar campo se logo-clear foi marcado
+            if logo_clear and old_logo:
+                import os
+                if old_logo.name and os.path.isfile(old_logo.path):
+                    os.remove(old_logo.path)
+                    print(f'Logo deletado: {old_logo.path}')
+                settings_obj.logo = None
+            # Deletar arquivo antigo se uma nova logo foi enviada
+            elif 'logo' in request.FILES and old_logo:
+                import os
+                if old_logo.name and os.path.isfile(old_logo.path):
+                    # Verificar se não é a mesma imagem
+                    new_logo_name = request.FILES['logo'].name
+                    if old_logo.name != f'company/logos/{new_logo_name}':
+                        os.remove(old_logo.path)
+                        print(f'Logo antigo substituído: {old_logo.path}')
+            
             settings_obj.save()
             
             # Registrar auditoria

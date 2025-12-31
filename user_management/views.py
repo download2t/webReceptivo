@@ -155,6 +155,46 @@ class UserManagementForm(forms.ModelForm):
         
         return password2
     
+    def clean_email(self):
+        """Valida se o e-mail já está em uso por outro usuário"""
+        email = self.cleaned_data.get('email')
+        
+        if email:
+            # Verifica se já existe outro usuário com este e-mail
+            existing_user = User.objects.filter(email=email)
+            
+            # Se estiver editando, excluir o próprio usuário da verificação
+            if self.instance and self.instance.pk:
+                existing_user = existing_user.exclude(pk=self.instance.pk)
+            
+            if existing_user.exists():
+                raise forms.ValidationError(
+                    'Este e-mail já está cadastrado no sistema. '
+                    'Cada usuário deve ter um e-mail único.'
+                )
+        
+        return email
+    
+    def clean_username(self):
+        """Valida se o nome de usuário já está em uso"""
+        username = self.cleaned_data.get('username')
+        
+        if username:
+            # Verifica se já existe outro usuário com este username
+            existing_user = User.objects.filter(username=username)
+            
+            # Se estiver editando, excluir o próprio usuário da verificação
+            if self.instance and self.instance.pk:
+                existing_user = existing_user.exclude(pk=self.instance.pk)
+            
+            if existing_user.exists():
+                raise forms.ValidationError(
+                    'Este nome de usuário já está em uso. '
+                    'Escolha outro nome de usuário.'
+                )
+        
+        return username
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         
