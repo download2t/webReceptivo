@@ -624,10 +624,11 @@ def ordem_servico_edit(request, pk):
                         'nome': tipo.strip()
                     })
         
-        # Carregar transfers da OS
+        # Carregar transfers da OS que correspondem à data deste lançamento
         transfers_lista = []
         if ordem:
-            for transfer_os in ordem.transfers_os.all():
+            # Filtrar transfers pela data do lançamento
+            for transfer_os in ordem.transfers_os.filter(data_transfer=lanc.data_servico):
                 transfers_lista.append({
                     'id': transfer_os.id,
                     'transfer_id': transfer_os.transfer.id,

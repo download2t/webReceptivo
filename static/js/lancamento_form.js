@@ -442,17 +442,20 @@
             }
         }
         
-        // Coletar transfers
+        // Coletar transfers APENAS do container de transfers
         let transfers = [];
         let valorTransferIda = 0;
         let valorTransferVolta = 0;
         
-        const transferSelects = document.querySelectorAll('.transfer-select');
+        const transferSelects = document.querySelectorAll('#containerTransfers .transfer-select');
+        console.log('Quantidade de transfers encontrados:', transferSelects.length);
         transferSelects.forEach(function(select) {
             if (select.value) {
                 const option = select.selectedOptions[0];
                 const transferNome = option.getAttribute('data-nome');
                 const transferValor = parseFloat(option.getAttribute('data-valor'));
+                
+                console.log('Transfer adicionado:', transferNome, transferValor);
                 
                 transfers.push({
                     transfer_id: select.value,  // ID do transfer
@@ -470,6 +473,8 @@
                 }
             }
         });
+        
+        console.log('Total de transfers coletados:', transfers.length);
         
         // Descrição
         let descricao = document.getElementById('descricaoServico').value.trim();
@@ -583,7 +588,8 @@
                 });
                 
                 setTimeout(function() {
-                    const transferSelects = document.querySelectorAll('.transfer-select');
+                    // Buscar APENAS os selects do container de transfers
+                    const transferSelects = document.querySelectorAll('#containerTransfers .transfer-select');
                     transferSelects.forEach(function(select, idx) {
                         if (servico.transfers[idx]) {
                             select.value = servico.transfers[idx].transfer_id || servico.transfers[idx].id;
@@ -692,6 +698,11 @@
             const nomeServico = info.nome || 'Serviço sem nome';
             const data = servico.data || '';
             
+            console.log('=== RESUMO - Serviço ' + (index + 1) + ' ===');
+            console.log('Nome:', nomeServico);
+            console.log('Transfers:', servico.transfers);
+            console.log('Quantidade de transfers:', servico.transfers ? servico.transfers.length : 0);
+            
             // Calcula valores do serviço
             const qtdInteira = parseInt(servico.qtd_inteira) || 0;
             const qtdMeia = parseInt(servico.qtd_meia) || 0;
@@ -752,7 +763,9 @@
             
             // Transfers - mostrar cada um com seu nome
             if (servico.transfers && servico.transfers.length > 0) {
-                servico.transfers.forEach(function(transfer) {
+                console.log('Exibindo ' + servico.transfers.length + ' transfers para:', nomeServico);
+                servico.transfers.forEach(function(transfer, tIdx) {
+                    console.log('  Transfer ' + (tIdx + 1) + ':', transfer.nome, 'R$', transfer.valor);
                     const valorTransfer = parseFloat(transfer.valor || 0);
                     if (valorTransfer > 0) {
                         html += '<div class="d-flex justify-content-between">';
