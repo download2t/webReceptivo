@@ -1,0 +1,62 @@
+/* Ordem de Serviço - Detalhes */
+
+/* WhatsApp preview - tema claro */
+[data-bs-theme="light"] .whatsapp-preview {
+    background-color: #e5ddd5;
+}
+
+[data-bs-theme="light"] .whatsapp-bubble {
+    background-color: #dcf8c6;
+    color: #000;
+}
+
+/* WhatsApp preview - tema escuro */
+[data-bs-theme="dark"] .whatsapp-preview {
+    background-color: #1e1e1e;
+}
+
+[data-bs-theme="dark"] .whatsapp-bubble {
+    background-color: #056162;
+    color: #e9edef;
+}
+
+.whatsapp-preview {
+    border-radius: 10px;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.whatsapp-bubble {
+    border-radius: 7px;
+    padding: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.copy-btn {
+    transition: all 0.3s ease;
+}
+
+.copy-btn.copied {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+/* Cards adaptativos */
+[data-bs-theme="dark"] .card {
+    background-color: var(--bs-body-bg);
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
+    color: var(--bs-body-color);
+}
+
+/* Badges no tema escuro */
+[data-bs-theme="dark"] .badge {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
