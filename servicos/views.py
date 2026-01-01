@@ -616,13 +616,30 @@ def ordem_servico_edit(request, pk):
         
         tipos_meia = []
         if lanc.tipos_meia_entrada:
-            for idx, tipo in enumerate(lanc.tipos_meia_entrada.split('\n')):
-                if tipo.strip():
-                    tipos_meia.append({
-                        'id': idx + 1,
-                        'tipo': tipo.strip(),
-                        'nome': tipo.strip()
-                    })
+            # Buscar todos os tipos de meia disponíveis para fazer o mapeamento
+            todos_tipos_meia = TipoMeiaEntrada.objects.filter(ativo=True)
+            mapa_tipos = {t.nome: t.id for t in todos_tipos_meia}
+            
+            for tipo_texto in lanc.tipos_meia_entrada.split('\n'):
+                tipo_texto = tipo_texto.strip()
+                if tipo_texto:
+                    # Tentar encontrar o ID real pelo nome
+                    tipo_id = mapa_tipos.get(tipo_texto)
+                    if tipo_id:
+                        tipos_meia.append({
+                            'id': tipo_id,
+                            'tipo': tipo_texto,
+                            'nome': tipo_texto
+                        })
+                    else:
+                        # Se não encontrar, usar o primeiro tipo disponível como fallback
+                        primeiro_tipo = todos_tipos_meia.first()
+                        if primeiro_tipo:
+                            tipos_meia.append({
+                                'id': primeiro_tipo.id,
+                                'tipo': tipo_texto,
+                                'nome': tipo_texto
+                            })
         
         # Carregar transfers da OS que correspondem à data deste lançamento
         transfers_lista = []

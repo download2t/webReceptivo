@@ -279,7 +279,7 @@
         input.title = 'Paga Inteira (R$ ' + parseFloat(servicoAtualInfo.valor_inteira).toFixed(2) + ')';
     }
 
-    function gerarCamposTiposMeia(qtd) {
+    function gerarCamposTiposMeia(qtd, callback) {
         const container = document.getElementById('containerTiposMeia');
         const campoTiposMeia = document.getElementById('campoTiposMeia');
         
@@ -316,12 +316,16 @@
                         col.appendChild(select);
                         container.appendChild(col);
                     }
+                    // Chamar callback após criar todos os campos
+                    if (callback) callback();
                 })
                 .catch(function(error) {
                     console.error('Erro ao carregar tipos de meia:', error);
+                    if (callback) callback();
                 });
         } else {
             campoTiposMeia.style.display = 'none';
+            if (callback) callback();
         }
     }
 
@@ -556,26 +560,39 @@
                 document.getElementById('qtdInfantil').value = servico.qtd_infantil;
                 
                 // Gerar campos de idades
-                if (servico.qtd_infantil > 0) {
+                if (servico.qtd_infantil > 0 && servico.idades && servico.idades.length > 0) {
                     gerarCamposIdades(servico.qtd_infantil);
                     setTimeout(function() {
                         const idadesInputs = document.querySelectorAll('#containerIdades input.idade-input');
                         idadesInputs.forEach(function(input, idx) {
-                            input.value = servico.idades[idx];
-                            input.dispatchEvent(new Event('input'));
+                            if (servico.idades[idx] !== undefined) {
+                                input.value = servico.idades[idx];
+                                input.dispatchEvent(new Event('input'));
+                            }
                         });
                     }, 100);
                 }
                 
                 // Gerar campos de tipos de meia
-                if (servico.qtd_meia > 0) {
-                    gerarCamposTiposMeia(servico.qtd_meia);
-                    setTimeout(function() {
+                if (servico.qtd_meia > 0 && servico.tipos_meia && servico.tipos_meia.length > 0) {
+                    console.log('=== CARREGANDO TIPOS DE MEIA ===');
+                    console.log('Quantidade de meia:', servico.qtd_meia);
+                    console.log('Tipos de meia salvos:', servico.tipos_meia);
+                    
+                    gerarCamposTiposMeia(servico.qtd_meia, function() {
+                        console.log('Campos de tipos de meia criados');
                         const tiposSelects = document.querySelectorAll('#containerTiposMeia select.tipo-meia-select');
+                        console.log('Selects encontrados:', tiposSelects.length);
+                        
                         tiposSelects.forEach(function(select, idx) {
-                            select.value = servico.tipos_meia[idx].id;
+                            if (servico.tipos_meia[idx] && servico.tipos_meia[idx].id) {
+                                console.log('Definindo select', idx, 'para ID:', servico.tipos_meia[idx].id, '- Nome:', servico.tipos_meia[idx].nome);
+                                select.value = servico.tipos_meia[idx].id;
+                            } else {
+                                console.warn('Tipo de meia não encontrado para índice:', idx);
+                            }
                         });
-                    }, 100);
+                    });
                 }
                 
                 // Limpar transfers existentes antes de adicionar os novos
@@ -971,6 +988,8 @@
             
             lancamentos.forEach(function(lancamento, index) {
                 console.log('Carregando lançamento ' + (index + 1) + ':', lancamento);
+                console.log('  - tipos_meia recebidos:', lancamento.tipos_meia);
+                console.log('  - idades recebidas:', lancamento.idades);
                 
                 // Garantir que o objeto tem todas as propriedades necessárias
                 const servicoCompleto = {
