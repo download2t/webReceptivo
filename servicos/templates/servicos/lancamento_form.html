@@ -152,6 +152,53 @@
         background-color: var(--bs-body-bg);
         border-color: var(--bs-border-color);
     }
+    
+    /* Regras de Negócio - Tema Escuro */
+    [data-bs-theme="dark"] #regrasServico {
+        background: var(--bs-tertiary-bg) !important;
+        border: 1px solid var(--bs-border-color) !important;
+    }
+    
+    [data-bs-theme="dark"] #regrasServico .table {
+        color: var(--bs-body-color);
+    }
+    
+    [data-bs-theme="dark"] #regrasServico .table-light {
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--bs-body-color);
+    }
+    
+    [data-bs-theme="dark"] #regrasServico .table-success {
+        background-color: rgba(25, 135, 84, 0.2) !important;
+        color: #75b798 !important;
+    }
+    
+    [data-bs-theme="dark"] #regrasServico .table-info {
+        background-color: rgba(13, 202, 240, 0.2) !important;
+        color: #6edff6 !important;
+    }
+    
+    [data-bs-theme="dark"] #regrasServico .table-warning {
+        background-color: rgba(255, 193, 7, 0.2) !important;
+        color: #ffda6a !important;
+    }
+    
+    /* Regras de Negócio - Tema Claro */
+    [data-bs-theme="light"] #regrasServico {
+        background: #f8f9fa !important;
+    }
+    
+    /* Animação de destaque para regras */
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        }
+        50% {
+            transform: scale(1.02);
+            box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.25);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -200,10 +247,13 @@
                     <div class="campos-servico" id="camposServico">
                         <hr class="my-4">
 
-                        <!-- Regras do Serviço -->
-                        <div class="alert alert-info" id="regrasServico" style="display:none;">
-                            <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Regras do Serviço</h6>
-                            <ul id="listaRegras" class="mb-0 small"></ul>
+                        <!-- Regras do Serviço - Nova Apresentação -->
+                        <div class="alert alert-light border shadow-sm" id="regrasServico" style="display:none;">
+                            <h6 class="alert-heading mb-3">
+                                <i class="bi bi-shield-check text-primary me-2"></i>
+                                <strong>Regras de Negócio deste Serviço</strong>
+                            </h6>
+                            <ul id="listaRegras" class="mb-0 list-unstyled" style="line-height: 1.8;"></ul>
                         </div>
 
                         <!-- Quantidades -->
@@ -272,6 +322,11 @@
                         </div>
 
                         <!-- Botões de Ação -->
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-outline-info btn-sm" id="btnVerRegras" style="display:none;">
+                                <i class="bi bi-shield-check me-1"></i>Ver Regras de Negócio
+                            </button>
+                        </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-success flex-grow-1" id="btnAdicionarServico">
                                 <i class="bi bi-check-circle me-2"></i>Adicionar Serviço

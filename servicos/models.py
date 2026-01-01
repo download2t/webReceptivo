@@ -690,10 +690,7 @@ class LancamentoServico(models.Model):
         total += self.qtd_infantil_pagam_inteira * self.valor_unit_inteira
         
         # Crianças isentas não somam (R$ 0,00)
-        
-        # Adicionar valores de transfer
-        total += self.valor_transfer_ida
-        total += self.valor_transfer_volta
+        # NOTA: Transfers agora são vinculados à OS via TransferOS, não aos lançamentos individuais
         
         return total
     

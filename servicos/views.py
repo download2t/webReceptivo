@@ -381,10 +381,6 @@ def lancamento_create(request):
                     tipos_meia = servico_data.get('tipos_meia', [])
                     descricao = servico_data.get('descricao', '')
                     
-                    # Valores de transfer
-                    valor_transfer_ida = Decimal(str(servico_data.get('valor_transfer_ida', 0)))
-                    valor_transfer_volta = Decimal(str(servico_data.get('valor_transfer_volta', 0)))
-                    
                     # Buscar serviço
                     servico = SubCategoria.objects.get(pk=servico_id)
                     
@@ -404,8 +400,6 @@ def lancamento_create(request):
                         valor_unit_inteira=servico.valor_inteira,
                         valor_unit_meia=servico.valor_meia,
                         valor_unit_infantil=servico.valor_infantil,
-                        valor_transfer_ida=valor_transfer_ida,
-                        valor_transfer_volta=valor_transfer_volta,
                     )
                     
                     print(f"DEBUG: Criado lançamento {lancamento.id} - {servico.nome} vinculado à OS #{ordem.numero_os}")
@@ -418,6 +412,30 @@ def lancamento_create(request):
                         lancamento.save()
                     
                     lancamentos_criados.append(lancamento)
+                
+                # Salvar transfers da OS
+                from .models import TransferOS
+                transfers_para_salvar = []
+                for servico_data in servicos:
+                    transfers_servico = servico_data.get('transfers', [])
+                    for transfer_data in transfers_servico:
+                        transfers_para_salvar.append({
+                            'transfer_id': transfer_data['transfer_id'],
+                            'data': transfer_data['data'],
+                            'quantidade': transfer_data.get('quantidade', 1),
+                            'valor': Decimal(str(transfer_data.get('valor', 0)))
+                        })
+                
+                # Criar transfers da OS
+                for transfer_info in transfers_para_salvar:
+                    transfer_obj = Transfer.objects.get(pk=transfer_info['transfer_id'])
+                    TransferOS.objects.create(
+                        ordem_servico=ordem,
+                        transfer=transfer_obj,
+                        data_transfer=transfer_info['data'],
+                        quantidade=transfer_info['quantidade'],
+                        valor=transfer_info['valor']
+                    )
                 
                 # Atualizar totais da OS
                 ordem.calcular_total()
@@ -480,8 +498,21 @@ def lancamento_edit(request, pk):
                     ordem.roteiro = roteiro
                     ordem.save()
                     
-                    # Remover todos os lançamentos antigos da OS
+                    # Remover todos os lançamentos e transfers antigos da OS
                     ordem.lancamentos.all().delete()
+                    ordem.transfers_os.all().delete()
+                    
+                    # Processar transfers de todos os serviços
+                    transfers_para_salvar = []
+                    for servico_data in servicos:
+                        transfers_servico = servico_data.get('transfers', [])
+                        for transfer_data in transfers_servico:
+                            transfers_para_salvar.append({
+                                'transfer_id': transfer_data['transfer_id'],
+                                'data': transfer_data['data'],
+                                'quantidade': transfer_data.get('quantidade', 1),
+                                'valor': Decimal(str(transfer_data.get('valor', 0)))
+                            })
                     
                     # Criar novos lançamentos
                     for servico_data in servicos:
@@ -495,10 +526,6 @@ def lancamento_edit(request, pk):
                         idades = [int(i) for i in idades_raw if i and str(i).strip()]
                         tipos_meia = servico_data.get('tipos_meia', [])
                         descricao = servico_data.get('descricao', '')
-                        
-                        # Valores de transfer
-                        valor_transfer_ida = Decimal(str(servico_data.get('valor_transfer_ida', 0)))
-                        valor_transfer_volta = Decimal(str(servico_data.get('valor_transfer_volta', 0)))
                         
                         # Buscar serviço
                         servico = SubCategoria.objects.get(pk=servico_id)
@@ -518,8 +545,6 @@ def lancamento_edit(request, pk):
                             valor_unit_inteira=servico.valor_inteira,
                             valor_unit_meia=servico.valor_meia,
                             valor_unit_infantil=servico.valor_infantil,
-                            valor_transfer_ida=valor_transfer_ida,
-                            valor_transfer_volta=valor_transfer_volta,
                         )
                         
                         # Associar tipos de meia
@@ -527,6 +552,18 @@ def lancamento_edit(request, pk):
                             tipos_texto = '\n'.join([t.get('tipo', t.get('nome', '')) for t in tipos_meia])
                             novo_lancamento.tipos_meia_entrada = tipos_texto
                             novo_lancamento.save()
+                    
+                    # Criar transfers da OS
+                    from .models import TransferOS
+                    for transfer_info in transfers_para_salvar:
+                        transfer_obj = Transfer.objects.get(pk=transfer_info['transfer_id'])
+                        TransferOS.objects.create(
+                            ordem_servico=ordem,
+                            transfer=transfer_obj,
+                            data_transfer=transfer_info['data'],
+                            quantidade=transfer_info['quantidade'],
+                            valor=transfer_info['valor']
+                        )
                     
                     # Atualizar totais da OS
                     ordem.calcular_total()
@@ -582,6 +619,19 @@ def lancamento_edit(request, pk):
                         'nome': tipo.strip()
                     })
         
+        # Carregar transfers da OS
+        transfers_lista = []
+        if ordem:
+            for transfer_os in ordem.transfers_os.all():
+                transfers_lista.append({
+                    'id': transfer_os.id,
+                    'transfer_id': transfer_os.transfer.id,
+                    'nome': transfer_os.transfer.nome,
+                    'data': transfer_os.data_transfer.strftime('%Y-%m-%d'),
+                    'quantidade': transfer_os.quantidade,
+                    'valor': float(transfer_os.valor)
+                })
+        
         lancamentos_data.append({
             'id': lanc.id,
             'data': lanc.data_servico.strftime('%Y-%m-%d'),
@@ -593,7 +643,7 @@ def lancamento_edit(request, pk):
             'qtd_infantil': lanc.qtd_infantil,
             'idades': idades,
             'tipos_meia': tipos_meia,
-            'transfers': [],
+            'transfers': transfers_lista,
             'valor_transfer_ida': float(lanc.valor_transfer_ida),
             'valor_transfer_volta': float(lanc.valor_transfer_volta),
             'descricao': lanc.obs_publica or lanc.subcategoria.nome,
