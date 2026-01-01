@@ -352,7 +352,7 @@
         btnRemove.innerHTML = '<i class="bi bi-trash"></i>';
         btnRemove.addEventListener('click', function() {
             div.remove();
-            contadorTransfers--;
+            // Não decrementar contadorTransfers para evitar IDs duplicados
         });
         
         wrapper.appendChild(label);
@@ -572,6 +572,10 @@
                         });
                     }, 100);
                 }
+                
+                // Limpar transfers existentes antes de adicionar os novos
+                document.getElementById('containerTransfers').innerHTML = '';
+                contadorTransfers = 0;
                 
                 // Adicionar transfers
                 servico.transfers.forEach(function() {
