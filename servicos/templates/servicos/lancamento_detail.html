@@ -1,0 +1,294 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load servicos_filters %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .whatsapp-preview {
+        background-color: #e5ddd5;
+        border-radius: 10px;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .whatsapp-bubble {
+        background-color: #dcf8c6;
+        border-radius: 7px;
+        padding: 15px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+    .copy-btn {
+        transition: all 0.3s ease;
+    }
+    .copy-btn.copied {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <!-- Cabeçalho -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ title }}</h5>
+                    <div class="btn-group">
+                        <a href="{% url 'servicos:lancamento_edit' lancamento.id %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'servicos:lancamento_list' %}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Data do Serviço:</strong> {{ lancamento.data_servico|date:"d/m/Y" }}</p>
+                            <p><strong>Categoria:</strong> {{ lancamento.categoria.nome }}</p>
+                            <p><strong>Serviço:</strong> {{ lancamento.subcategoria.nome }}</p>
+                            
+                            {% if lancamento.subcategoria.texto_isencao %}
+                            <div class="alert alert-success mt-3 mb-2">
+                                <strong><i class="fas fa-gift"></i> Isenção:</strong><br>
+                                {{ lancamento.subcategoria.texto_isencao }}
+                            </div>
+                            {% endif %}
+                            
+                            {% if lancamento.subcategoria.regras_meia_entrada %}
+                            <div class="alert alert-info mt-2 mb-0">
+                                <strong><i class="fas fa-info-circle"></i> Regras de Meia Entrada:</strong><br>
+                                {{ lancamento.subcategoria.regras_meia_entrada }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Criado por:</strong> {{ lancamento.criado_por.get_full_name|default:lancamento.criado_por.username }}</p>
+                            <p><strong>Criado em:</strong> {{ lancamento.criado_em|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Atualizado em:</strong> {{ lancamento.atualizado_em|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quantidades e Valores -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-users"></i> Quantidades e Valores</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th class="text-center">Quantidade</th>
+                                    <th class="text-end">Valor Unitário</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if lancamento.qtd_inteira %}
+                                <tr>
+                                    <td><strong>Inteira</strong></td>
+                                    <td class="text-center">{{ lancamento.qtd_inteira }}</td>
+                                    <td class="text-end">R$ {{ lancamento.valor_unit_inteira|floatformat:2 }}</td>
+                                    <td class="text-end">
+                                        <strong>R$ {{ lancamento.qtd_inteira|mul:lancamento.valor_unit_inteira|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                
+                                {% if lancamento.qtd_meia %}
+                                <tr>
+                                    <td>
+                                        <strong>Meia</strong>
+                                        {% if lancamento.tipos_meia_entrada.all %}
+                                        <br><small class="text-muted">
+                                            {% for tipo in lancamento.tipos_meia_entrada.all %}
+                                                <span class="badge bg-info me-1">{{ tipo.nome }}</span>
+                                            {% endfor %}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ lancamento.qtd_meia }}</td>
+                                    <td class="text-end">R$ {{ lancamento.valor_unit_meia|floatformat:2 }}</td>
+                                    <td class="text-end">
+                                        <strong>R$ {{ lancamento.qtd_meia|mul:lancamento.valor_unit_meia|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                
+                                {% if lancamento.qtd_infantil %}
+                                <tr>
+                                    <td>
+                                        <strong>Infantil</strong>
+                                        {% if lancamento.idades_criancas %}
+                                        <br><small class="text-muted">
+                                            <i class="fas fa-birthday-cake"></i> Idades: 
+                                            {% for idade in lancamento.idades_criancas %}
+                                                {% if lancamento.subcategoria.idade_isencao_min != None and lancamento.subcategoria.idade_isencao_max != None and lancamento.subcategoria.idade_isencao_min <= idade and idade <= lancamento.subcategoria.idade_isencao_max %}
+                                                    <span class="badge bg-success text-white me-1" title="Isento">{{ idade }} anos ⭐</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark me-1">{{ idade }} anos</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </small>
+                                        {% endif %}
+                                        {% if lancamento.qtd_infantil_isentas > 0 %}
+                                        <br><small class="text-success">
+                                            <i class="fas fa-gift"></i> {{ lancamento.qtd_infantil_isentas }} isenta(s) | {{ lancamento.qtd_infantil_pagas }} paga(s)
+                                        </small>
+                                        {% endif %}
+                                        {% if lancamento.qtd_infantil_pagam_inteira > 0 %}
+                                        <br><small class="text-info">
+                                            <i class="fas fa-info-circle"></i> Crianças pagas cobradas como INTEIRA (serviço não aceita meia)
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ lancamento.qtd_infantil }}
+                                        {% if lancamento.qtd_infantil_isentas > 0 %}
+                                        <br><small class="text-muted">({{ lancamento.qtd_infantil_pagas }} pagas)</small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if lancamento.qtd_infantil_pagam_inteira > 0 %}
+                                            R$ {{ lancamento.valor_unit_inteira|floatformat:2 }}
+                                            <br><small class="text-muted">(valor inteira)</small>
+                                        {% else %}
+                                            R$ {{ lancamento.valor_unit_infantil|floatformat:2 }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if lancamento.qtd_infantil_pagam_inteira > 0 %}
+                                            <strong>R$ {{ lancamento.qtd_infantil_pagas|mul:lancamento.valor_unit_inteira|floatformat:2 }}</strong>
+                                        {% else %}
+                                            <strong>R$ {{ lancamento.qtd_infantil_pagas|mul:lancamento.valor_unit_infantil|floatformat:2 }}</strong>
+                                        {% endif %}
+                                        {% if lancamento.qtd_infantil_isentas > 0 %}
+                                        <br><small class="text-success">
+                                            Economia: R$ 
+                                            {% if lancamento.qtd_infantil_pagam_inteira > 0 %}
+                                                {{ lancamento.qtd_infantil_isentas|mul:lancamento.valor_unit_inteira|floatformat:2 }}
+                                            {% else %}
+                                                {{ lancamento.qtd_infantil_isentas|mul:lancamento.valor_unit_infantil|floatformat:2 }}
+                                            {% endif %}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                
+                                <tr class="table-success">
+                                    <td colspan="2"><strong>TOTAL</strong></td>
+                                    <td class="text-end"><strong>{{ lancamento.total_pax }} PAX</strong></td>
+                                    <td class="text-end">
+                                        <h5 class="mb-0 text-success">R$ {{ lancamento.valor_total|floatformat:2 }}</h5>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Observações -->
+            {% if lancamento.obs_publica or lancamento.obs_privada %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-comment"></i> Observações</h6>
+                </div>
+                <div class="card-body">
+                    {% if lancamento.obs_publica %}
+                    <div class="mb-3">
+                        <strong>Observações Públicas:</strong>
+                        <p class="mb-0 mt-2">{{ lancamento.obs_publica }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if lancamento.obs_privada %}
+                    <div>
+                        <strong>Observações Privadas (uso interno):</strong>
+                        <p class="mb-0 mt-2 text-muted">{{ lancamento.obs_privada }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Texto do WhatsApp -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fab fa-whatsapp"></i> Texto para WhatsApp</h6>
+                    <button type="button" class="btn btn-light btn-sm copy-btn" id="copyBtn" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="whatsapp-preview">
+                        <div class="whatsapp-bubble" id="whatsappText">{{ texto_whatsapp }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard() {
+    const text = document.getElementById('whatsappText').textContent;
+    const btn = document.getElementById('copyBtn');
+    
+    // Usar a API moderna do Clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Feedback visual
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+            
+            // Resetar após 2 segundos
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copiar';
+            }, 2000);
+        }).catch(err => {
+            console.error('Erro ao copiar:', err);
+            alert('Erro ao copiar para a área de transferência. Por favor, copie manualmente.');
+        });
+    } else {
+        // Fallback para navegadores antigos
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+            
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copiar';
+            }, 2000);
+        } catch (err) {
+            console.error('Erro ao copiar:', err);
+            alert('Erro ao copiar. Por favor, copie manualmente.');
+        }
+        
+        document.body.removeChild(textArea);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,921 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block page_title %}Nova Ordem de Serviço{% endblock %}
+
+{% block extra_css %}
+<style>
+    .roteiro-preview {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        font-family: 'Courier New', monospace;
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        min-height: 400px;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .servico-adicionado {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-left: 4px solid #0d6efd;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .servico-adicionado:hover {
+        box-shadow: 0 .25rem .75rem rgba(0,0,0,.1);
+    }
+    
+    .idade-input.isento {
+        border-color: #198754 !important;
+        background-color: #d1e7dd;
+    }
+    
+    .idade-input.infantil {
+        border-color: #0dcaf0 !important;
+        background-color: #cff4fc;
+    }
+    
+    .idade-input.inteira {
+        border-color: #ffc107 !important;
+        background-color: #fff3cd;
+    }
+    
+    .idade-input.invalido {
+        border-color: #dc3545 !important;
+        background-color: #f8d7da;
+    }
+    
+    .transfer-opcao {
+        background: #e9ecef;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .campos-servico {
+        display: none;
+    }
+    
+    .campos-servico.show {
+        display: block;
+    }
+    
+    .legenda-cores {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.875rem;
+    }
+    
+    .legenda-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .legenda-quadrado {
+        width: 20px;
+        height: 20px;
+        border-radius: 0.25rem;
+        border: 2px solid;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        Nova Ordem de Serviço
+    </h2>
+
+    <div class="row g-4">
+        <!-- Coluna Esquerda: Formulário -->
+        <div class="col-lg-7">
+            <!-- Card: Adicionar Serviço -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Adicionar Serviço
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Seleção de Data, Categoria e Serviço -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Data do Serviço *</label>
+                            <input type="date" class="form-control" id="dataServico" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Categoria *</label>
+                            <select class="form-select" id="categoria" required>
+                                <option value="">Selecione...</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.id }}">{{ cat.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Serviço *</label>
+                            <select class="form-select" id="servico" required disabled>
+                                <option value="">Primeiro selecione uma categoria</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Campos Dinâmicos (aparecem após selecionar serviço) -->
+                    <div class="campos-servico" id="camposServico">
+                        <hr class="my-4">
+                        
+                        <!-- Regras do Serviço -->
+                        <div class="alert alert-info" id="regrasServico" style="display:none;">
+                            <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Regras do Serviço</h6>
+                            <ul id="listaRegras" class="mb-0 small"></ul>
+                        </div>
+                        
+                        <!-- Quantidades -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Qtd Inteira</label>
+                                <input type="number" class="form-control" id="qtdInteira" min="0" value="0">
+                            </div>
+                            <div class="col-md-4" id="campoQtdMeia" style="display:none;">
+                                <label class="form-label fw-bold">Qtd Meia</label>
+                                <input type="number" class="form-control" id="qtdMeia" min="0" value="0">
+                            </div>
+                            <div class="col-md-4" id="campoQtdInfantil" style="display:none;">
+                                <label class="form-label fw-bold">Qtd Infantil</label>
+                                <input type="number" class="form-control" id="qtdInfantil" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Idades das Crianças -->
+                        <div id="campoIdades" style="display:none;" class="mb-3">
+                            <label class="form-label fw-bold">Idades das Crianças *</label>
+                            <div class="alert alert-warning py-2 px-3 mb-2">
+                                <div class="legenda-cores">
+                                    <div class="legenda-item">
+                                        <div class="legenda-quadrado" style="background-color: #d1e7dd; border-color: #198754;"></div>
+                                        <span><strong>Verde</strong> = Isento (grátis)</span>
+                                    </div>
+                                    <div class="legenda-item">
+                                        <div class="legenda-quadrado" style="background-color: #cff4fc; border-color: #0dcaf0;"></div>
+                                        <span><strong>Azul</strong> = Paga Infantil</span>
+                                    </div>
+                                    <div class="legenda-item">
+                                        <div class="legenda-quadrado" style="background-color: #fff3cd; border-color: #ffc107;"></div>
+                                        <span><strong>Amarelo</strong> = Paga Inteira</span>
+                                    </div>
+                                    <div class="legenda-item">
+                                        <div class="legenda-quadrado" style="background-color: #f8d7da; border-color: #dc3545;"></div>
+                                        <span><strong>Vermelho</strong> = Bloqueado (idade mínima)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="containerIdades" class="row g-2"></div>
+                        </div>
+
+                        <!-- Tipos de Meia Entrada -->
+                        <div id="campoTiposMeia" style="display:none;" class="mb-3">
+                            <label class="form-label fw-bold">Tipos de Meia Entrada *</label>
+                            <div id="containerTiposMeia"></div>
+                        </div>
+
+                        <!-- Descrição Editável -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Descrição do Serviço (editável)</label>
+                            <textarea class="form-control" id="descricaoServico" rows="4" 
+                                      placeholder="A descrição será preenchida automaticamente, mas você pode editá-la"></textarea>
+                            <small class="text-muted">Esta descrição aparecerá no roteiro</small>
+                        </div>
+
+                        <!-- Transfers -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Transfers (Opcionais)</label>
+                            <div id="containerTransfers"></div>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="adicionarTransferOpcao()">
+                                <i class="bi bi-plus-circle me-1"></i>Adicionar Opção de Transfer
+                            </button>
+                        </div>
+
+                        <!-- Botão Adicionar à OS -->
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success btn-lg" onclick="adicionarServicoALista()">
+                                <i class="bi bi-check-circle me-2"></i>Adicionar à Ordem de Serviço
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="limparFormulario()">
+                                <i class="bi bi-x-circle me-2"></i>Limpar e Adicionar Outro Serviço
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Serviços Adicionados -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Serviços Adicionados (<span id="contadorServicos">0</span>)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="listaServicos">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                            <p>Nenhum serviço adicionado ainda</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Preview do Roteiro -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm sticky-top" style="top: 1rem;">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-map me-2"></i>Preview do Roteiro
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="roteiro-preview" id="roteiroPreview">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-file-earmark-text display-3 d-block mb-3"></i>
+                            <p>Adicione serviços para visualizar o roteiro</p>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-success" onclick="copiarRoteiro()">
+                            <i class="bi bi-clipboard me-2"></i>Copiar Roteiro
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="salvarOrdemServico()">
+                            <i class="bi bi-save me-2"></i>Salvar Ordem de Serviço
+                        </button>
+                        <a href="{% url 'servicos:lancamento_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Estado global
+let servicosAdicionados = [];
+let servicoAtualInfo = null;
+let contadorTransfers = 0;
+
+// Carregar serviços quando categoria mudar
+document.getElementById('categoria').addEventListener('change', function() {
+    const categoriaId = this.value;
+    const servicoSelect = document.getElementById('servico');
+    
+    if (!categoriaId) {
+        servicoSelect.innerHTML = '<option value="">Primeiro selecione uma categoria</option>';
+        servicoSelect.disabled = true;
+        return;
+    }
+    
+    // Buscar serviços via AJAX
+    fetch(`/servicos/ajax/subcategorias/?categoria_id=${categoriaId}`)
+        .then(response => response.json())
+        .then(data => {
+            servicoSelect.innerHTML = '<option value="">Selecione o serviço...</option>';
+            data.forEach(servico => {
+                const option = document.createElement('option');
+                option.value = servico.id;
+                option.textContent = servico.nome;
+                servicoSelect.appendChild(option);
+            });
+            servicoSelect.disabled = false;
+        })
+        .catch(error => {
+            console.error('Erro ao carregar serviços:', error);
+            alert('Erro ao carregar serviços');
+        });
+});
+
+// Carregar informações do serviço quando selecionado
+document.getElementById('servico').addEventListener('change', function() {
+    const servicoId = this.value;
+    
+    if (!servicoId) {
+        document.getElementById('camposServico').classList.remove('show');
+        return;
+    }
+    
+    // Buscar informações completas do serviço
+    fetch(`/servicos/ajax/servico-info/?servico_id=${servicoId}`)
+        .then(response => response.json())
+        .then(data => {
+            servicoAtualInfo = data;
+            mostrarCamposServico(data);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar informações do serviço:', error);
+            alert('Erro ao carregar informações do serviço');
+        });
+});
+
+function mostrarCamposServico(info) {
+    // Mostrar regras do serviço
+    const regrasDiv = document.getElementById('regrasServico');
+    const listaRegras = document.getElementById('listaRegras');
+    listaRegras.innerHTML = '';
+    
+    // Adicionar regras
+    const regras = [];
+    
+    if (info.permite_infantil) {
+        regras.push(`✓ Permite crianças de ${info.idade_minima_infantil} a ${info.idade_maxima_infantil} anos (Infantil - R$ ${info.valor_infantil.toFixed(2)})`);
+    } else {
+        regras.push(`✗ Não possui categoria infantil`);
+    }
+    
+    if (info.possui_isencao) {
+        regras.push(`✓ ${info.texto_isencao || `Crianças de ${info.idade_isencao_min} a ${info.idade_isencao_max} anos são ISENTAS`} (grátis)`);
+    }
+    
+    if (info.tem_idade_minima && info.idade_minima > 0) {
+        regras.push(`⚠ Idade mínima: ${info.idade_minima} anos`);
+    }
+    
+    if (info.aceita_meia_entrada) {
+        regras.push(`✓ Aceita meia entrada (R$ ${info.valor_meia.toFixed(2)})`);
+        if (info.regras_meia_entrada) {
+            regras.push(`&nbsp;&nbsp;&nbsp;→ ${info.regras_meia_entrada}`);
+        }
+    } else {
+        regras.push(`✗ Não aceita meia entrada`);
+    }
+    
+    regras.push(`💰 Valor Inteira: R$ ${info.valor_inteira.toFixed(2)}`);
+    
+    regras.forEach(regra => {
+        const li = document.createElement('li');
+        li.innerHTML = regra;
+        listaRegras.appendChild(li);
+    });
+    
+    regrasDiv.style.display = 'block';
+    
+    // Mostrar campos
+    document.getElementById('camposServico').classList.add('show');
+    
+    // Preencher descrição
+    document.getElementById('descricaoServico').value = info.descricao || '';
+    
+    // Mostrar/ocultar campos baseado nas flags
+    document.getElementById('campoQtdMeia').style.display = info.aceita_meia_entrada ? 'block' : 'none';
+    document.getElementById('campoQtdInfantil').style.display = info.permite_infantil ? 'block' : 'none';
+    
+    // Resetar valores
+    document.getElementById('qtdInteira').value = 0;
+    document.getElementById('qtdMeia').value = 0;
+    document.getElementById('qtdInfantil').value = 0;
+    document.getElementById('containerIdades').innerHTML = '';
+    document.getElementById('containerTiposMeia').innerHTML = '';
+    document.getElementById('containerTransfers').innerHTML = '';
+    document.getElementById('campoIdades').style.display = 'none';
+    document.getElementById('campoTiposMeia').style.display = 'none';
+    contadorTransfers = 0;
+}
+
+// Gerar campos de idades quando quantidade infantil mudar
+document.getElementById('qtdInfantil').addEventListener('input', function() {
+    const qtd = parseInt(this.value) || 0;
+    gerarCamposIdades(qtd);
+});
+
+function gerarCamposIdades(qtd) {
+    const container = document.getElementById('containerIdades');
+    container.innerHTML = '';
+    
+    if (qtd === 0) {
+        document.getElementById('campoIdades').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('campoIdades').style.display = 'block';
+    
+    for (let i = 0; i < qtd; i++) {
+        const col = document.createElement('div');
+        col.className = 'col-md-3 col-sm-4 col-6';
+        col.innerHTML = `
+            <label class="form-label small">Criança ${i + 1}</label>
+            <input type="number" class="form-control idade-input" data-index="${i}" 
+                   min="0" max="17" placeholder="Idade" required 
+                   oninput="validarIdade(this)">
+        `;
+        container.appendChild(col);
+    }
+}
+
+function validarIdade(input) {
+    const idade = parseInt(input.value);
+    const info = servicoAtualInfo;
+    
+    if (!info || isNaN(idade) || idade < 0 || idade > 17) {
+        input.className = 'form-control idade-input';
+        return;
+    }
+    
+    // Validar idade mínima do serviço
+    if (info.tem_idade_minima && idade < info.idade_minima) {
+        input.className = 'form-control idade-input invalido';
+        input.title = `Idade mínima: ${info.idade_minima} anos`;
+        return;
+    }
+    
+    // Validar isenção
+    if (info.possui_isencao && idade >= info.idade_isencao_min && idade <= info.idade_isencao_max) {
+        input.className = 'form-control idade-input isento';
+        input.title = `Isento (${info.texto_isencao || 'Grátis'})`;
+        return;
+    }
+    
+    // Validar infantil
+    if (info.permite_infantil && idade >= info.idade_minima_infantil && idade <= info.idade_maxima_infantil) {
+        input.className = 'form-control idade-input infantil';
+        input.title = `Paga Infantil - R$ ${info.valor_infantil.toFixed(2)}`;
+        return;
+    }
+    
+    // Paga inteira
+    input.className = 'form-control idade-input inteira';
+    input.title = `Paga Inteira - R$ ${info.valor_inteira.toFixed(2)}`;
+}
+
+// Gerar campos de tipos de meia quando quantidade meia mudar
+document.getElementById('qtdMeia').addEventListener('input', function() {
+    const qtd = parseInt(this.value) || 0;
+    gerarCamposTiposMeia(qtd);
+});
+
+function gerarCamposTiposMeia(qtd) {
+    const container = document.getElementById('containerTiposMeia');
+    container.innerHTML = '';
+    
+    if (qtd === 0) {
+        document.getElementById('campoTiposMeia').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('campoTiposMeia').style.display = 'block';
+    
+    // Buscar tipos de meia disponíveis
+    fetch('/servicos/ajax/tipos-meia/')
+        .then(response => response.json())
+        .then(tipos => {
+            for (let i = 0; i < qtd; i++) {
+                const div = document.createElement('div');
+                div.className = 'mb-2';
+                div.innerHTML = `
+                    <label class="form-label small">Tipo de Meia ${i + 1}</label>
+                    <select class="form-select form-select-sm tipo-meia" required>
+                        <option value="">Selecione...</option>
+                        ${tipos.map(t => `<option value="${t.id}">${t.nome}</option>`).join('')}
+                    </select>
+                `;
+                container.appendChild(div);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar tipos de meia:', error);
+        });
+}
+
+function adicionarTransferOpcao() {
+    contadorTransfers++;
+    const container = document.getElementById('containerTransfers');
+    
+    fetch('/servicos/ajax/subcategorias/?categoria_id=') // Buscar todos os transfers
+        .then(() => {
+            // Buscar transfers do backend
+            return fetch('{% url "servicos:transfer_list" %}')
+                .then(response => response.text())
+                .then(html => {
+                    // Parsear HTML para extrair transfers (simplificado)
+                    // Na prática, seria melhor ter um endpoint JSON para transfers
+                    const div = document.createElement('div');
+                    div.className = 'transfer-opcao';
+                    div.innerHTML = `
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label small mb-0">Opção ${contadorTransfers}</label>
+                            <select class="form-select form-select-sm flex-grow-1 transfer-select" data-transfer="${contadorTransfers}">
+                                <option value="">Selecione um transfer...</option>
+                                {% for transfer in transfers %}
+                                <option value="{{ transfer.id }}" data-nome="{{ transfer.nome }}" data-valor="{{ transfer.valor }}">
+                                    {{ transfer.nome }} - R$ {{ transfer.valor }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="this.parentElement.parentElement.remove(); contadorTransfers--;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+        })
+        .catch(error => {
+            console.error('Erro ao adicionar transfer:', error);
+        });
+}
+
+function adicionarServicoALista() {
+    // Validações
+    const dataServico = document.getElementById('dataServico').value;
+    const categoriaId = document.getElementById('categoria').value;
+    const servicoId = document.getElementById('servico').value;
+    const qtdInteira = parseInt(document.getElementById('qtdInteira').value) || 0;
+    const qtdMeia = parseInt(document.getElementById('qtdMeia').value) || 0;
+    const qtdInfantil = parseInt(document.getElementById('qtdInfantil').value) || 0;
+    
+    if (!dataServico || !categoriaId || !servicoId) {
+        alert('Preencha data, categoria e serviço');
+        return;
+    }
+    
+    if (qtdInteira === 0 && qtdMeia === 0 && qtdInfantil === 0) {
+        alert('Informe ao menos uma quantidade');
+        return;
+    }
+    
+    // Coletar idades
+    const idades = [];
+    if (qtdInfantil > 0) {
+        const idadeInputs = document.querySelectorAll('.idade-input');
+        idadeInputs.forEach(input => {
+            const idade = parseInt(input.value);
+            if (isNaN(idade) || idade < 0 || idade > 17) {
+                alert('Preencha todas as idades corretamente (0-17 anos)');
+                throw new Error('Idades inválidas');
+            }
+            if (input.classList.contains('invalido')) {
+                alert(`Idade ${idade} está abaixo da idade mínima do serviço (${servicoAtualInfo.idade_minima} anos)`);
+                throw new Error('Idade mínima não atendida');
+            }
+            idades.push(idade);
+        });
+    }
+    
+    // Coletar tipos de meia
+    const tiposMeia = [];
+    if (qtdMeia > 0) {
+        const tipoSelects = document.querySelectorAll('.tipo-meia');
+        tipoSelects.forEach(select => {
+            if (!select.value) {
+                alert('Selecione todos os tipos de meia entrada');
+                throw new Error('Tipos de meia não selecionados');
+            }
+            tiposMeia.push({
+                id: select.value,
+                nome: select.options[select.selectedIndex].text
+            });
+        });
+    }
+    
+    // Coletar transfers
+    const transfers = [];
+    const transferSelects = document.querySelectorAll('.transfer-select');
+    transferSelects.forEach(select => {
+        if (select.value) {
+            const option = select.options[select.selectedIndex];
+            transfers.push({
+                id: select.value,
+                nome: option.dataset.nome,
+                valor: parseFloat(option.dataset.valor)
+            });
+        }
+    });
+    
+    // Criar objeto do serviço
+    const servico = {
+        id: Date.now(), // ID temporário
+        data: dataServico,
+        categoria_id: categoriaId,
+        categoria_nome: document.getElementById('categoria').options[document.getElementById('categoria').selectedIndex].text,
+        servico_id: servicoId,
+        servico_nome: document.getElementById('servico').options[document.getElementById('servico').selectedIndex].text,
+        descricao: document.getElementById('descricaoServico').value,
+        qtd_inteira: qtdInteira,
+        qtd_meia: qtdMeia,
+        qtd_infantil: qtdInfantil,
+        idades: idades,
+        tipos_meia: tiposMeia,
+        transfers: transfers,
+        info: servicoAtualInfo
+    };
+    
+    servicosAdicionados.push(servico);
+    atualizarListaServicos();
+    atualizarRoteiro();
+    limparFormulario();
+}
+
+function limparFormulario() {
+    // Não limpar data, categoria e serviço - apenas resetar quantidades
+    document.getElementById('qtdInteira').value = 0;
+    document.getElementById('qtdMeia').value = 0;
+    document.getElementById('qtdInfantil').value = 0;
+    document.getElementById('containerIdades').innerHTML = '';
+    document.getElementById('containerTiposMeia').innerHTML = '';
+    document.getElementById('containerTransfers').innerHTML = '';
+    document.getElementById('campoIdades').style.display = 'none';
+    document.getElementById('campoTiposMeia').style.display = 'none';
+    contadorTransfers = 0;
+    
+    // Scroll para o topo do formulário
+    document.getElementById('camposServico').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function atualizarListaServicos() {
+    const container = document.getElementById('listaServicos');
+    const contador = document.getElementById('contadorServicos');
+    
+    contador.textContent = servicosAdicionados.length;
+    
+    if (servicosAdicionados.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                <p>Nenhum serviço adicionado ainda</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = servicosAdicionados.map((s, index) => `
+        <div class="servico-adicionado">
+            <div div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="editarServico(${s.id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="removerServico(${s.id})" title="Remover">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="small">
+                ${s.qtd_inteira > 0 ? `<span class="badge bg-primary me-1">${s.qtd_inteira} Inteira</span>` : ''}
+                ${s.qtd_meia > 0 ? `<span class="badge bg-info me-1">${s.qtd_meia} Meia</span>` : ''}
+                ${s.qtd_infantil > 0 ? `<span class="badge bg-success me-1">${s.qtd_infantil} Infantil (idades: ${s.idades.join(', ')})s.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="small">
+                ${s.qtd_inteira > 0 ? `<span class="badge bg-primary me-1">${s.qtd_inteira} Inteira</span>` : ''}
+                ${s.qtd_meia > 0 ? `<span class="badge bg-info me-1">${s.qtd_meia} Meia</span>` : ''}
+                ${s.qtd_infantil > 0 ? `<span class="badge bg-success me-1">${s.qtd_infantil} Infantil</span>` : ''}
+            </div>
+            ${s.transfers.length > 0 ? `
+                <div class="mt-2 small text-muted">
+                    <i class="bi bi-truck me-1"></i>Transfers: ${s.transfers.map(t => t.nome).join(', ')}
+                </div>
+            ` : ''}
+    if (confirm('Remover este serviço da ordem?')) {
+        servicosAdicionados = servicosAdicionados.filter(s => s.id !== id);
+        atualizarListaServicos();
+        atualizarRoteiro();
+    }
+}
+
+function editarServico(id) {
+    const servico = servicosAdicionados.find(s => s.id === id);
+    if (!servico) return;
+    
+    // Preencher formulário com dados do serviço
+    document.getElementById('dataServico').value = servico.data;
+    document.getElementById('categoria').value = servico.categoria_id;
+    
+    // Trigger change para carregar serviços
+    document.getElementById('categoria').dispatchEvent(new Event('change'));
+    
+    // Aguardar carregamento dos serviços
+    setTimeout(() => {
+        document.getElementById('servico').value = servico.servico_id;
+        document.getElementById('servico').dispatchEvent(new Event('change'));
+        
+        // Aguardar carregamento das informações
+        setTimeout(() => {
+            document.getElementById('qtdInteira').value = servico.qtd_inteira;
+            document.getElementById('qtdMeia').value = servico.qtd_meia;
+            document.getElementById('qtdInfantil').value = servico.qtd_infantil;
+            document.getElementById('descricaoServico').value = servico.descricao;
+            
+            // Trigger para gerar campos
+            if (servico.qtd_infantil > 0) {
+                document.getElementById('qtdInfantil').dispatchEvent(new Event('input'));
+                setTimeout(() => {
+                    const idadeInputs = document.querySelectorAll('.idade-input');
+                    servico.idades.forEach((idade, idx) => {
+                        if (idadeInputs[idx]) {
+                            idadeInputs[idx].value = idade;
+                            validarIdade(idadeInputs[idx]);
+                        }
+                    });
+                }, 100);
+            }
+            
+            if (servico.qtd_meia > 0) {
+                document.getElementById('qtdMeia').dispatchEvent(new Event('input'));
+            }
+        }, 500);
+    }, 500);
+    
+    // Remover serviço antigo
+    servicosAdicionados = servicosAdicionados.filter(s => s.id !== id);
+    atualizarListaServicos();
+    atualizarRoteiro();
+    
+    // Scroll para o formulário
+    document.getElementById('camposServico').scrollIntoView({ behavior: 'smooth' }
+
+function removerServico(id) {
+    servicosAdicionados = servicosAdicionados.filter(s => s.id !== id);
+    atualizarListaServicos();
+    atualizarRoteiro();
+}
+
+function formatarData(dataStr) {
+    const date = new Date(dataStr + 'T00:00:00');
+    const dias = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
+    const dia = date.getDate() + 1; // Ajuste de timezone
+    const mes = date.getMonth() + 1;
+    const diaSemana = dias[date.getDay()];
+    return `${diaSemana} ${dia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}`;
+}
+
+function atualizarRoteiro() {
+    const preview = document.getElementById('roteiroPreview');
+    
+    if (servicosAdicionados.length === 0) {
+        preview.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="bi bi-file-earmark-text display-3 d-block mb-3"></i>
+                <p>Adicione serviços para visualizar o roteiro</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Agrupar por data
+    const porData = {};
+    servicosAdicionados.forEach(s => {
+        if (!porData[s.data]) {
+            porData[s.data] = [];
+        }
+        porData[s.data].push(s);
+    });
+    
+    // Ordenar datas
+    const datasOrdenadas = Object.keys(porData).sort();
+    
+    // Gerar roteiro
+    let roteiro = '';
+    datasOrdenadas.forEach(data => {
+        roteiro += formatarData(data) + '\n\n';
+        
+        porData[data].forEach(servico => {
+            roteiro += servico.servico_nome + ':\n';
+            
+            if (servico.descricao) {
+                const linhas = servico.descricao.split('\n');
+                linhas.forEach(linha => {
+                    if (linha.trim()) {
+                        roteiro += '- ' + linha.trim() + '\n';
+                    }
+                });
+            }
+            
+            // Valores (se tiver)
+            const valorTotal = calcularValorServico(servico);
+            if (valorTotal > 0) {
+                roteiro += `R$ ${valorTotal.toFixed(2).replace('.', ',')}\n`;
+            }
+            
+            roteiro += '\n';
+            
+            // Transfers
+            if (servico.transfers.length > 0) {
+                servico.transfers.forEach((transfer, idx) => {
+                    roteiro += `Opção ${idx + 1}\n`;
+                    roteiro += `${transfer.nome} R$ ${transfer.valor.toFixed(2).replace('.', ',')}\n\n`;
+                });
+            }
+        });
+        
+        roteiro += '\n';
+    });
+    
+    preview.textContent = roteiro;
+}
+
+function calcularValorServico(servico) {
+    const info = servico.info;
+    let total = 0;
+    
+    // Inteiras
+    total += servico.qtd_inteira * info.valor_inteira;
+    
+    // Meias
+    total += servico.qtd_meia * info.valor_meia;
+    
+    // Infantis (validar idades)
+    servico.idades.forEach(idade => {
+        // Isento
+        if (info.possui_isencao && idade >= info.idade_isencao_min && idade <= info.idade_isencao_max) {
+            return; // R$ 0
+        }
+        
+        // Infantil
+        if (info.permite_infantil && idade >= info.idade_minima_infantil && idade <= info.idade_maxima_infantil) {
+            total += info.valor_infantil;
+            return;
+        }
+        
+        // Inteira
+        total += info.valor_inteira;
+    });
+    
+    return total;
+}
+
+function copiarRoteiro() {
+    const roteiro = document.getElementById('roteiroPreview').textContent;
+    
+    if (servicosAdicionados.length === 0) {
+        alert('Adicione serviços primeiro');
+        return;
+    }
+    
+    navigator.clipboard.writeText(roteiro).then(() => {
+        // Toast de sucesso
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle me-2"></i>Roteiro copiado!
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }).catch(err => {
+        alert('Erro ao copiar: ' + err);
+    });
+}
+
+function salvarOrdemServico() {
+    if (servicosAdicionados.length === 0) {
+        alert('Adicione ao menos um serviço');
+        return;
+    }
+    
+    // Preparar dados para envio
+    const dados = {
+        servicos: servicosAdicionados,
+        roteiro: document.getElementById('roteiroPreview').textContent
+    };
+    
+    // Enviar para o backend
+    fetch('{% url "servicos:lancamento_create" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(dados)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Ordem de Serviço salva com sucesso!');
+            window.location.href = '{% url "servicos:lancamento_list" %}';
+        } else {
+            return response.json().then(data => {
+                alert('Erro ao salvar: ' + (data.error || 'Erro desconhecido'));
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar ordem de serviço');
+    });
+}
+</script>
+{% endblock %}

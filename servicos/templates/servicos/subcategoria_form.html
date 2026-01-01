@@ -1,0 +1,390 @@
+{% extends 'base/base.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog"></i> {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="servicoForm">
+                        {% csrf_token %}
+                        
+                        <!-- 1. Informações Básicas -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-info-circle text-primary"></i> Informações Básicas
+                        </h5>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.categoria.id_for_label }}" class="form-label">
+                                    <i class="fas fa-folder"></i> Categoria <span class="text-danger">*</span>
+                                </label>
+                                {{ form.categoria }}
+                                {% if form.categoria.errors %}
+                                <div class="invalid-feedback d-block">{{ form.categoria.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.nome.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag"></i> Nome do Serviço <span class="text-danger">*</span>
+                                </label>
+                                {{ form.nome }}
+                                {% if form.nome.errors %}
+                                <div class="invalid-feedback d-block">{{ form.nome.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.descricao.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left"></i> Descrição
+                            </label>
+                            {{ form.descricao }}
+                            {% if form.descricao.errors %}
+                            <div class="invalid-feedback d-block">{{ form.descricao.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 2. Valor Inteira (Sempre obrigatório) -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-dollar-sign text-success"></i> Valor Inteira
+                        </h5>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label for="{{ form.valor_inteira.id_for_label }}" class="form-label">
+                                    Valor Inteira <span class="text-danger">*</span>
+                                </label>
+                                {{ form.valor_inteira }}
+                                <div class="form-text">Valor integral do serviço</div>
+                                {% if form.valor_inteira.errors %}
+                                <div class="invalid-feedback d-block">{{ form.valor_inteira.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 3. Meia Entrada -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-ticket-alt text-info"></i> Configurações de Meia Entrada
+                        </h5>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.aceita_meia_entrada }}
+                                    <label class="form-check-label" for="{{ form.aceita_meia_entrada.id_for_label }}">
+                                        <strong>Aceita Meia Entrada</strong>
+                                    </label>
+                                </div>
+                                <div class="form-text">Este serviço aceita meia entrada?</div>
+                                {% if form.aceita_meia_entrada.errors %}
+                                <div class="invalid-feedback d-block">{{ form.aceita_meia_entrada.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="meiaEntradaFields" style="display:none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.valor_meia.id_for_label }}" class="form-label">
+                                        Valor Meia Entrada
+                                    </label>
+                                    {{ form.valor_meia }}
+                                    <div class="form-text">Geralmente 50% do valor inteiro</div>
+                                    {% if form.valor_meia.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.valor_meia.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.regras_meia_entrada.id_for_label }}" class="form-label">
+                                    Regras de Meia Entrada
+                                </label>
+                                {{ form.regras_meia_entrada }}
+                                <div class="form-text">Ex: EST. DE 9 A 16 ANOS COM RG, IDOSO, PROF BR, PCD</div>
+                                {% if form.regras_meia_entrada.errors %}
+                                <div class="invalid-feedback d-block">{{ form.regras_meia_entrada.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 4. Infantil -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-child text-warning"></i> Configurações de Infantil
+                        </h5>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.permite_infantil }}
+                                    <label class="form-check-label" for="{{ form.permite_infantil.id_for_label }}">
+                                        <strong>Permite Categoria Infantil</strong>
+                                    </label>
+                                </div>
+                                <div class="form-text">Este serviço possui categoria infantil?</div>
+                                {% if form.permite_infantil.errors %}
+                                <div class="invalid-feedback d-block">{{ form.permite_infantil.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="infantilFields" style="display:none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.valor_infantil.id_for_label }}" class="form-label">
+                                        Valor Infantil
+                                    </label>
+                                    {{ form.valor_infantil }}
+                                    <div class="form-text">Valor especial para crianças</div>
+                                    {% if form.valor_infantil.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.valor_infantil.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="{{ form.idade_minima_infantil.id_for_label }}" class="form-label">
+                                        Idade Mínima Infantil
+                                    </label>
+                                    {{ form.idade_minima_infantil }}
+                                    <div class="form-text">Ex: 0 (mínimo 0, máximo 17)</div>
+                                    {% if form.idade_minima_infantil.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.idade_minima_infantil.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label for="{{ form.idade_maxima_infantil.id_for_label }}" class="form-label">
+                                        Idade Máxima Infantil
+                                    </label>
+                                    {{ form.idade_maxima_infantil }}
+                                    <div class="form-text">Ex: 12 (mínimo 0, máximo 17)</div>
+                                    {% if form.idade_maxima_infantil.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.idade_maxima_infantil.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 5. Isenção por Idade -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-gift text-success"></i> Isenção por Idade
+                        </h5>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.possui_isencao }}
+                                    <label class="form-check-label" for="{{ form.possui_isencao.id_for_label }}">
+                                        <strong>Possui Isenção por Faixa Etária</strong>
+                                    </label>
+                                </div>
+                                <div class="form-text">Este serviço isenta crianças em uma faixa de idade?</div>
+                                {% if form.possui_isencao.errors %}
+                                <div class="invalid-feedback d-block">{{ form.possui_isencao.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="isencaoFields" style="display:none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3">
+                                    <label for="{{ form.idade_isencao_min.id_for_label }}" class="form-label">
+                                        Idade Mínima
+                                    </label>
+                                    {{ form.idade_isencao_min }}
+                                    <div class="form-text">Ex: 0 (máx 17)</div>
+                                    {% if form.idade_isencao_min.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.idade_isencao_min.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    <label for="{{ form.idade_isencao_max.id_for_label }}" class="form-label">
+                                        Idade Máxima
+                                    </label>
+                                    {{ form.idade_isencao_max }}
+                                    <div class="form-text">Ex: 6 (máx 17)</div>
+                                    {% if form.idade_isencao_max.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.idade_isencao_max.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="{{ form.texto_isencao.id_for_label }}" class="form-label">
+                                        Texto da Isenção
+                                    </label>
+                                    {{ form.texto_isencao }}
+                                    <div class="form-text">Ex: CRIANÇA DE 0 A 6 ANOS</div>
+                                    {% if form.texto_isencao.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.texto_isencao.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- 6. Idade Mínima Exigida -->
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-exclamation-triangle text-danger"></i> Restrição de Idade Mínima
+                        </h5>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.tem_idade_minima }}
+                                    <label class="form-check-label" for="{{ form.tem_idade_minima.id_for_label }}">
+                                        <strong>Exige Idade Mínima</strong>
+                                    </label>
+                                </div>
+                                <div class="form-text">Este serviço exige idade mínima para participar?</div>
+                                {% if form.tem_idade_minima.errors %}
+                                <div class="invalid-feedback d-block">{{ form.tem_idade_minima.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="idadeMinimaFields" style="display:none;">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.idade_minima.id_for_label }}" class="form-label">
+                                        Idade Mínima Exigida
+                                    </label>
+                                    {{ form.idade_minima }}
+                                    <div class="form-text">Ex: 6 (criança deve ter no mínimo 6 anos, máximo 17)</div>
+                                    {% if form.idade_minima.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.idade_minima.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Status -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    {{ form.ativo }}
+                                    <label class="form-check-label" for="{{ form.ativo.id_for_label }}">
+                                        <strong>Serviço Ativo</strong>
+                                    </label>
+                                </div>
+                                <div class="form-text">Desmarque para desativar temporariamente o serviço</div>
+                                {% if form.ativo.errors %}
+                                <div class="invalid-feedback d-block">{{ form.ativo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'servicos:subcategoria_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {{ action }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aceitaMeiaCheck = document.getElementById('id_aceita_meia_entrada');
+    const meiaEntradaFields = document.getElementById('meiaEntradaFields');
+    
+    const permiteInfantilCheck = document.getElementById('id_permite_infantil');
+    const infantilFields = document.getElementById('infantilFields');
+    
+    const possuiIsencaoCheck = document.getElementById('id_possui_isencao');
+    const isencaoFields = document.getElementById('isencaoFields');
+    
+    const temIdadeMinimaCheck = document.getElementById('id_tem_idade_minima');
+    const idadeMinimaFields = document.getElementById('idadeMinimaFields');
+    
+    // Função para mostrar/ocultar campos de meia entrada
+    function toggleMeiaEntrada() {
+        if (aceitaMeiaCheck.checked) {
+            meiaEntradaFields.style.display = 'block';
+        } else {
+            meiaEntradaFields.style.display = 'none';
+            // Limpar valores quando desativado
+            document.getElementById('id_valor_meia').value = '0.00';
+            document.getElementById('id_regras_meia_entrada').value = '';
+        }
+    }
+    
+    // Função para mostrar/ocultar campos infantis
+    function toggleInfantil() {
+        if (permiteInfantilCheck.checked) {
+            infantilFields.style.display = 'block';
+        } else {
+            infantilFields.style.display = 'none';
+            // Limpar valores quando desativado
+            document.getElementById('id_valor_infantil').value = '0.00';
+            document.getElementById('id_idade_minima_infantil').value = '0';
+            document.getElementById('id_idade_maxima_infantil').value = '17';
+        }
+    }
+    
+    // Função para mostrar/ocultar campos de isenção
+    function toggleIsencao() {
+        if (possuiIsencaoCheck.checked) {
+            isencaoFields.style.display = 'block';
+        } else {
+            isencaoFields.style.display = 'none';
+            // Limpar valores quando desativado
+            document.getElementById('id_idade_isencao_min').value = '0';
+            document.getElementById('id_idade_isencao_max').value = '0';
+            document.getElementById('id_texto_isencao').value = '';
+        }
+    }
+    
+    // Função para mostrar/ocultar campos de idade mínima
+    function toggleIdadeMinima() {
+        if (temIdadeMinimaCheck.checked) {
+            idadeMinimaFields.style.display = 'block';
+        } else {
+            idadeMinimaFields.style.display = 'none';
+            // Limpar valores quando desativado
+            document.getElementById('id_idade_minima').value = '0';
+        }
+    }
+    
+    // Eventos
+    aceitaMeiaCheck.addEventListener('change', toggleMeiaEntrada);
+    permiteInfantilCheck.addEventListener('change', toggleInfantil);
+    possuiIsencaoCheck.addEventListener('change', toggleIsencao);
+    temIdadeMinimaCheck.addEventListener('change', toggleIdadeMinima);
+    
+    // Estado inicial
+    toggleMeiaEntrada();
+    toggleInfantil();
+    toggleIsencao();
+    toggleIdadeMinima();
+});
+</script>
+{% endblock %}

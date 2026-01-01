@@ -1,0 +1,80 @@
+{% extends 'base/base.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ title }}</h5>
+                    <a href="{% url 'servicos:categoria_create' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus"></i> Nova Categoria
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-3">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <input type="text" name="search" class="form-control" placeholder="Buscar categoria..." value="{{ search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th class="text-center">Ordem</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Data de Criação</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for categoria in categorias %}
+                                <tr>
+                                    <td><strong>{{ categoria.nome }}</strong></td>
+                                    <td class="text-center">{{ categoria.ordem }}</td>
+                                    <td class="text-center">
+                                        {% if categoria.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ categoria.criado_em|date:"d/m/Y" }}</td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'servicos:categoria_edit' categoria.id %}" class="btn btn-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'servicos:categoria_delete' categoria.id %}" class="btn btn-danger" title="Deletar">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <p class="text-muted mb-0">Nenhuma categoria encontrada.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'base/base.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ title }}</h5>
+                    <a href="{% url 'servicos:subcategoria_create' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus"></i> Novo Serviço
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <form method="get" class="mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-7">
+                                <input type="text" name="search" class="form-control" placeholder="Buscar serviço..." value="{{ search }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="categoria" class="form-select">
+                                    <option value="">Todas as Categorias</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ categoria.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter"></i> Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Tabela -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th class="text-end">Valor Inteira</th>
+                                    <th class="text-end">Valor Meia</th>
+                                    <th class="text-end">Valor Infantil</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subcategoria in subcategorias %}
+                                <tr>
+                                    <td><strong>{{ subcategoria.nome }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-info">{{ subcategoria.categoria.nome }}</span>
+                                    </td>
+                                    <td class="text-end">R$ {{ subcategoria.valor_inteira|floatformat:2 }}</td>
+                                    <td class="text-end">R$ {{ subcategoria.valor_meia|floatformat:2 }}</td>
+                                    <td class="text-end">R$ {{ subcategoria.valor_infantil|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        {% if subcategoria.ativo %}
+                                        <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'servicos:subcategoria_edit' subcategoria.id %}" class="btn btn-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'servicos:subcategoria_delete' subcategoria.id %}" class="btn btn-danger" title="Deletar">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <p class="text-muted mb-0">Nenhum serviço encontrado.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if subcategorias.has_other_pages %}
+                    <nav aria-label="Navegação">
+                        <ul class="pagination justify-content-center">
+                            {% if subcategorias.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ subcategorias.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Anterior</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Página {{ subcategorias.number }} de {{ subcategorias.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if subcategorias.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ subcategorias.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Próxima</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

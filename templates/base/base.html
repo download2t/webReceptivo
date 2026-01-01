@@ -48,6 +48,34 @@
                 
                 <!-- Menu colapsável -->
                 <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if request.resolver_match.namespace == 'servicos' %}active{% endif %}" href="#" id="servicosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-briefcase me-1"></i>Serviços
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="servicosDropdown">
+                                <li><a class="dropdown-item" href="{% url 'servicos:lancamento_create' %}">
+                                    <i class="bi bi-plus-circle me-2"></i>Nova Ordem de Serviço
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'servicos:lancamento_list' %}">
+                                    <i class="bi bi-card-checklist me-2"></i>Listar Ordens de Serviço
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'servicos:categoria_list' %}">
+                                    <i class="bi bi-folder me-2"></i>Listar Categorias
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'servicos:subcategoria_list' %}">
+                                    <i class="bi bi-tags me-2"></i>Listar Serviços
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'servicos:transfer_list' %}">
+                                    <i class="bi bi-truck me-2"></i>Listar Transfers
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'servicos:tipo_meia_list' %}">
+                                    <i class="bi bi-ticket-perforated me-2"></i>Listar Meia Entrada
+                                </a></li>
+                            </ul>
+                        </li>
+                    </ul>
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

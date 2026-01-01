@@ -1,0 +1,241 @@
+{% extends 'base/base.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.categoria.id_for_label }}" class="form-label">Categoria *</label>
+                                {{ form.categoria }}
+                                {% if form.categoria.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.categoria.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.nome.id_for_label }}" class="form-label">Nome do Serviço *</label>
+                                {{ form.nome }}
+                                {% if form.nome.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.nome.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.descricao.id_for_label }}" class="form-label">Descrição</label>
+                            {{ form.descricao }}
+                            {% if form.descricao.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.descricao.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.valor_inteira.id_for_label }}" class="form-label">Valor Inteira *</label>
+                                {{ form.valor_inteira }}
+                                {% if form.valor_inteira.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.valor_inteira.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="{{ form.valor_meia.id_for_label }}" class="form-label">Valor Meia *</label>
+                                {{ form.valor_meia }}
+                                {% if form.valor_meia.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.valor_meia.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="{{ form.valor_infantil.id_for_label }}" class="form-label">Valor Infantil *</label>
+                                {{ form.valor_infantil }}
+                                {% if form.valor_infantil.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.valor_infantil.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="mb-3">Configurações de Meia Entrada</h6>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.aceita_meia_entrada }}
+                                <label class="form-check-label" for="{{ form.aceita_meia_entrada.id_for_label }}">
+                                    Este serviço aceita meia entrada
+                                </label>
+                            </div>
+                            {% if form.aceita_meia_entrada.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.aceita_meia_entrada.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3" id="regras-meia-container">
+                            <label for="{{ form.regras_meia_entrada.id_for_label }}" class="form-label">Regras de Meia Entrada</label>
+                            {{ form.regras_meia_entrada }}
+                            <div class="form-text">
+                                Descreva as condições para meia entrada neste serviço.<br>
+                                <strong>Exemplos:</strong><br>
+                                - "não aceita meia entrada"<br>
+                                - "EST. DE 9 A 16 ANOS COM RG, EST. COM CARTEIRINHA, PROF BR, IDOSO, DOADOR DE SANGUE, POL.BR, PCD E ACOM."<br>
+                                - "CRIAN. 6 A 11ANOS, IDOSO, EST. BR, PROF. BR, DOADOR DE SANGUE, PCD, PES.COM CANCER."
+                            </div>
+                            {% if form.regras_meia_entrada.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.regras_meia_entrada.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="mb-3">Configurações de Isenção</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.idade_isencao_min.id_for_label }}" class="form-label">Idade Mínima Isenção</label>
+                                {{ form.idade_isencao_min }}
+                                <div class="form-text">Use 0 se não houver isenção</div>
+                                {% if form.idade_isencao_min.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.idade_isencao_min.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="{{ form.idade_isencao_max.id_for_label }}" class="form-label">Idade Máxima Isenção</label>
+                                {{ form.idade_isencao_max }}
+                                <div class="form-text">Ex: 6 para crianças até 6 anos</div>
+                                {% if form.idade_isencao_max.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.idade_isencao_max.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="{{ form.texto_isencao.id_for_label }}" class="form-label">Texto da Isenção</label>
+                                {{ form.texto_isencao }}
+                                <div class="form-text">Ex: CRIANÇA DE 0 A 6 ANOS</div>
+                                {% if form.texto_isencao.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.texto_isencao.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Idade Mínima -->
+                        <h5 class="mb-3">
+                            <i class="fas fa-exclamation-triangle text-warning"></i> Restrição de Idade Mínima
+                        </h5>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    {{ form.tem_idade_minima }}
+                                    <label class="form-check-label" for="{{ form.tem_idade_minima.id_for_label }}">
+                                        <strong>Possui Idade Mínima</strong>
+                                    </label>
+                                </div>
+                                <div class="form-text">Este serviço exige idade mínima?</div>
+                                {% if form.tem_idade_minima.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tem_idade_minima.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="{{ form.idade_minima.id_for_label }}" class="form-label">Idade Mínima</label>
+                                {{ form.idade_minima }}
+                                <div class="form-text">Ex: 6 (criança deve ter no mínimo 6 anos)</div>
+                                {% if form.idade_minima.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.idade_minima.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.ativo }}
+                                <label class="form-check-label" for="{{ form.ativo.id_for_label }}">
+                                    Serviço Ativo
+                                </label>
+                            </div>
+                            {% if form.ativo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.ativo.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'servicos:subcategoria_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> {{ action }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aceitaMeiaCheckbox = document.getElementById('{{ form.aceita_meia_entrada.id_for_label }}');
+    const regrasContainer = document.getElementById('regras-meia-container');
+    
+    function toggleRegras() {
+        if (aceitaMeiaCheckbox.checked) {
+            regrasContainer.style.display = 'block';
+        } else {
+            regrasContainer.style.display = 'none';
+        }
+    }
+    
+    // Aplicar estado inicial
+    toggleRegras();
+    
+    // Adicionar listener
+    aceitaMeiaCheckbox.addEventListener('change', toggleRegras);
+});
+</script>
+{% endblock %}
