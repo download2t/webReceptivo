@@ -111,6 +111,9 @@
             })
             .then(function(data) {
                 servicoAtualInfo = data;
+                console.log('Dados do serviço recebidos:', data);
+                console.log('idade_isencao_min:', data.idade_isencao_min, 'tipo:', typeof data.idade_isencao_min);
+                console.log('idade_isencao_max:', data.idade_isencao_max, 'tipo:', typeof data.idade_isencao_max);
                 mostrarCamposServico(data);
             })
             .catch(function(error) {
@@ -143,8 +146,18 @@
             campoMeia.style.display = 'none';
         }
         
-        if (info.permite_infantil) {
+        // Mostrar campo de infantil se permite infantil OU se tem isenção (para validar idades)
+        if (info.permite_infantil || info.possui_isencao) {
             campoInfantil.style.display = 'block';
+            // Mudar o label se não permite infantil mas tem isenção
+            const labelInfantil = campoInfantil.querySelector('label');
+            if (labelInfantil) {
+                if (info.permite_infantil) {
+                    labelInfantil.textContent = 'Qtd Infantil';
+                } else {
+                    labelInfantil.textContent = 'Qtd Crianças';
+                }
+            }
         } else {
             campoInfantil.style.display = 'none';
         }
@@ -158,6 +171,7 @@
 
     function aoMudarQtdInfantil() {
         const qtd = parseInt(this.value) || 0;
+        // Sempre gerar campos de idade se há quantidade de crianças (para validar isenção)
         gerarCamposIdades(qtd);
     }
 
@@ -174,6 +188,19 @@
         
         if (qtd > 0) {
             campoIdades.style.display = 'block';
+            
+            // Se tem isenção mas não permite infantil, mostrar aviso
+            if (servicoAtualInfo && servicoAtualInfo.possui_isencao && !servicoAtualInfo.permite_infantil) {
+                const avisoDiv = document.createElement('div');
+                avisoDiv.className = 'alert alert-warning py-2 mb-2';
+                const idadeMin = servicoAtualInfo.idade_isencao_min !== undefined ? servicoAtualInfo.idade_isencao_min : '?';
+                const idadeMax = servicoAtualInfo.idade_isencao_max !== undefined ? servicoAtualInfo.idade_isencao_max : '?';
+                avisoDiv.innerHTML = '<small><i class="bi bi-info-circle me-1"></i>' +
+                    '<strong>Atenção:</strong> Crianças na faixa de isenção (' + 
+                    idadeMin + ' a ' + idadeMax + 
+                    ' anos) <strong>NÃO PAGAM</strong>. Crianças fora desta faixa pagam <strong>INTEIRA</strong>.</small>';
+                container.appendChild(avisoDiv);
+            }
             for (let i = 1; i <= qtd; i++) {
                 const col = document.createElement('div');
                 col.className = 'col-md-3';
@@ -199,6 +226,9 @@
         const input = event.target;
         const idade = parseInt(input.value);
         
+        console.log('validarIdade chamada para idade:', idade);
+        console.log('servicoAtualInfo:', servicoAtualInfo);
+        
         if (!servicoAtualInfo || isNaN(idade)) {
             input.classList.remove('isento', 'infantil', 'inteira', 'invalido');
             return;
@@ -215,9 +245,20 @@
         }
         
         // Verificar isenção
+        console.log('Verificando isenção:', {
+            possui_isencao: servicoAtualInfo.possui_isencao,
+            idade_isencao_min: servicoAtualInfo.idade_isencao_min,
+            idade_isencao_max: servicoAtualInfo.idade_isencao_max,
+            idade: idade,
+            condicao: idade >= servicoAtualInfo.idade_isencao_min && idade <= servicoAtualInfo.idade_isencao_max
+        });
+        
         if (servicoAtualInfo.possui_isencao && 
-            idade >= (servicoAtualInfo.idade_isencao_min || servicoAtualInfo.idade_minima_isencao) && 
-            idade <= (servicoAtualInfo.idade_isencao_max || servicoAtualInfo.idade_maxima_isencao)) {
+            servicoAtualInfo.idade_isencao_min !== undefined && 
+            servicoAtualInfo.idade_isencao_max !== undefined &&
+            idade >= servicoAtualInfo.idade_isencao_min && 
+            idade <= servicoAtualInfo.idade_isencao_max) {
+            console.log('APLICANDO CLASSE ISENTO');
             input.classList.add('isento');
             input.title = 'Isento (grátis)';
             return;
@@ -233,6 +274,7 @@
         }
         
         // Senão, paga inteira
+        console.log('APLICANDO CLASSE INTEIRA');
         input.classList.add('inteira');
         input.title = 'Paga Inteira (R$ ' + parseFloat(servicoAtualInfo.valor_inteira).toFixed(2) + ')';
     }
@@ -866,7 +908,7 @@
         };
         
         // URL varia se está editando ou criando
-        let url = djangoData.urls.lancamentoCreate;
+        let url = djangoData.urls.ordemServicoCreate || djangoData.urls.lancamentoCreate;
         
         if (djangoData.editando && djangoData.lancamentosData && djangoData.lancamentosData.length > 0) {
             // Pegar o ID do primeiro lançamento (todos pertencem à mesma OS)
@@ -888,7 +930,7 @@
         .then(function(response) {
             if (response.ok) {
                 alert('Ordem de Serviço salva com sucesso!');
-                window.location.href = djangoData.urls.lancamentoList;
+                window.location.href = djangoData.urls.ordemServicoList || djangoData.urls.lancamentoList;
             } else {
                 return response.json().then(function(data) {
                     alert('Erro ao salvar: ' + (data.error || 'Erro desconhecido'));
@@ -972,10 +1014,11 @@
         if (info.possui_isencao) {
             const li = document.createElement('li');
             li.className = 'mb-2';
+            const idadeMin = info.idade_isencao_min !== undefined ? info.idade_isencao_min : '?';
+            const idadeMax = info.idade_isencao_max !== undefined ? info.idade_isencao_max : '?';
             li.innerHTML = '<i class="bi bi-gift text-success me-2"></i>' +
                 '<strong class="text-success">ISENÇÃO:</strong> Crianças de ' + 
-                (info.idade_isencao_min || info.idade_minima_isencao) + ' a ' + 
-                (info.idade_isencao_max || info.idade_maxima_isencao) + ' anos são <strong>GRATUITAS</strong>' +
+                idadeMin + ' a ' + idadeMax + ' anos são <strong>GRATUITAS</strong>' +
                 '<br><small class="text-muted ms-4">Estas crianças não pagam nada</small>';
             listaRegras.appendChild(li);
             temRegras = true;
@@ -1053,10 +1096,28 @@
         // Ordenar faixas por idade
         let faixas = [];
         
+        // Determinar a faixa inteira corretamente
+        let idadeInteiraTexto = '';
+        if (info.permite_infantil) {
+            // Se permite infantil, inteira é acima da idade máxima infantil
+            idadeInteiraTexto = 'Acima de ' + info.idade_maxima_infantil + ' anos';
+        } else if (info.possui_isencao) {
+            // Se não permite infantil mas tem isenção, inteira é acima da isenção
+            idadeInteiraTexto = 'Acima de ' + info.idade_isencao_max + ' anos';
+        } else if (info.tem_idade_minima) {
+            // Se só tem idade mínima, inteira é a partir da idade mínima
+            idadeInteiraTexto = 'A partir de ' + info.idade_minima + ' anos';
+        } else {
+            // Caso genérico
+            idadeInteiraTexto = 'Todas as idades';
+        }
+        
         if (info.possui_isencao) {
+            const idadeMin = info.idade_isencao_min !== undefined ? info.idade_isencao_min : '?';
+            const idadeMax = info.idade_isencao_max !== undefined ? info.idade_isencao_max : '?';
             faixas.push({
                 nome: '🎁 Isento',
-                idade: (info.idade_isencao_min || info.idade_minima_isencao) + ' - ' + (info.idade_isencao_max || info.idade_maxima_isencao) + ' anos',
+                idade: idadeMin + ' - ' + idadeMax + ' anos',
                 valor: 'Grátis',
                 classe: 'table-success'
             });
@@ -1073,7 +1134,7 @@
         
         faixas.push({
             nome: '👤 Inteira',
-            idade: (info.tem_idade_minima ? info.idade_minima + '+ anos' : 'Acima da faixa infantil'),
+            idade: idadeInteiraTexto,
             valor: 'R$ ' + parseFloat(info.valor_inteira).toFixed(2),
             classe: 'table-warning'
         });

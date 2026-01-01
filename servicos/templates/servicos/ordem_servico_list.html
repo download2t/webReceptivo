@@ -1,0 +1,171 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ title }}</h5>
+                    <a href="{% url 'servicos:ordem_servico_create' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus"></i> Nova Ordem de Serviço
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Estatísticas -->
+                    {% if stats %}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Total de Ordens de Serviço</h6>
+                                    <h3 class="mb-0">{{ stats.total_ordens|default:0 }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <h6 class="text-muted">Total de Serviços</h6>
+                                    <h3 class="mb-0">{{ stats.total_servicos|default:0 }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Filtros -->
+                    <form method="get" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <input type="text" name="search" class="form-control" placeholder="Buscar..." value="{{ search }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="categoria" class="form-select">
+                                    <option value="">Todas as Categorias</option>
+                                    {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ categoria.nome }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="data_inicio" class="form-control" placeholder="Data Início" value="{{ data_inicio }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" name="data_fim" class="form-control" placeholder="Data Fim" value="{{ data_fim }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter"></i> Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Tabela de Ordens de Serviço -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>OS #</th>
+                                    <th style="width: 40%;">Serviços</th>
+                                    <th class="text-center">Qtd Serviços</th>
+                                    <th class="text-end">Valor Total</th>
+                                    <th>Criado por</th>
+                                    <th>Data Criação</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ordem in ordens %}
+                                <tr>
+                                    <td><strong>{{ ordem.numero_os }}</strong></td>
+                                    <td>
+                                        {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
+                                        {% for lancamento in lancamentos|slice:":3" %}
+                                        <div class="mb-1">
+                                            <i class="fas fa-ticket-alt text-primary"></i>
+                                            <strong>{{ lancamento.data_servico|date:"d/m" }}</strong> - 
+                                            {{ lancamento.subcategoria.nome }}
+                                            <small class="text-muted">({{ lancamento.total_pax }} pax)</small>
+                                        </div>
+                                        {% endfor %}
+                                        {% if total > 3 %}
+                                        <small class="text-info"><i class="fas fa-ellipsis-h"></i> +{{ total|add:"-3" }} serviço(s)</small>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{ ordem.lancamentos.count }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}</td>
+                                    <td>{{ ordem.data_criacao|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-center">
+                                        {% with primeiro_lancamento=ordem.lancamentos.first %}
+                                        {% if primeiro_lancamento %}
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Ver Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar OS">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-danger btn-sm" title="Excluir OS" 
+                                                    onclick="if(confirm('Tem certeza que deseja excluir esta OS e todos os seus serviços?')) { document.getElementById('delete-form-{{ ordem.id }}').submit(); }">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <form id="delete-form-{{ ordem.id }}" method="post" action="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" style="display:none;">
+                                            {% csrf_token %}
+                                        </form>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <p class="text-muted mb-0">Nenhuma Ordem de Serviço encontrada.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if ordens.has_other_pages %}
+                    <nav aria-label="Navegação">
+                        <ul class="pagination justify-content-center">
+                            {% if ordens.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ ordens.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Anterior</a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">Página {{ ordens.number }} de {{ ordens.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if ordens.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ ordens.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Próxima</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -278,10 +278,10 @@ def tipo_meia_delete(request, pk):
     return render(request, 'servicos/tipo_meia_confirm_delete.html', context)
 
 
-# ==================== VIEWS DE LANÇAMENTO DE SERVIÇO ====================
+# ==================== VIEWS DE ORDEM DE SERVIÇO ====================
 
 @login_required
-def lancamento_list(request):
+def ordem_servico_list(request):
     """Lista Ordens de Serviço (OS) com seus lançamentos agrupados"""
     ordens = OrdemServico.objects.select_related('criado_por').prefetch_related(
         'lancamentos__categoria',
@@ -333,11 +333,14 @@ def lancamento_list(request):
         'data_fim': data_fim,
         'title': 'Ordens de Serviço'
     }
-    return render(request, 'servicos/lancamento_list.html', context)
+    return render(request, 'servicos/ordem_servico_list.html', context)
+
+# Alias para retrocompatibilidade
+lancamento_list = ordem_servico_list
 
 
 @login_required
-def lancamento_create(request):
+def ordem_servico_create(request):
     """Cria novo lançamento / ordem de serviço com múltiplos serviços"""
     import json
     from decimal import Decimal
@@ -471,11 +474,13 @@ def lancamento_create(request):
             'transfers': transfers,
             'title': 'Nova Ordem de Serviço'
         }
-        return render(request, 'servicos/lancamento_form.html', context)
+        return render(request, 'servicos/ordem_servico_form.html', context)
 
+# Alias para retrocompatibilidade
+lancamento_create = ordem_servico_create
 
 @login_required
-def lancamento_edit(request, pk):
+def ordem_servico_edit(request, pk):
     """Edita lançamento existente - usa mesmo template de criação"""
     lancamento = get_object_or_404(LancamentoServico, pk=pk)
     ordem = lancamento.ordem_servico
@@ -673,11 +678,13 @@ def lancamento_edit(request, pk):
         'lancamentos_json': json.dumps(lancamentos_data),
         'roteiro': roteiro,
     }
-    return render(request, 'servicos/lancamento_form.html', context)
+    return render(request, 'servicos/ordem_servico_form.html', context)
 
+# Alias para retrocompatibilidade
+lancamento_edit = ordem_servico_edit
 
 @login_required
-def lancamento_delete(request, pk):
+def ordem_servico_delete(request, pk):
     """Deleta Ordem de Serviço inteira com todos os lançamentos"""
     lancamento = get_object_or_404(LancamentoServico, pk=pk)
     ordem = lancamento.ordem_servico
@@ -707,7 +714,7 @@ def lancamento_delete(request, pk):
 
 
 @login_required
-def lancamento_detail(request, pk):
+def ordem_servico_detail(request, pk):
     """Visualiza detalhes completos da Ordem de Serviço"""
     lancamento = get_object_or_404(
         LancamentoServico.objects.select_related(
@@ -730,7 +737,10 @@ def lancamento_detail(request, pk):
         'todos_lancamentos': todos_lancamentos,
         'title': f'OS #{ordem.numero_os if ordem else lancamento.id}'
     }
-    return render(request, 'servicos/lancamento_detail.html', context)
+    return render(request, 'servicos/ordem_servico_detail.html', context)
+
+# Alias para retrocompatibilidade  
+lancamento_detail = ordem_servico_detail
 
 
 # ==================== AJAX VIEWS ====================

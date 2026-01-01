@@ -31,12 +31,19 @@ urlpatterns = [
     path('transfers/<int:pk>/editar/', views.transfer_edit, name='transfer_edit'),
     path('transfers/<int:pk>/deletar/', views.transfer_delete, name='transfer_delete'),
     
-    # Lançamentos
-    path('', views.lancamento_list, name='lancamento_list'),
-    path('lancamentos/criar/', views.lancamento_create, name='lancamento_create'),
-    path('lancamentos/<int:pk>/', views.lancamento_detail, name='lancamento_detail'),
-    path('lancamentos/<int:pk>/editar/', views.lancamento_edit, name='lancamento_edit'),
-    path('lancamentos/<int:pk>/deletar/', views.lancamento_delete, name='lancamento_delete'),
+    # Ordens de Serviço
+    path('', views.ordem_servico_list, name='ordem_servico_list'),
+    path('ordens-servico/criar/', views.ordem_servico_create, name='ordem_servico_create'),
+    path('ordens-servico/<int:pk>/', views.ordem_servico_detail, name='ordem_servico_detail'),
+    path('ordens-servico/<int:pk>/editar/', views.ordem_servico_edit, name='ordem_servico_edit'),
+    path('ordens-servico/<int:pk>/deletar/', views.ordem_servico_delete, name='ordem_servico_delete'),
+    
+    # URLs antigas (retrocompatibilidade) - redirecionar para as novas
+    path('lancamentos/', views.ordem_servico_list, name='lancamento_list'),
+    path('lancamentos/criar/', views.ordem_servico_create, name='lancamento_create'),
+    path('lancamentos/<int:pk>/', views.ordem_servico_detail, name='lancamento_detail'),
+    path('lancamentos/<int:pk>/editar/', views.ordem_servico_edit, name='lancamento_edit'),
+    path('lancamentos/<int:pk>/deletar/', views.ordem_servico_delete, name='lancamento_delete'),
     
     # AJAX endpoints
     path('ajax/subcategorias/', views.ajax_load_subcategorias, name='ajax_load_subcategorias'),
