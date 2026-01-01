@@ -242,9 +242,11 @@ class LancamentoServicoForm(forms.ModelForm):
             import json
             if self.instance.idades_criancas:
                 self.fields['idades_criancas_json'].initial = json.dumps(self.instance.idades_criancas)
-            if self.instance.tipos_meia_entrada.exists():
-                tipos_ids = list(self.instance.tipos_meia_entrada.values_list('id', flat=True))
-                self.fields['tipos_meia_json'].initial = json.dumps(tipos_ids)
+            if self.instance.tipos_meia_entrada:
+                # tipos_meia_entrada é um TextField, não ManyToMany
+                # Converter texto em lista para JSON
+                tipos_lista = [t.strip() for t in self.instance.tipos_meia_entrada.split('\n') if t.strip()]
+                self.fields['tipos_meia_json'].initial = json.dumps(tipos_lista)
     
     def clean(self):
         """Validações customizadas"""

@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count
-from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer
+from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico
 from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm
 
 
@@ -282,10 +282,11 @@ def tipo_meia_delete(request, pk):
 
 @login_required
 def lancamento_list(request):
-    """Lista lançamentos de serviços"""
-    lancamentos = LancamentoServico.objects.select_related(
-        'categoria', 'subcategoria', 'criado_por'
-    ).prefetch_related('tipos_meia_entrada').all()
+    """Lista Ordens de Serviço (OS) com seus lançamentos agrupados"""
+    ordens = OrdemServico.objects.select_related('criado_por').prefetch_related(
+        'lancamentos__categoria',
+        'lancamentos__subcategoria'
+    ).all().order_by('-data_criacao')
     
     # Filtros
     search = request.GET.get('search', '')
@@ -294,42 +295,43 @@ def lancamento_list(request):
     data_fim = request.GET.get('data_fim', '')
     
     if search:
-        lancamentos = lancamentos.filter(
-            Q(subcategoria__nome__icontains=search) |
-            Q(obs_publica__icontains=search)
-        )
+        ordens = ordens.filter(
+            Q(numero_os__icontains=search) |
+            Q(lancamentos__subcategoria__nome__icontains=search) |
+            Q(roteiro__icontains=search)
+        ).distinct()
     
     if categoria_id:
-        lancamentos = lancamentos.filter(categoria_id=categoria_id)
+        ordens = ordens.filter(lancamentos__categoria_id=categoria_id).distinct()
     
     if data_inicio:
-        lancamentos = lancamentos.filter(data_servico__gte=data_inicio)
+        ordens = ordens.filter(lancamentos__data_servico__gte=data_inicio).distinct()
     
     if data_fim:
-        lancamentos = lancamentos.filter(data_servico__lte=data_fim)
+        ordens = ordens.filter(lancamentos__data_servico__lte=data_fim).distinct()
     
     # Estatísticas
-    stats = lancamentos.aggregate(
-        total_lancamentos=Count('id'),
-        total_pax=Sum('qtd_inteira') + Sum('qtd_meia') + Sum('qtd_infantil')
-    )
+    stats = {
+        'total_ordens': ordens.count(),
+        'total_servicos': sum(os.lancamentos.count() for os in ordens),
+    }
     
     # Paginação
-    paginator = Paginator(lancamentos, 20)
+    paginator = Paginator(ordens, 20)
     page = request.GET.get('page')
-    lancamentos = paginator.get_page(page)
+    ordens = paginator.get_page(page)
     
     categorias = Categoria.objects.filter(ativo=True)
     
     context = {
-        'lancamentos': lancamentos,
+        'ordens': ordens,
         'categorias': categorias,
         'stats': stats,
         'search': search,
         'categoria_filter': categoria_id,
         'data_inicio': data_inicio,
         'data_fim': data_fim,
-        'title': 'Lançamentos de Serviços'
+        'title': 'Ordens de Serviço'
     }
     return render(request, 'servicos/lancamento_list.html', context)
 
@@ -339,6 +341,7 @@ def lancamento_create(request):
     """Cria novo lançamento / ordem de serviço com múltiplos serviços"""
     import json
     from decimal import Decimal
+    from django.utils import timezone
     
     if request.method == 'POST':
         # Verificar se é JSON (múltiplos serviços)
@@ -351,25 +354,43 @@ def lancamento_create(request):
                 if not servicos:
                     return JsonResponse({'error': 'Nenhum serviço informado'}, status=400)
                 
-                # Criar todos os lançamentos
+                # CRIAR UMA ORDEM DE SERVIÇO PRIMEIRO
+                ordem = OrdemServico.objects.create(
+                    cliente=None,  # Sem cliente por enquanto
+                    roteiro=roteiro,
+                    status='confirmado',
+                    criado_por=request.user
+                )
+                
+                print(f"DEBUG: Criada OS #{ordem.numero_os} (ID: {ordem.id})")
+                print(f"DEBUG: Vou criar {len(servicos)} lançamentos vinculados a esta OS")
+                
+                # Criar todos os lançamentos vinculados a esta OS
                 lancamentos_criados = []
                 
                 for servico_data in servicos:
                     # Extrair dados
                     data_servico = servico_data['data']
                     servico_id = servico_data['servico_id']
-                    qtd_inteira = servico_data.get('qtd_inteira', 0)
-                    qtd_meia = servico_data.get('qtd_meia', 0)
-                    qtd_infantil = servico_data.get('qtd_infantil', 0)
-                    idades = servico_data.get('idades', [])
+                    qtd_inteira = int(servico_data.get('qtd_inteira') or 0)
+                    qtd_meia = int(servico_data.get('qtd_meia') or 0)
+                    qtd_infantil = int(servico_data.get('qtd_infantil') or 0)
+                    # Converter idades para int, ignorando valores vazios
+                    idades_raw = servico_data.get('idades', [])
+                    idades = [int(i) for i in idades_raw if i and str(i).strip()]
                     tipos_meia = servico_data.get('tipos_meia', [])
                     descricao = servico_data.get('descricao', '')
+                    
+                    # Valores de transfer
+                    valor_transfer_ida = Decimal(str(servico_data.get('valor_transfer_ida', 0)))
+                    valor_transfer_volta = Decimal(str(servico_data.get('valor_transfer_volta', 0)))
                     
                     # Buscar serviço
                     servico = SubCategoria.objects.get(pk=servico_id)
                     
-                    # Criar lançamento
+                    # Criar lançamento vinculado à OS
                     lancamento = LancamentoServico.objects.create(
+                        ordem_servico=ordem,  # VINCULAR À OS
                         data_servico=data_servico,
                         categoria=servico.categoria,
                         subcategoria=servico,
@@ -378,21 +399,40 @@ def lancamento_create(request):
                         qtd_infantil=qtd_infantil,
                         idades_criancas=','.join(map(str, idades)) if idades else '',
                         obs_publica=descricao,
-                        criado_por=request.user
+                        criado_por=request.user,
+                        # Snapshot dos valores
+                        valor_unit_inteira=servico.valor_inteira,
+                        valor_unit_meia=servico.valor_meia,
+                        valor_unit_infantil=servico.valor_infantil,
+                        valor_transfer_ida=valor_transfer_ida,
+                        valor_transfer_volta=valor_transfer_volta,
                     )
                     
-                    # Associar tipos de meia (se usar ManyToMany - senão guardar como texto)
+                    print(f"DEBUG: Criado lançamento {lancamento.id} - {servico.nome} vinculado à OS #{ordem.numero_os}")
+                    print(f"DEBUG: ordem_servico_id do lançamento: {lancamento.ordem_servico_id}")
+                    
+                    # Associar tipos de meia
                     if tipos_meia:
-                        tipos_texto = '\n'.join([t['nome'] for t in tipos_meia])
-                        lancamento.tipos_meia_entrada_text = tipos_texto
+                        tipos_texto = '\n'.join([t.get('tipo', t.get('nome', '')) for t in tipos_meia])
+                        lancamento.tipos_meia_entrada = tipos_texto
                         lancamento.save()
                     
                     lancamentos_criados.append(lancamento)
                 
-                messages.success(request, f'{len(lancamentos_criados)} serviço(s) adicionado(s) com sucesso!')
-                return JsonResponse({'success': True, 'message': 'Ordem de serviço criada com sucesso'})
+                # Atualizar totais da OS
+                ordem.calcular_total()
+                
+                messages.success(request, f'Ordem de Serviço #{ordem.numero_os} criada com {len(lancamentos_criados)} serviço(s)!')
+                return JsonResponse({
+                    'success': True, 
+                    'message': f'Ordem de Serviço #{ordem.numero_os} criada com sucesso',
+                    'ordem_id': ordem.id,
+                    'numero_os': ordem.numero_os
+                })
                 
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 return JsonResponse({'error': str(e)}, status=500)
         else:
             # Formulário tradicional (manter compatibilidade)
@@ -418,64 +458,227 @@ def lancamento_create(request):
 
 @login_required
 def lancamento_edit(request, pk):
-    """Edita lançamento existente"""
+    """Edita lançamento existente - usa mesmo template de criação"""
     lancamento = get_object_or_404(LancamentoServico, pk=pk)
+    ordem = lancamento.ordem_servico
     
     if request.method == 'POST':
-        form = LancamentoServicoForm(request.POST, instance=lancamento)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Lançamento atualizado com sucesso!')
-            return redirect('servicos:lancamento_list')
+        # Se for JSON (salvamento do formulário novo)
+        if request.content_type == 'application/json':
+            import json
+            from decimal import Decimal
+            try:
+                dados = json.loads(request.body)
+                servicos = dados.get('servicos', [])
+                roteiro = dados.get('roteiro', '')
+                
+                if not servicos:
+                    return JsonResponse({'error': 'Nenhum serviço informado'}, status=400)
+                
+                # Atualizar roteiro da OS
+                if ordem:
+                    ordem.roteiro = roteiro
+                    ordem.save()
+                    
+                    # Remover todos os lançamentos antigos da OS
+                    ordem.lancamentos.all().delete()
+                    
+                    # Criar novos lançamentos
+                    for servico_data in servicos:
+                        # Extrair dados
+                        data_servico = servico_data['data']
+                        servico_id = servico_data['servico_id']
+                        qtd_inteira = int(servico_data.get('qtd_inteira') or 0)
+                        qtd_meia = int(servico_data.get('qtd_meia') or 0)
+                        qtd_infantil = int(servico_data.get('qtd_infantil') or 0)
+                        idades_raw = servico_data.get('idades', [])
+                        idades = [int(i) for i in idades_raw if i and str(i).strip()]
+                        tipos_meia = servico_data.get('tipos_meia', [])
+                        descricao = servico_data.get('descricao', '')
+                        
+                        # Valores de transfer
+                        valor_transfer_ida = Decimal(str(servico_data.get('valor_transfer_ida', 0)))
+                        valor_transfer_volta = Decimal(str(servico_data.get('valor_transfer_volta', 0)))
+                        
+                        # Buscar serviço
+                        servico = SubCategoria.objects.get(pk=servico_id)
+                        
+                        # Criar novo lançamento vinculado à OS
+                        novo_lancamento = LancamentoServico.objects.create(
+                            ordem_servico=ordem,
+                            data_servico=data_servico,
+                            categoria=servico.categoria,
+                            subcategoria=servico,
+                            qtd_inteira=qtd_inteira,
+                            qtd_meia=qtd_meia,
+                            qtd_infantil=qtd_infantil,
+                            idades_criancas=','.join(map(str, idades)) if idades else '',
+                            obs_publica=descricao,
+                            criado_por=request.user,
+                            valor_unit_inteira=servico.valor_inteira,
+                            valor_unit_meia=servico.valor_meia,
+                            valor_unit_infantil=servico.valor_infantil,
+                            valor_transfer_ida=valor_transfer_ida,
+                            valor_transfer_volta=valor_transfer_volta,
+                        )
+                        
+                        # Associar tipos de meia
+                        if tipos_meia:
+                            tipos_texto = '\n'.join([t.get('tipo', t.get('nome', '')) for t in tipos_meia])
+                            novo_lancamento.tipos_meia_entrada = tipos_texto
+                            novo_lancamento.save()
+                    
+                    # Atualizar totais da OS
+                    ordem.calcular_total()
+                    
+                    messages.success(request, f'Ordem de Serviço #{ordem.numero_os} atualizada com {len(servicos)} serviço(s)!')
+                    return JsonResponse({
+                        'success': True, 
+                        'message': f'Ordem de Serviço #{ordem.numero_os} atualizada com sucesso',
+                        'ordem_id': ordem.id,
+                        'numero_os': ordem.numero_os
+                    })
+                else:
+                    return JsonResponse({'error': 'Lançamento não possui Ordem de Serviço vinculada'}, status=400)
+                
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=500)
+        else:
+            # Form tradicional (fallback)
+            form = LancamentoServicoForm(request.POST, instance=lancamento)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Lançamento atualizado com sucesso!')
+                return redirect('servicos:lancamento_list')
+    
+    # GET - preparar dados para o JavaScript
+    categorias = Categoria.objects.filter(ativo=True)
+    transfers = Transfer.objects.filter(ativo=True)
+    
+    # Converter TODOS os lançamentos da OS para formato JavaScript
+    import json
+    
+    # Pegar todos os lançamentos da mesma OS
+    if ordem:
+        todos_lancamentos = ordem.lancamentos.all()
+        roteiro = ordem.roteiro
     else:
-        form = LancamentoServicoForm(instance=lancamento)
+        todos_lancamentos = [lancamento]
+        roteiro = ""
+    
+    lancamentos_data = []
+    for lanc in todos_lancamentos:
+        idades = []
+        if lanc.idades_criancas:
+            idades = [int(i.strip()) for i in lanc.idades_criancas.split(',') if i.strip()]
+        
+        tipos_meia = []
+        if lanc.tipos_meia_entrada:
+            for idx, tipo in enumerate(lanc.tipos_meia_entrada.split('\n')):
+                if tipo.strip():
+                    tipos_meia.append({
+                        'id': idx + 1,
+                        'tipo': tipo.strip(),
+                        'nome': tipo.strip()
+                    })
+        
+        lancamentos_data.append({
+            'id': lanc.id,
+            'data': lanc.data_servico.strftime('%Y-%m-%d'),
+            'categoria_id': lanc.categoria.id,
+            'servico_id': lanc.subcategoria.id,
+            'servico_nome': lanc.subcategoria.nome,
+            'qtd_inteira': lanc.qtd_inteira,
+            'qtd_meia': lanc.qtd_meia,
+            'qtd_infantil': lanc.qtd_infantil,
+            'idades': idades,
+            'tipos_meia': tipos_meia,
+            'transfers': [],
+            'valor_transfer_ida': float(lanc.valor_transfer_ida),
+            'valor_transfer_volta': float(lanc.valor_transfer_volta),
+            'descricao': lanc.obs_publica or lanc.subcategoria.nome,
+            'info': {
+                'id': lanc.subcategoria.id,
+                'nome': lanc.subcategoria.nome,
+                'valor_inteira': float(lanc.subcategoria.valor_inteira),
+                'valor_meia': float(lanc.subcategoria.valor_meia),
+                'valor_infantil': float(lanc.subcategoria.valor_infantil),
+                'aceita_meia_entrada': lanc.subcategoria.aceita_meia_entrada,
+                'permite_infantil': lanc.subcategoria.permite_infantil,
+                'possui_isencao': lanc.subcategoria.possui_isencao,
+                'tem_idade_minima': lanc.subcategoria.tem_idade_minima,
+                'idade_minima': lanc.subcategoria.idade_minima,
+                'idade_minima_infantil': lanc.subcategoria.idade_minima_infantil,
+                'idade_maxima_infantil': lanc.subcategoria.idade_maxima_infantil,
+                'idade_minima_isencao': lanc.subcategoria.idade_isencao_min,
+                'idade_maxima_isencao': lanc.subcategoria.idade_isencao_max,
+            }
+        })
     
     context = {
-        'form': form,
-        'lancamento': lancamento,
-        'title': f'Editar Lançamento #{lancamento.id}',
-        'action': 'Atualizar'
+        'categorias': categorias,
+        'transfers': transfers,
+        'title': f'Editar OS #{ordem.numero_os if ordem else lancamento.id}',
+        'editando': True,
+        'lancamentos_json': json.dumps(lancamentos_data),
+        'roteiro': roteiro,
     }
     return render(request, 'servicos/lancamento_form.html', context)
 
 
 @login_required
 def lancamento_delete(request, pk):
-    """Deleta lançamento"""
+    """Deleta Ordem de Serviço inteira com todos os lançamentos"""
     lancamento = get_object_or_404(LancamentoServico, pk=pk)
+    ordem = lancamento.ordem_servico
     
     if request.method == 'POST':
         try:
-            lancamento.delete()
-            messages.success(request, 'Lançamento deletado com sucesso!')
+            if ordem:
+                numero_os = ordem.numero_os
+                qtd_servicos = ordem.lancamentos.count()
+                # Deletar a OS inteira (cascade vai deletar os lançamentos)
+                ordem.delete()
+                messages.success(request, f'Ordem de Serviço #{numero_os} deletada com sucesso ({qtd_servicos} serviço(s))!')
+            else:
+                # Lançamento sem OS, deletar só ele
+                lancamento.delete()
+                messages.success(request, 'Lançamento deletado com sucesso!')
         except Exception as e:
-            messages.error(request, f'Erro ao deletar lançamento: {str(e)}')
+            messages.error(request, f'Erro ao deletar: {str(e)}')
         return redirect('servicos:lancamento_list')
     
     context = {
         'lancamento': lancamento,
-        'title': f'Deletar Lançamento #{lancamento.id}'
+        'ordem': ordem,
+        'title': f'Deletar OS #{ordem.numero_os if ordem else lancamento.id}'
     }
     return render(request, 'servicos/lancamento_confirm_delete.html', context)
 
 
 @login_required
 def lancamento_detail(request, pk):
-    """Visualiza detalhes do lançamento"""
+    """Visualiza detalhes completos da Ordem de Serviço"""
     lancamento = get_object_or_404(
         LancamentoServico.objects.select_related(
-            'categoria', 'subcategoria', 'criado_por'
+            'categoria', 'subcategoria', 'criado_por', 'ordem_servico'
         ),
         pk=pk
     )
     
-    # Gerar texto do WhatsApp
-    texto_whatsapp = lancamento.gerar_texto_whatsapp()
+    ordem = lancamento.ordem_servico
+    
+    # Pegar todos os lançamentos da OS
+    if ordem:
+        todos_lancamentos = ordem.lancamentos.select_related('categoria', 'subcategoria').all()
+    else:
+        todos_lancamentos = [lancamento]
     
     context = {
         'lancamento': lancamento,
-        'texto_whatsapp': texto_whatsapp,
-        'title': f'Lançamento #{lancamento.id}'
+        'ordem': ordem,
+        'todos_lancamentos': todos_lancamentos,
+        'title': f'OS #{ordem.numero_os if ordem else lancamento.id}'
     }
     return render(request, 'servicos/lancamento_detail.html', context)
 
@@ -537,7 +740,7 @@ def ajax_get_subcategoria_valores(request):
 def ajax_load_tipos_meia(request):
     """Retorna lista de tipos de meia entrada ativos em JSON"""
     tipos = TipoMeiaEntrada.objects.filter(ativo=True).values('id', 'nome')
-    return JsonResponse({'tipos': list(tipos)})
+    return JsonResponse(list(tipos), safe=False)
 
 
 # ==================== VIEWS DE TRANSFER ====================

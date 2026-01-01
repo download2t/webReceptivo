@@ -21,16 +21,16 @@
                         <div class="col-md-6">
                             <div class="card border-primary">
                                 <div class="card-body">
-                                    <h6 class="text-muted">Total de Lançamentos</h6>
-                                    <h3 class="mb-0">{{ stats.total_lancamentos|default:0 }}</h3>
+                                    <h6 class="text-muted">Total de Ordens de Serviço</h6>
+                                    <h3 class="mb-0">{{ stats.total_ordens|default:0 }}</h3>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card border-success">
                                 <div class="card-body">
-                                    <h6 class="text-muted">Total de PAX</h6>
-                                    <h3 class="mb-0">{{ stats.total_pax|default:0 }}</h3>
+                                    <h6 class="text-muted">Total de Serviços</h6>
+                                    <h3 class="mb-0">{{ stats.total_servicos|default:0 }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -67,62 +67,73 @@
                         </div>
                     </form>
                     
-                    <!-- Tabela de lançamentos -->
+                    <!-- Tabela de Ordens de Serviço -->
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>#</th>
-                                    <th>Data</th>
-                                    <th>Categoria</th>
-                                    <th>Serviço</th>
-                                    <th class="text-center">Inteira</th>
-                                    <th class="text-center">Meia</th>
-                                    <th class="text-center">Infantil</th>
-                                    <th class="text-center">Total PAX</th>
+                                    <th>OS #</th>
+                                    <th style="width: 40%;">Serviços</th>
+                                    <th class="text-center">Qtd Serviços</th>
                                     <th class="text-end">Valor Total</th>
+                                    <th>Criado por</th>
+                                    <th>Data Criação</th>
                                     <th class="text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for lancamento in lancamentos %}
+                                {% for ordem in ordens %}
                                 <tr>
-                                    <td>{{ lancamento.id }}</td>
-                                    <td>{{ lancamento.data_servico|date:"d/m/Y" }}</td>
-                                    <td>{{ lancamento.categoria.nome }}</td>
-                                    <td>{{ lancamento.subcategoria.nome }}</td>
-                                    <td class="text-center">{{ lancamento.qtd_inteira }}</td>
-                                    <td class="text-center">
-                                        {{ lancamento.qtd_meia }}
-                                        {% if lancamento.tipo_meia_entrada %}
-                                        <span class="badge bg-info" title="{{ lancamento.tipo_meia_entrada.nome }}">
-                                            {{ lancamento.tipo_meia_entrada.nome|truncatechars:10 }}
-                                        </span>
+                                    <td><strong>{{ ordem.numero_os }}</strong></td>
+                                    <td>
+                                        {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
+                                        {% for lancamento in lancamentos|slice:":3" %}
+                                        <div class="mb-1">
+                                            <i class="fas fa-ticket-alt text-primary"></i>
+                                            <strong>{{ lancamento.data_servico|date:"d/m" }}</strong> - 
+                                            {{ lancamento.subcategoria.nome }}
+                                            <small class="text-muted">({{ lancamento.total_pax }} pax)</small>
+                                        </div>
+                                        {% endfor %}
+                                        {% if total > 3 %}
+                                        <small class="text-info"><i class="fas fa-ellipsis-h"></i> +{{ total|add:"-3" }} serviço(s)</small>
                                         {% endif %}
-                                    </td>
-                                    <td class="text-center">{{ lancamento.qtd_infantil }}</td>
-                                    <td class="text-center"><strong>{{ lancamento.total_pax }}</strong></td>
-                                    <td class="text-end">
-                                        <strong>R$ {{ lancamento.valor_total|floatformat:2 }}</strong>
+                                        {% endwith %}
                                     </td>
                                     <td class="text-center">
+                                        <span class="badge bg-info">{{ ordem.lancamentos.count }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-success">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}</td>
+                                    <td>{{ ordem.data_criacao|date:"d/m/Y H:i" }}</td>
+                                    <td class="text-center">
+                                        {% with primeiro_lancamento=ordem.lancamentos.first %}
+                                        {% if primeiro_lancamento %}
                                         <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{% url 'servicos:lancamento_detail' lancamento.id %}" class="btn btn-info" title="Detalhes">
+                                            <a href="{% url 'servicos:lancamento_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Ver Detalhes">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{% url 'servicos:lancamento_edit' lancamento.id %}" class="btn btn-warning" title="Editar">
+                                            <a href="{% url 'servicos:lancamento_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar OS">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="{% url 'servicos:lancamento_delete' lancamento.id %}" class="btn btn-danger" title="Deletar">
+                                            <button type="button" class="btn btn-danger btn-sm" title="Excluir OS" 
+                                                    onclick="if(confirm('Tem certeza que deseja excluir esta OS e todos os seus serviços?')) { document.getElementById('delete-form-{{ ordem.id }}').submit(); }">
                                                 <i class="fas fa-trash"></i>
-                                            </a>
+                                            </button>
                                         </div>
+                                        <form id="delete-form-{{ ordem.id }}" method="post" action="{% url 'servicos:lancamento_delete' primeiro_lancamento.id %}" style="display:none;">
+                                            {% csrf_token %}
+                                        </form>
+                                        {% endif %}
+                                        {% endwith %}
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="10" class="text-center py-4">
-                                        <p class="text-muted mb-0">Nenhum lançamento encontrado.</p>
+                                    <td colspan="8" class="text-center py-4">
+                                        <p class="text-muted mb-0">Nenhuma Ordem de Serviço encontrada.</p>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -131,22 +142,22 @@
                     </div>
                     
                     <!-- Paginação -->
-                    {% if lancamentos.has_other_pages %}
+                    {% if ordens.has_other_pages %}
                     <nav aria-label="Navegação">
                         <ul class="pagination justify-content-center">
-                            {% if lancamentos.has_previous %}
+                            {% if ordens.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ lancamentos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Anterior</a>
+                                <a class="page-link" href="?page={{ ordens.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Anterior</a>
                             </li>
                             {% endif %}
                             
                             <li class="page-item active">
-                                <span class="page-link">Página {{ lancamentos.number }} de {{ lancamentos.paginator.num_pages }}</span>
+                                <span class="page-link">Página {{ ordens.number }} de {{ ordens.paginator.num_pages }}</span>
                             </li>
                             
-                            {% if lancamentos.has_next %}
+                            {% if ordens.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ lancamentos.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Próxima</a>
+                                <a class="page-link" href="?page={{ ordens.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Próxima</a>
                             </li>
                             {% endif %}
                         </ul>

@@ -224,11 +224,28 @@ body {
 .navbar {
   box-shadow: var(--box-shadow);
   border-bottom: 1px solid var(--border-color);
+  z-index: 1100 !important; /* Acima do sidebar (1040) */
 }
 
 .custom-navbar {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
   backdrop-filter: blur(10px);
+}
+
+/* Dropdown menus com z-index muito alto */
+.navbar .dropdown-menu {
+  z-index: 1110 !important; /* Acima do navbar e sidebar */
+  box-shadow: var(--box-shadow-lg);
+  position: absolute !important;
+}
+
+.navbar .dropdown {
+  z-index: 1105 !important; /* Entre navbar e dropdown-menu */
+  position: relative;
+}
+
+.navbar .dropdown.show {
+  z-index: 1105 !important;
 }
 
 .navbar-brand {
@@ -239,10 +256,40 @@ body {
 .nav-link {
   font-weight: 500;
   transition: var(--transition);
+  position: relative;
 }
 
 .nav-link:hover {
   transform: translateY(-1px);
+}
+
+/* Active state for nav links */
+.navbar-nav .nav-link.active {
+  font-weight: 600;
+  position: relative;
+}
+
+.navbar-nav .nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Spacing between menu items */
+.navbar-nav .nav-item {
+  margin: 0 0.25rem;
+}
+
+@media (min-width: 992px) {
+  .navbar-nav .nav-item {
+    margin: 0 0.5rem;
+  }
 }
 
 /* Theme Toggle Button */

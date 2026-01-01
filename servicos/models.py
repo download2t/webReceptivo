@@ -225,7 +225,9 @@ class OrdemServico(models.Model):
         Cliente,
         on_delete=models.PROTECT,
         related_name='ordens_servico',
-        verbose_name='Cliente'
+        verbose_name='Cliente',
+        null=True,
+        blank=True
     )
     data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
     data_inicio = models.DateField('Data de Início', null=True, blank=True)
@@ -488,6 +490,22 @@ class LancamentoServico(models.Model):
         default=Decimal('0.00')
     )
     
+    # Valores de Transfer (snapshot no momento do lançamento)
+    valor_transfer_ida = models.DecimalField(
+        'Valor Transfer Ida',
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Valor total dos transfers de ida'
+    )
+    valor_transfer_volta = models.DecimalField(
+        'Valor Transfer Volta',
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Valor total dos transfers de volta'
+    )
+    
     # Observações
     obs_publica = models.TextField(
         'Observações Públicas',
@@ -519,6 +537,20 @@ class LancamentoServico(models.Model):
     def __str__(self):
         return f"{self.subcategoria.nome} - {self.data_servico.strftime('%d/%m/%Y')}"
     
+    def get_idades_lista(self):
+        """Converte o campo idades_criancas (string CSV) para lista de inteiros"""
+        if not self.idades_criancas:
+            return []
+        
+        if isinstance(self.idades_criancas, list):
+            return [int(i) if isinstance(i, str) else i for i in self.idades_criancas]
+        
+        # Se for string, separar por vírgula e converter para int
+        try:
+            return [int(idade.strip()) for idade in self.idades_criancas.split(',') if idade.strip()]
+        except (ValueError, AttributeError):
+            return []
+    
     @property
     def total_pax(self):
         """Total de passageiros"""
@@ -527,7 +559,8 @@ class LancamentoServico(models.Model):
     @property
     def qtd_infantil_isentas(self):
         """Retorna quantas crianças estão isentas por idade"""
-        if not self.idades_criancas or not isinstance(self.idades_criancas, list):
+        idades = self.get_idades_lista()
+        if not idades:
             return 0
         
         if not self.subcategoria:
@@ -540,7 +573,7 @@ class LancamentoServico(models.Model):
             return 0
         
         count = 0
-        for idade in self.idades_criancas:
+        for idade in idades:
             if idade_min <= idade <= idade_max:
                 count += 1
         
@@ -572,7 +605,7 @@ class LancamentoServico(models.Model):
         
         # Contar crianças fora da faixa infantil
         count = 0
-        idades = self.idades_criancas or []
+        idades = self.get_idades_lista()
         
         # Crianças isentas
         idade_isencao_min = self.subcategoria.idade_isencao_min
@@ -611,7 +644,7 @@ class LancamentoServico(models.Model):
         
         # Contar crianças dentro da faixa infantil
         count = 0
-        idades = self.idades_criancas or []
+        idades = self.get_idades_lista()
         
         # Crianças isentas
         idade_isencao_min = self.subcategoria.idade_isencao_min
@@ -640,6 +673,7 @@ class LancamentoServico(models.Model):
         1. ISENTAS (R$ 0,00) - dentro da faixa de isenção
         2. INFANTIL - dentro da faixa infantil (se serviço permite infantil e aceita meia)
         3. INTEIRA - fora das faixas acima ou quando serviço não permite infantil/meia
+        Inclui valores de transfers (ida + volta)
         """
         total = Decimal('0.00')
         
@@ -656,6 +690,10 @@ class LancamentoServico(models.Model):
         total += self.qtd_infantil_pagam_inteira * self.valor_unit_inteira
         
         # Crianças isentas não somam (R$ 0,00)
+        
+        # Adicionar valores de transfer
+        total += self.valor_transfer_ida
+        total += self.valor_transfer_volta
         
         return total
     
@@ -684,8 +722,9 @@ class LancamentoServico(models.Model):
             else:
                 detalhes_pax.append(f"{self.qtd_meia} meia(s)")
         if self.qtd_infantil > 0:
-            if self.idades_criancas and isinstance(self.idades_criancas, list) and len(self.idades_criancas) > 0:
-                idades_texto = f" - Idades: {', '.join(map(str, self.idades_criancas))}"
+            idades = self.get_idades_lista()
+            if idades and len(idades) > 0:
+                idades_texto = f" - Idades: {', '.join(map(str, idades))}"
                 # Adicionar informação sobre isenções
                 qtd_isentas = self.qtd_infantil_isentas
                 if qtd_isentas > 0:
@@ -743,17 +782,19 @@ Aguardamos você! 🎉"""
             if not self.idades_criancas:
                 errors['__all__'] = 'Informe as idades das crianças'
             else:
-                # Validar formato das idades (agora é JSONField - lista)
-                if not isinstance(self.idades_criancas, list):
+                # Obter lista de idades (pode ser string CSV ou lista)
+                idades = self.get_idades_lista()
+                
+                if not idades:
                     errors['__all__'] = 'Formato inválido para idades das crianças'
                 else:
                     # Verificar se a quantidade de idades corresponde à quantidade de crianças
-                    if len(self.idades_criancas) != self.qtd_infantil:
-                        errors['__all__'] = f'Quantidade de idades ({len(self.idades_criancas)}) não corresponde à quantidade de crianças ({self.qtd_infantil})'
+                    if len(idades) != self.qtd_infantil:
+                        errors['__all__'] = f'Quantidade de idades ({len(idades)}) não corresponde à quantidade de crianças ({self.qtd_infantil})'
                     
                     # Validar se todas as idades são positivas e não ultrapassam 17 anos
-                    for idade in self.idades_criancas:
-                        if not isinstance(idade, int) or idade <= 0:
+                    for idade in idades:
+                        if idade <= 0:
                             errors['__all__'] = 'Todas as idades devem ser números positivos'
                             break
                         if idade > 17:

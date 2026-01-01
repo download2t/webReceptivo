@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'user_management',
     'audit_system',
     'company_settings',
+    'servicos',
 ]
 
 MIDDLEWARE = [
