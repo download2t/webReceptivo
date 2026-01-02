@@ -1,41 +1,46 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block page_title %}{{ title }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tipo_meia_list.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-lg-10 offset-lg-1">
-            <div class="card shadow-sm list-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-ticket-perforated me-2"></i>{{ title }}</h5>
-                    <a href="{% url 'servicos:tipo_meia_create' %}" class="btn btn-light btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Novo Tipo
-                    </a>
+<div class="container-fluid px-0 py-3">
+    <div class="row mb-3 mx-0">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-ticket-perforated me-2"></i>{{ title }}</h5>
+                <a href="{% url 'servicos:tipo_meia_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Novo Tipo
+                </a>
+            </div>
+            
+            <form method="get" class="mb-3">
+                <div class="row g-2">
+                    <div class="col-12 col-md-10">
+                        <input type="text" name="search" class="form-control" placeholder="🔍 Buscar tipo de meia entrada..." value="{{ search }}">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filtrar
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="get" class="filter-section">
-                        <div class="row g-3">
-                            <div class="col-md-10">
-                                <input type="text" name="search" class="form-control" placeholder="🔍 Buscar tipo de meia entrada..." value="{{ search }}">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover">
+            </form>
+            
+            <!-- Desktop Table -->
+            <div class="desktop-table">
+                <table class="table table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Nome</th>
                                     <th>Descrição</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Data de Criação</th>
-                                    <th class="text-center">Ações</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -51,13 +56,13 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">{{ tipo.criado_em|date:"d/m/Y" }}</td>
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'servicos:tipo_meia_edit' tipo.id %}" class="btn btn-warning" title="Editar">
-                                                <i class="fas fa-edit"></i>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'servicos:tipo_meia_edit' tipo.id %}" class="btn btn-warning btn-sm" title="Editar">
+                                                <i class="bi bi-pencil"></i>
                                             </a>
-                                            <a href="{% url 'servicos:tipo_meia_delete' tipo.id %}" class="btn btn-danger" title="Deletar">
-                                                <i class="fas fa-trash"></i>
+                                            <a href="{% url 'servicos:tipo_meia_delete' tipo.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                                                <i class="bi bi-trash"></i>
                                             </a>
                                         </div>
                                     </td>
@@ -71,6 +76,44 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Mobile Cards -->
+                    <div class="mobile-cards">
+                        {% for tipo in tipos %}
+                        <div class="card tipo-meia-card">
+                            <div class="card-header tipo-meia-header">
+                                <h6 class="mb-0">{{ tipo.nome }}</h6>
+                                {% if tipo.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <small class="text-muted">Descrição:</small>
+                                    <div>{{ tipo.descricao|default:"-" }}</div>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">Criado em:</small>
+                                    <div><strong>{{ tipo.criado_em|date:"d/m/Y" }}</strong></div>
+                                </div>
+                                <div class="d-flex gap-2 mt-3">
+                                    <a href="{% url 'servicos:tipo_meia_edit' tipo.id %}" class="btn btn-warning btn-sm flex-fill">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <a href="{% url 'servicos:tipo_meia_delete' tipo.id %}" class="btn btn-danger btn-sm flex-fill">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">Nenhum tipo de meia entrada encontrado.</p>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

@@ -50,4 +50,5 @@ urlpatterns = [
     path('ajax/valores/', views.ajax_get_subcategoria_valores, name='ajax_get_subcategoria_valores'),
     path('ajax/tipos-meia/', views.ajax_load_tipos_meia, name='ajax_load_tipos_meia'),
     path('ajax/servico-info/', views.ajax_get_servico_info, name='ajax_get_servico_info'),
+    path('ajax/translate/', views.translate_text, name='translate_text'),
 ]

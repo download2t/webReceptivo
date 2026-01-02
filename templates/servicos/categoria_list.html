@@ -1,48 +1,53 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block page_title %}{{ title }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/categoria_list.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
+<div class="container-fluid px-0 py-3">
+    <div class="row mb-3 mx-0">
         <div class="col-12">
-            <div class="card shadow-sm list-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-folder me-2"></i>{{ title }}</h5>
-                    <a href="{% url 'servicos:categoria_create' %}" class="btn btn-light btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Nova Categoria
-                    </a>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-folder me-2"></i>{{ title }}</h5>
+                {% if perms.servicos.add_categoria %}
+                <a href="{% url 'servicos:categoria_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Nova Categoria
+                </a>
+                {% endif %}
+            </div>
+            
+            <form method="get" class="mb-3">
+                <div class="row g-2">
+                    <div class="col-12 col-md-10">
+                        <input type="text" name="search" class="form-control" placeholder="🔍 Buscar categoria..." value="{{ search }}">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filtrar
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="get" class="filter-section">
-                        <div class="row g-3">
-                            <div class="col-md-10">
-                                <input type="text" name="search" class="form-control" placeholder="🔍 Buscar categoria..." value="{{ search }}">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i> Buscar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+            </form>
+            
+            <!-- Desktop Table -->
+            <div class="desktop-table">
+                <table class="table table-hover w-100">
                             <thead>
                                 <tr>
                                     <th>Nome</th>
-                                    <th class="text-center">Ordem</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center">Data de Criação</th>
-                                    <th class="text-center">Ações</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for categoria in categorias %}
                                 <tr>
                                     <td><strong>{{ categoria.nome }}</strong></td>
-                                    <td class="text-center">{{ categoria.ordem }}</td>
                                     <td class="text-center">
                                         {% if categoria.ativo %}
                                         <span class="badge bg-success">Ativo</span>
@@ -51,26 +56,78 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">{{ categoria.criado_em|date:"d/m/Y" }}</td>
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'servicos:categoria_edit' categoria.id %}" class="btn btn-warning" title="Editar">
-                                                <i class="fas fa-edit"></i>
+                                    <td class="text-end">
+                                        {% if perms.servicos.change_categoria or perms.servicos.delete_categoria %}
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {% if perms.servicos.change_categoria %}
+                                            <a href="{% url 'servicos:categoria_edit' categoria.id %}" class="btn btn-warning btn-sm" title="Editar">
+                                                <i class="bi bi-pencil"></i>
                                             </a>
-                                            <a href="{% url 'servicos:categoria_delete' categoria.id %}" class="btn btn-danger" title="Deletar">
-                                                <i class="fas fa-trash"></i>
+                                            {% endif %}
+                                            {% if perms.servicos.delete_categoria %}
+                                            <a href="{% url 'servicos:categoria_delete' categoria.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                                                <i class="bi bi-trash"></i>
                                             </a>
+                                            {% endif %}
                                         </div>
+                                        {% else %}
+                                        <span class="text-muted small">Sem permissão</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-4">
+                                    <td colspan="4" class="text-center py-4">
                                         <p class="text-muted mb-0">Nenhuma categoria encontrada.</p>
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Mobile Cards -->
+                    <div class="mobile-cards">
+                        {% for categoria in categorias %}
+                        <div class="card categoria-card">
+                            <div class="card-header categoria-header">
+                                <h6 class="mb-0">{{ categoria.nome }}</h6>
+                                {% if categoria.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <small class="text-muted">Criado em:</small>
+                                    <div><strong>{{ categoria.criado_em|date:"d/m/Y" }}</strong></div>
+                                </div>
+                                {% if perms.servicos.change_categoria or perms.servicos.delete_categoria %}
+                                <div class="d-flex gap-2 mt-3">
+                                    {% if perms.servicos.change_categoria %}
+                                    <a href="{% url 'servicos:categoria_edit' categoria.id %}" class="btn btn-warning btn-sm flex-fill">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    {% endif %}
+                                    {% if perms.servicos.delete_categoria %}
+                                    <a href="{% url 'servicos:categoria_delete' categoria.id %}" class="btn btn-danger btn-sm flex-fill">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="mt-3 text-center">
+                                    <small class="text-muted">Sem permissão para editar/excluir</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">Nenhuma categoria encontrada.</p>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
