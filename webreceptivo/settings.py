@@ -30,6 +30,12 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']  # Permitir todos os hosts temporariamente para desenvolvimento
 
+# Security settings - Desabilitados para desenvolvimento
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None  # Remove aviso COOP em desenvolvimento
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
 
 # Application definition
 
