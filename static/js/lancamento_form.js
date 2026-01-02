@@ -49,12 +49,24 @@
         document.getElementById('qtdMeia').addEventListener('input', aoMudarQtdMeia);
         
         // Botões principais
-        document.getElementById('btnAddTransfer').addEventListener('click', adicionarTransferOpcao);
-        document.getElementById('btnAdicionarServico').addEventListener('click', adicionarServicoALista);
-        document.getElementById('btnLimparForm').addEventListener('click', limparFormulario);
-        document.getElementById('btnCopiarRoteiro').addEventListener('click', copiarRoteiro);
-        document.getElementById('btnSalvarOS').addEventListener('click', salvarOrdemServico);
-        document.getElementById('btnVerRegras').addEventListener('click', exibirRegrasNovamente);
+        const btnAddTransfer = document.getElementById('btnAddTransfer');
+        const btnAdicionarServico = document.getElementById('btnAdicionarServico');
+        const btnLimparForm = document.getElementById('btnLimparForm');
+        const btnCopiarRoteiro = document.getElementById('btnCopiarRoteiro');
+        const btnSalvarOS = document.getElementById('btnSalvarOS');
+        const btnVerRegras = document.getElementById('btnVerRegras');
+        
+        if (btnAddTransfer) btnAddTransfer.addEventListener('click', adicionarTransferOpcao);
+        if (btnAdicionarServico) btnAdicionarServico.addEventListener('click', adicionarServicoALista);
+        if (btnLimparForm) btnLimparForm.addEventListener('click', limparFormulario);
+        if (btnCopiarRoteiro) {
+            console.log('Botão copiar roteiro encontrado, adicionando event listener');
+            btnCopiarRoteiro.addEventListener('click', copiarRoteiro);
+        } else {
+            console.error('Botão btnCopiarRoteiro NÃO encontrado!');
+        }
+        if (btnSalvarOS) btnSalvarOS.addEventListener('click', salvarOrdemServico);
+        if (btnVerRegras) btnVerRegras.addEventListener('click', exibirRegrasNovamente);
     }
 
     function aoMudarCategoria() {
@@ -523,9 +535,6 @@
         let descricao = document.getElementById('descricaoServico').value.trim();
         if (!descricao) {
             descricao = servicoNome;
-            if (qtdInteira > 0) descricao += ' - ' + qtdInteira + ' Inteira(s)';
-            if (qtdMeia > 0) descricao += ' - ' + qtdMeia + ' Meia(s)';
-            if (qtdInfantil > 0) descricao += ' - ' + qtdInfantil + ' Infantil(is)';
         }
         
         // Criar objeto do serviço
@@ -903,11 +912,10 @@
         
         datasOrdenadas.forEach(function(data) {
             roteiro += '📅 ' + formatarData(data) + '\n';
-            roteiro += '─'.repeat(50) + '\n\n';
+            roteiro += '─'.repeat(50) + '\n';
             
             porData[data].forEach(function(servico, idx) {
-                roteiro += 'Opção ' + (idx + 1) + '\n';
-                roteiro += servico.descricao + '\n';
+                roteiro += '\n' + servico.descricao + '\n';
                 
                 if (servico.qtd_inteira > 0) roteiro += '  • ' + servico.qtd_inteira + ' Inteira(s)\n';
                 if (servico.qtd_meia > 0) roteiro += '  • ' + servico.qtd_meia + ' Meia(s)\n';
@@ -920,7 +928,7 @@
                     });
                 }
                 
-                roteiro += '\n';
+                roteiro += '';
                 
                 // Calcular valores do serviço para o resumo
                 const info = servico.info || {};
@@ -953,22 +961,22 @@
                 });
             });
             
-            roteiro += '\n';
+            roteiro += '\n\n';
         });
         
         // Adicionar resumo de valores no final
         if (resumoServicos.length > 0) {
             roteiro += '─'.repeat(50) + '\n';
             roteiro += '💰 RESUMO DE VALORES\n';
-            roteiro += '─'.repeat(50) + '\n\n';
+            roteiro += '─'.repeat(50) + '\n';
             
             resumoServicos.forEach(function(item) {
                 if (item.valorIngressos > 0) {
-                    roteiro += '🎫 ' + item.nome + ' - Ingresso: R$ ' + item.valorIngressos.toFixed(2).replace('.', ',') + '\n';
+                    roteiro += '\n🎫 ' + item.nome + ' - Ingresso: R$ ' + item.valorIngressos.toFixed(2).replace('.', ',');
                 }
             });
             
-            roteiro += '─'.repeat(50) + '\n';
+            roteiro += '\n' + '─'.repeat(50) + '\n';
         }
         
         preview.textContent = roteiro;
@@ -977,6 +985,71 @@
     function formatarData(data) {
         const partes = data.split('-');
         return partes[2] + '/' + partes[1] + '/' + partes[0];
+    }
+
+    function copiarRoteiro() {
+        console.log('Função copiarRoteiro chamada');
+        const preview = document.getElementById('roteiroPreview');
+        const btn = document.getElementById('btnCopiarRoteiro');
+        
+        if (!preview) {
+            console.error('Elemento roteiroPreview não encontrado');
+            alert('Erro: Preview do roteiro não encontrado.');
+            return;
+        }
+        
+        if (!btn) {
+            console.error('Botão btnCopiarRoteiro não encontrado');
+            return;
+        }
+        
+        const texto = preview.textContent;
+        console.log('Texto do roteiro:', texto);
+        console.log('servicosAdicionados.length:', servicosAdicionados.length);
+        
+        // Verificar se há texto para copiar (ignora se array está vazio, pode ter roteiro carregado)
+        if (!texto || texto.trim() === '') {
+            alert('⚠️ Não há roteiro para copiar. Adicione serviços primeiro.');
+            return;
+        }
+        
+        // Usar textarea para garantir compatibilidade (funciona via IP)
+        const textArea = document.createElement('textarea');
+        textArea.value = texto;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // Para dispositivos móveis
+        
+        try {
+            const sucesso = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            if (sucesso) {
+                // Feedback visual
+                const originalHTML = btn.innerHTML;
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-outline-success');
+                btn.innerHTML = '<i class="bi bi-check"></i> Copiado!';
+                btn.disabled = true;
+                
+                // Resetar após 2 segundos
+                setTimeout(function() {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-success');
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }, 2000);
+            } else {
+                alert('Não foi possível copiar. Por favor, copie manualmente.');
+            }
+        } catch (err) {
+            document.body.removeChild(textArea);
+            console.error('Erro ao copiar:', err);
+            alert('Erro ao copiar. Por favor, selecione e copie manualmente (CTRL+C).');
+        }
     }
 
     function limparFormulario(limparTudo) {
@@ -1010,24 +1083,6 @@
         servicoAtualInfo = null;
         contadorTransfers = 0;
         editandoId = null;
-    }
-
-    function copiarRoteiro() {
-        const texto = document.getElementById('roteiroPreview').textContent;
-        
-        if (!texto || texto.includes('Adicione serviços')) {
-            alert('Nenhum roteiro para copiar');
-            return;
-        }
-        
-        navigator.clipboard.writeText(texto)
-            .then(function() {
-                alert('Roteiro copiado para a área de transferência!');
-            })
-            .catch(function(error) {
-                console.error('Erro ao copiar:', error);
-                alert('Erro ao copiar roteiro');
-            });
     }
 
     function salvarOrdemServico() {
