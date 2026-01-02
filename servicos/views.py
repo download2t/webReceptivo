@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count
-from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico
+from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico, TransferOS
 from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm
 
 
@@ -414,31 +414,23 @@ def ordem_servico_create(request):
                         lancamento.tipos_meia_entrada = tipos_texto
                         lancamento.save()
                     
-                    lancamentos_criados.append(lancamento)
-                
-                # Salvar transfers da OS
-                from .models import TransferOS
-                transfers_para_salvar = []
-                for servico_data in servicos:
+                    # Criar transfers deste serviço específico
                     transfers_servico = servico_data.get('transfers', [])
                     for transfer_data in transfers_servico:
-                        transfers_para_salvar.append({
-                            'transfer_id': transfer_data['transfer_id'],
-                            'data': transfer_data['data'],
-                            'quantidade': transfer_data.get('quantidade', 1),
-                            'valor': Decimal(str(transfer_data.get('valor', 0)))
-                        })
-                
-                # Criar transfers da OS
-                for transfer_info in transfers_para_salvar:
-                    transfer_obj = Transfer.objects.get(pk=transfer_info['transfer_id'])
-                    TransferOS.objects.create(
-                        ordem_servico=ordem,
-                        transfer=transfer_obj,
-                        data_transfer=transfer_info['data'],
-                        quantidade=transfer_info['quantidade'],
-                        valor=transfer_info['valor']
-                    )
+                        transfer_obj = Transfer.objects.get(pk=transfer_data['transfer_id'])
+                        valor_transfer = Decimal(str(transfer_data.get('valor', 0)))
+                        
+                        transfer_os = TransferOS.objects.create(
+                            ordem_servico=ordem,
+                            lancamento_servico=lancamento,  # VINCULAR AO LANÇAMENTO
+                            transfer=transfer_obj,
+                            data_transfer=transfer_data['data'],
+                            quantidade=transfer_data.get('quantidade', 1),
+                            valor=valor_transfer
+                        )
+                        print(f"DEBUG: Transfer {transfer_os.transfer.nome} vinculado ao lançamento {lancamento.id}")
+                    
+                    lancamentos_criados.append(lancamento)
                 
                 # Atualizar totais da OS
                 ordem.calcular_total()
@@ -507,19 +499,7 @@ def ordem_servico_edit(request, pk):
                     ordem.lancamentos.all().delete()
                     ordem.transfers_os.all().delete()
                     
-                    # Processar transfers de todos os serviços
-                    transfers_para_salvar = []
-                    for servico_data in servicos:
-                        transfers_servico = servico_data.get('transfers', [])
-                        for transfer_data in transfers_servico:
-                            transfers_para_salvar.append({
-                                'transfer_id': transfer_data['transfer_id'],
-                                'data': transfer_data['data'],
-                                'quantidade': transfer_data.get('quantidade', 1),
-                                'valor': Decimal(str(transfer_data.get('valor', 0)))
-                            })
-                    
-                    # Criar novos lançamentos
+                    # Criar novos lançamentos com seus transfers
                     for servico_data in servicos:
                         # Extrair dados
                         data_servico = servico_data['data']
@@ -557,18 +537,21 @@ def ordem_servico_edit(request, pk):
                             tipos_texto = '\n'.join([t.get('tipo', t.get('nome', '')) for t in tipos_meia])
                             novo_lancamento.tipos_meia_entrada = tipos_texto
                             novo_lancamento.save()
-                    
-                    # Criar transfers da OS
-                    from .models import TransferOS
-                    for transfer_info in transfers_para_salvar:
-                        transfer_obj = Transfer.objects.get(pk=transfer_info['transfer_id'])
-                        TransferOS.objects.create(
-                            ordem_servico=ordem,
-                            transfer=transfer_obj,
-                            data_transfer=transfer_info['data'],
-                            quantidade=transfer_info['quantidade'],
-                            valor=transfer_info['valor']
-                        )
+                        
+                        # Criar transfers deste serviço específico
+                        transfers_servico = servico_data.get('transfers', [])
+                        for transfer_data in transfers_servico:
+                            transfer_obj = Transfer.objects.get(pk=transfer_data['transfer_id'])
+                            valor_transfer = Decimal(str(transfer_data.get('valor', 0)))
+                            
+                            TransferOS.objects.create(
+                                ordem_servico=ordem,
+                                lancamento_servico=novo_lancamento,  # VINCULAR AO LANÇAMENTO
+                                transfer=transfer_obj,
+                                data_transfer=transfer_data['data'],
+                                quantidade=transfer_data.get('quantidade', 1),
+                                valor=valor_transfer
+                            )
                     
                     # Atualizar totais da OS
                     ordem.calcular_total()
@@ -602,13 +585,14 @@ def ordem_servico_edit(request, pk):
     
     # Pegar todos os lançamentos da mesma OS
     if ordem:
-        todos_lancamentos = ordem.lancamentos.all()
+        todos_lancamentos = ordem.lancamentos.all().order_by('id')
         roteiro = ordem.roteiro
     else:
         todos_lancamentos = [lancamento]
         roteiro = ""
     
     lancamentos_data = []
+    
     for lanc in todos_lancamentos:
         idades = []
         if lanc.idades_criancas:
@@ -641,11 +625,11 @@ def ordem_servico_edit(request, pk):
                                 'nome': tipo_texto
                             })
         
-        # Carregar transfers da OS que correspondem à data deste lançamento
+        # Coletar transfers deste lançamento usando o vínculo direto
         transfers_lista = []
         if ordem:
-            # Filtrar transfers pela data do lançamento
-            for transfer_os in ordem.transfers_os.filter(data_transfer=lanc.data_servico):
+            # Usar o related_name 'transfers_vinculados' do campo lancamento_servico
+            for transfer_os in lanc.transfers_vinculados.all():
                 transfers_lista.append({
                     'id': transfer_os.id,
                     'transfer_id': transfer_os.transfer.id,
@@ -723,12 +707,16 @@ def ordem_servico_delete(request, pk):
             messages.error(request, f'Erro ao deletar: {str(e)}')
         return redirect('servicos:lancamento_list')
     
+    # Buscar todos os lançamentos da OS
+    lancamentos = ordem.lancamentos.all() if ordem else [lancamento]
+    
     context = {
         'lancamento': lancamento,
         'ordem': ordem,
+        'lancamentos': lancamentos,
         'title': f'Deletar OS #{ordem.numero_os if ordem else lancamento.id}'
     }
-    return render(request, 'servicos/lancamento_confirm_delete.html', context)
+    return render(request, 'servicos/ordem_servico_confirm_delete.html', context)
 
 
 @login_required

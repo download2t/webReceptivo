@@ -3,34 +3,38 @@
 
 {% block page_title %}{{ title }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ordem_servico_list.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm list-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+<div class="container-fluid px-0 py-3">
+    <div class="row mb-3 mx-0">
+        <div class="col-12 px-3">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                     <h5 class="mb-0"><i class="bi bi-card-checklist me-2"></i>{{ title }}</h5>
-                    <a href="{% url 'servicos:ordem_servico_create' %}" class="btn btn-light btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i> Nova Ordem de Serviço
+                    <a href="{% url 'servicos:ordem_servico_create' %}" class="btn btn-primary btn-sm w-100 w-md-auto">
+                        <i class="bi bi-plus-circle me-1"></i> Nova OS
                     </a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-2 p-md-3">
                     <!-- Estatísticas -->
                     {% if stats %}
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card border-primary">
-                                <div class="card-body">
-                                    <h6 class="text-muted">Total de Ordens de Serviço</h6>
-                                    <h3 class="mb-0">{{ stats.total_ordens|default:0 }}</h3>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="card border-primary stats-card">
+                                <div class="card-body p-2 p-md-3">
+                                    <small class="text-muted d-block">Total OS</small>
+                                    <h4 class="mb-0">{{ stats.total_ordens|default:0 }}</h4>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card border-success">
-                                <div class="card-body">
-                                    <h6 class="text-muted">Total de Serviços</h6>
-                                    <h3 class="mb-0">{{ stats.total_servicos|default:0 }}</h3>
+                        <div class="col-6">
+                            <div class="card border-success stats-card">
+                                <div class="card-body p-2 p-md-3">
+                                    <small class="text-muted d-block">Serviços</small>
+                                    <h4 class="mb-0">{{ stats.total_servicos|default:0 }}</h4>
                                 </div>
                             </div>
                         </div>
@@ -38,14 +42,14 @@
                     {% endif %}
                     
                     <!-- Filtros -->
-                    <form method="get" class="filter-section">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <input type="text" name="search" class="form-control" placeholder="🔍 Buscar..." value="{{ search }}">
+                    <form method="get" class="filter-section mb-3">
+                        <div class="row g-2">
+                            <div class="col-12 col-md-4">
+                                <input type="text" name="search" class="form-control form-control-sm" placeholder="🔍 Buscar..." value="{{ search }}">
                             </div>
-                            <div class="col-md-3">
-                                <select name="categoria" class="form-select">
-                                    <option value="">Todas as Categorias</option>
+                            <div class="col-6 col-md-3">
+                                <select name="categoria" class="form-select form-select-sm">
+                                    <option value="">Categorias</option>
                                     {% for categoria in categorias %}
                                     <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
                                         {{ categoria.nome }}
@@ -53,111 +57,194 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <input type="date" name="data_inicio" class="form-control" placeholder="Data Início" value="{{ data_inicio }}">
+                            <div class="col-6 col-md-2">
+                                <input type="date" name="data_inicio" class="form-control form-control-sm" placeholder="Data Início" value="{{ data_inicio }}">
                             </div>
-                            <div class="col-md-2">
-                                <input type="date" name="data_fim" class="form-control" placeholder="Data Fim" value="{{ data_fim }}">
+                            <div class="col-6 col-md-2">
+                                <input type="date" name="data_fim" class="form-control form-control-sm" placeholder="Data Fim" value="{{ data_fim }}">
                             </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
+                            <div class="col-6 col-md-1">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">
                                     <i class="fas fa-filter"></i> Filtrar
                                 </button>
                             </div>
                         </div>
                     </form>
                     
-                    <!-- Tabela de Ordens de Serviço -->
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>OS #</th>
-                                    <th style="width: 40%;">Serviços</th>
-                                    <th class="text-center">Qtd Serviços</th>
-                                    <th class="text-end">Valor Total</th>
-                                    <th>Criado por</th>
-                                    <th>Data Criação</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for ordem in ordens %}
-                                <tr>
-                                    <td><strong>{{ ordem.numero_os }}</strong></td>
-                                    <td>
-                                        {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
-                                        {% for lancamento in lancamentos|slice:":3" %}
-                                        <div class="mb-1">
-                                            <i class="fas fa-ticket-alt text-primary"></i>
-                                            <strong>{{ lancamento.data_servico|date:"d/m" }}</strong> - 
-                                            {{ lancamento.subcategoria.nome }}
-                                            <small class="text-muted">({{ lancamento.total_pax }} pax)</small>
+                    <!-- Versão Desktop - Tabela -->
+                    <div class="desktop-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover w-100">
+                                <thead>
+                                    <tr>
+                                        <th>OS #</th>
+                                        <th>Serviços</th>
+                                        <th class="text-center">Qtd</th>
+                                        <th class="text-end">Valor</th>
+                                        <th>Criado Por</th>
+                                        <th class="text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ordem in ordens %}
+                                    <tr>
+                                        <td><strong>{{ ordem.numero_os }}</strong></td>
+                                        <td>
+                                            {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
+                                            {% for lancamento in lancamentos|slice:":2" %}
+                                            <div class="mb-1">
+                                                <i class="bi bi-ticket-detailed text-primary"></i>
+                                                <strong>{{ lancamento.data_servico|date:"d/m" }}</strong> - 
+                                                {{ lancamento.subcategoria.nome }}
+                                                <small class="text-muted">({{ lancamento.total_pax }} pax)</small>
+                                            </div>
+                                            {% endfor %}
+                                            {% if total > 2 %}
+                                            <small class="text-info"><i class="bi bi-three-dots"></i> +{{ total|add:"-2" }} serviço(s)</small>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">{{ ordem.lancamentos.count }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
+                                        </td>
+                                        <td>
+                                            <div>{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}</div>
+                                            <small class="text-muted">{{ ordem.data_criacao|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td class="text-end">
+                                            {% with primeiro_lancamento=ordem.lancamentos.first %}
+                                            {% if primeiro_lancamento %}
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <p class="text-muted mb-0">Nenhuma OS encontrada</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Versão Mobile - Cards -->
+                    <div class="mobile-cards">
+                        {% for ordem in ordens %}
+                        {% with primeiro_lancamento=ordem.lancamentos.first %}
+                        <div class="card ordem-card shadow-sm">
+                            <div class="ordem-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0"><i class="bi bi-receipt"></i> OS #{{ ordem.numero_os }}</h6>
+                                        <small><i class="bi bi-person"></i> {{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="badge bg-light text-dark">{{ ordem.lancamentos.count }} serviço(s)</div>
+                                        <div class="text-white mt-1"><small>{{ ordem.data_criacao|date:"d/m/Y" }}</small></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-2">
+                                <!-- Serviços -->
+                                <div class="mb-2">
+                                    <strong class="d-block mb-2"><i class="bi bi-list-ul"></i> Serviços:</strong>
+                                    {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
+                                    {% for lancamento in lancamentos|slice:":3" %}
+                                    <div class="servico-item mb-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <strong class="text-primary">{{ lancamento.data_servico|date:"d/m/Y" }}</strong>
+                                                <div>{{ lancamento.subcategoria.nome }}</div>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-tag"></i> {{ lancamento.categoria.nome }} | 
+                                                    <i class="bi bi-people"></i> {{ lancamento.total_pax }} PAX
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-success fw-bold">R$ {{ lancamento.valor_total|floatformat:2 }}</small>
+                                            </div>
                                         </div>
-                                        {% endfor %}
-                                        {% if total > 3 %}
-                                        <small class="text-info"><i class="fas fa-ellipsis-h"></i> +{{ total|add:"-3" }} serviço(s)</small>
-                                        {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-info">{{ ordem.lancamentos.count }}</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <strong class="text-success">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
-                                    </td>
-                                    <td>{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}</td>
-                                    <td>{{ ordem.data_criacao|date:"d/m/Y H:i" }}</td>
-                                    <td class="text-center">
-                                        {% with primeiro_lancamento=ordem.lancamentos.first %}
-                                        {% if primeiro_lancamento %}
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Ver Detalhes">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar OS">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-danger btn-sm" title="Excluir OS" 
-                                                    onclick="if(confirm('Tem certeza que deseja excluir esta OS e todos os seus serviços?')) { document.getElementById('delete-form-{{ ordem.id }}').submit(); }">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                        <form id="delete-form-{{ ordem.id }}" method="post" action="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" style="display:none;">
-                                            {% csrf_token %}
-                                        </form>
-                                        {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="8" class="text-center py-4">
-                                        <p class="text-muted mb-0">Nenhuma Ordem de Serviço encontrada.</p>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                    </div>
+                                    {% endfor %}
+                                    {% if total > 3 %}
+                                    <div class="text-center">
+                                        <small class="text-info"><i class="bi bi-three-dots"></i> +{{ total|add:"-3" }} serviço(s)</small>
+                                    </div>
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+                                
+                                <!-- Total -->
+                                <div class="border-top pt-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong>Total da OS:</strong>
+                                        <h5 class="mb-0 text-success">R$ {{ ordem.valor_total|floatformat:2 }}</h5>
+                                    </div>
+                                </div>
+                                
+                                <!-- Ações -->
+                                {% if primeiro_lancamento %}
+                                <div class="d-flex gap-2 action-buttons">
+                                    <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                    <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endwith %}
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <p class="text-muted mt-3">Nenhuma OS encontrada</p>
+                        </div>
+                        {% endfor %}
                     </div>
                     
                     <!-- Paginação -->
                     {% if ordens.has_other_pages %}
-                    <nav aria-label="Navegação">
-                        <ul class="pagination justify-content-center">
+                    <nav aria-label="Navegação" class="mt-3">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
                             {% if ordens.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ ordens.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Anterior</a>
+                                <a class="page-link" href="?page={{ ordens.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
                             </li>
                             {% endif %}
                             
                             <li class="page-item active">
-                                <span class="page-link">Página {{ ordens.number }} de {{ ordens.paginator.num_pages }}</span>
+                                <span class="page-link">{{ ordens.number }}/{{ ordens.paginator.num_pages }}</span>
                             </li>
                             
                             {% if ordens.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ ordens.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">Próxima</a>
+                                <a class="page-link" href="?page={{ ordens.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
                             </li>
                             {% endif %}
                         </ul>

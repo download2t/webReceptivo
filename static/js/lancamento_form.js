@@ -335,7 +335,7 @@
         const templateSelect = document.getElementById('transferTemplate');
         
         const div = document.createElement('div');
-        div.className = 'transfer-opcao';
+        div.className = 'transfer-opcao mb-2';
         
         const wrapper = document.createElement('div');
         wrapper.className = 'd-flex align-items-center gap-2';
@@ -343,12 +343,37 @@
         const label = document.createElement('label');
         label.className = 'form-label small mb-0';
         label.textContent = 'Opção ' + contadorTransfers;
+        label.style.minWidth = '60px';
         
+        // Campo select do transfer
         const selectClone = templateSelect.cloneNode(true);
         selectClone.id = '';
         selectClone.style.display = '';
-        selectClone.className = 'form-select form-select-sm flex-grow-1 transfer-select';
+        selectClone.className = 'form-select form-select-sm transfer-select';
         selectClone.setAttribute('data-transfer', contadorTransfers);
+        selectClone.style.flex = '2';
+        
+        // Campo de valor editável
+        const valorInput = document.createElement('input');
+        valorInput.type = 'number';
+        valorInput.step = '0.01';
+        valorInput.min = '0';
+        valorInput.className = 'form-control form-control-sm transfer-valor-input';
+        valorInput.placeholder = 'Valor';
+        valorInput.style.flex = '1';
+        valorInput.style.minWidth = '100px';
+        valorInput.value = '0.00';
+        
+        // Evento para preencher o valor automaticamente ao selecionar transfer
+        selectClone.addEventListener('change', function() {
+            if (this.value) {
+                const option = this.selectedOptions[0];
+                const transferValor = option.getAttribute('data-valor');
+                valorInput.value = parseFloat(transferValor).toFixed(2);
+            } else {
+                valorInput.value = '0.00';
+            }
+        });
         
         const btnRemove = document.createElement('button');
         btnRemove.type = 'button';
@@ -361,6 +386,7 @@
         
         wrapper.appendChild(label);
         wrapper.appendChild(selectClone);
+        wrapper.appendChild(valorInput);
         wrapper.appendChild(btnRemove);
         div.appendChild(wrapper);
         container.appendChild(div);
@@ -451,15 +477,25 @@
         let valorTransferIda = 0;
         let valorTransferVolta = 0;
         
-        const transferSelects = document.querySelectorAll('#containerTransfers .transfer-select');
-        console.log('Quantidade de transfers encontrados:', transferSelects.length);
-        transferSelects.forEach(function(select) {
-            if (select.value) {
+        const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
+        console.log('=== COLETANDO TRANSFERS ===');
+        console.log('Quantidade de transfers encontrados:', transferOpcoes.length);
+        transferOpcoes.forEach(function(opcao, idx) {
+            const select = opcao.querySelector('.transfer-select');
+            const valorInput = opcao.querySelector('.transfer-valor-input');
+            
+            console.log('Transfer #' + (idx + 1) + ':');
+            console.log('  - Select encontrado:', !!select);
+            console.log('  - Select value:', select ? select.value : 'N/A');
+            console.log('  - Input valor encontrado:', !!valorInput);
+            console.log('  - Input valor:', valorInput ? valorInput.value : 'N/A');
+            
+            if (select && select.value && valorInput) {
                 const option = select.selectedOptions[0];
                 const transferNome = option.getAttribute('data-nome');
-                const transferValor = parseFloat(option.getAttribute('data-valor'));
+                const transferValor = parseFloat(valorInput.value) || 0; // Usar o valor editável
                 
-                console.log('Transfer adicionado:', transferNome, transferValor);
+                console.log('  ✅ Transfer adicionado:', transferNome, 'Valor: R$', transferValor);
                 
                 transfers.push({
                     transfer_id: select.value,  // ID do transfer
@@ -475,10 +511,13 @@
                 } else {
                     valorTransferVolta += transferValor;
                 }
+            } else {
+                console.log('  ❌ Transfer não adicionado (falta select, valor ou select vazio)');
             }
         });
         
         console.log('Total de transfers coletados:', transfers.length);
+        console.log('Dados dos transfers:', JSON.stringify(transfers, null, 2));
         
         // Descrição
         let descricao = document.getElementById('descricaoServico').value.trim();
@@ -605,11 +644,20 @@
                 });
                 
                 setTimeout(function() {
-                    // Buscar APENAS os selects do container de transfers
-                    const transferSelects = document.querySelectorAll('#containerTransfers .transfer-select');
-                    transferSelects.forEach(function(select, idx) {
+                    // Buscar APENAS os selects e inputs do container de transfers
+                    const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
+                    transferOpcoes.forEach(function(opcao, idx) {
                         if (servico.transfers[idx]) {
-                            select.value = servico.transfers[idx].transfer_id || servico.transfers[idx].id;
+                            const select = opcao.querySelector('.transfer-select');
+                            const valorInput = opcao.querySelector('.transfer-valor-input');
+                            
+                            if (select) {
+                                select.value = servico.transfers[idx].transfer_id || servico.transfers[idx].id;
+                            }
+                            
+                            if (valorInput && servico.transfers[idx].valor) {
+                                valorInput.value = parseFloat(servico.transfers[idx].valor).toFixed(2);
+                            }
                         }
                     });
                 }, 100);
@@ -736,9 +784,13 @@
             // Transfer - somar todos os transfers do array
             let totalTransfer = 0;
             if (servico.transfers && servico.transfers.length > 0) {
-                servico.transfers.forEach(function(transfer) {
-                    totalTransfer += parseFloat(transfer.valor || 0);
+                console.log('=== CALCULANDO TRANSFERS NO RESUMO ===');
+                servico.transfers.forEach(function(transfer, tIdx) {
+                    const valorTransfer = parseFloat(transfer.valor || 0);
+                    console.log(`Transfer ${tIdx + 1}: ${transfer.nome} - Valor: R$ ${valorTransfer}`);
+                    totalTransfer += valorTransfer;
                 });
+                console.log(`Total de transfers: R$ ${totalTransfer}`);
             }
             
             const subtotalServico = subtotalInteira + subtotalMeia + subtotalInfantil + totalTransfer;
@@ -984,6 +1036,10 @@
             return;
         }
         
+        console.log('=== SALVANDO ORDEM DE SERVIÇO ===');
+        console.log('Serviços a salvar:', servicosAdicionados.length);
+        console.log('Dados completos:', JSON.stringify(servicosAdicionados, null, 2));
+        
         const dados = {
             servicos: servicosAdicionados,
             roteiro: document.getElementById('roteiroPreview').textContent
@@ -1000,6 +1056,7 @@
         
         console.log('URL de salvamento:', url);
         console.log('Editando?', djangoData.editando);
+        console.log('Payload JSON:', JSON.stringify(dados, null, 2));
         
         fetch(url, {
             method: 'POST',

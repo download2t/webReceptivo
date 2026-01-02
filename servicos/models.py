@@ -376,6 +376,14 @@ class TransferOS(models.Model):
         related_name='lancamentos',
         verbose_name='Transfer'
     )
+    lancamento_servico = models.ForeignKey(
+        'LancamentoServico',
+        on_delete=models.CASCADE,
+        related_name='transfers_vinculados',
+        verbose_name='Lançamento de Serviço',
+        null=True,
+        blank=True
+    )
     data_transfer = models.DateField('Data do Transfer')
     quantidade = models.PositiveIntegerField('Quantidade', default=1)
     valor = models.DecimalField(
@@ -396,9 +404,11 @@ class TransferOS(models.Model):
         return f"{self.transfer.nome} - {self.data_transfer}"
     
     def save(self, *args, **kwargs):
-        """Captura o valor do transfer"""
+        """Captura o valor do transfer se não foi fornecido"""
         if not self.pk and self.transfer:
-            self.valor = self.transfer.valor
+            # Só definir o valor padrão se não foi especificado (está em 0.00)
+            if self.valor == Decimal('0.00'):
+                self.valor = self.transfer.valor
         super().save(*args, **kwargs)
 
 

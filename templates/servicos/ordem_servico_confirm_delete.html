@@ -1,39 +1,142 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block page_title %}{{ title }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-lg-6 offset-lg-3">
-            <div class="card shadow-sm border-danger">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
                 <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> {{ title }}</h5>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                        <div>
+                            <h4 class="mb-0">Confirmar Exclusão</h4>
+                            <small>OS #{{ ordem.numero_os }}</small>
+                        </div>
+                    </div>
                 </div>
+                
                 <div class="card-body">
-                    <div class="alert alert-warning">
-                        <p class="mb-0"><strong>Atenção:</strong> Esta ação não pode ser desfeita!</p>
+                    <div class="alert alert-danger border-0 mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-shield-exclamation fs-1 me-3"></i>
+                            <div>
+                                <h5 class="alert-heading mb-1">Ação Irreversível!</h5>
+                                <p class="mb-0">Esta ação NÃO pode ser desfeita. Todos os dados serão permanentemente removidos.</p>
+                            </div>
+                        </div>
                     </div>
                     
-                    <h6 class="mb-3">Você tem certeza que deseja deletar este lançamento?</h6>
-                    
-                    <div class="border rounded p-3 bg-light mb-4">
-                        <p class="mb-2"><strong>Data:</strong> {{ lancamento.data_servico|date:"d/m/Y" }}</p>
-                        <p class="mb-2"><strong>Categoria:</strong> {{ lancamento.categoria.nome }}</p>
-                        <p class="mb-2"><strong>Serviço:</strong> {{ lancamento.subcategoria.nome }}</p>
-                        <p class="mb-2"><strong>Total PAX:</strong> {{ lancamento.total_pax }}</p>
-                        <p class="mb-0"><strong>Valor Total:</strong> R$ {{ lancamento.valor_total|floatformat:2 }}</p>
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">
+                            <i class="bi bi-info-circle me-2"></i>Resumo da Ordem de Serviço
+                        </h5>
+                        
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Número da OS</small>
+                                        <strong class="fs-5">#{{ ordem.numero_os }}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Total de Serviços</small>
+                                        <strong class="fs-5">{{ lancamentos|length }}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Valor Total</small>
+                                        <strong class="fs-5 text-success">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
+                                    </div>
+                                </div>
+                                
+                                {% if ordem.cliente %}
+                                <div class="mb-0">
+                                    <small class="text-muted d-block">Cliente</small>
+                                    <strong>{{ ordem.cliente.nome }}</strong>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
-                    <form method="post" class="d-flex justify-content-between">
-                        {% csrf_token %}
-                        <a href="{% url 'servicos:ordem_servico_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Sim, Deletar
-                        </button>
-                    </form>
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">
+                            <i class="bi bi-list-ul me-2"></i>Serviços que serão excluídos
+                        </h5>
+                        
+                        <div class="list-group">
+                            {% for lanc in lancamentos %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                                            <h6 class="mb-0">{{ lanc.subcategoria.nome }}</h6>
+                                        </div>
+                                        <div class="small text-muted">
+                                            <i class="bi bi-calendar3 me-1"></i>{{ lanc.data_servico|date:"d/m/Y" }}
+                                            <span class="mx-2">|</span>
+                                            <i class="bi bi-tag me-1"></i>{{ lanc.categoria.nome }}
+                                            <span class="mx-2">|</span>
+                                            <i class="bi bi-people me-1"></i>{{ lanc.total_pax }} PAX
+                                        </div>
+                                        
+                                        {% if lanc.qtd_inteira > 0 %}
+                                        <div class="small mt-1">
+                                            <i class="bi bi-dot"></i>{{ lanc.qtd_inteira }} Inteira(s) × R$ {{ lanc.valor_unit_inteira|floatformat:2 }}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if lanc.qtd_meia > 0 %}
+                                        <div class="small mt-1">
+                                            <i class="bi bi-dot"></i>{{ lanc.qtd_meia }} Meia(s) × R$ {{ lanc.valor_unit_meia|floatformat:2 }}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if lanc.qtd_infantil > 0 %}
+                                        <div class="small mt-1">
+                                            <i class="bi bi-dot"></i>{{ lanc.qtd_infantil }} Infantil(is) × R$ {{ lanc.valor_unit_infantil|floatformat:2 }}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if lanc.transfers_vinculados.exists %}
+                                        <div class="small mt-2 text-warning">
+                                            <i class="bi bi-bus-front me-1"></i>
+                                            <strong>Transfers:</strong>
+                                            {% for transfer in lanc.transfers_vinculados.all %}
+                                                {{ transfer.transfer.nome }} (R$ {{ transfer.valor|floatformat:2 }}){% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-end ms-3">
+                                        <strong class="text-success">R$ {{ lanc.valor_total|floatformat:2 }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="border-top pt-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <a href="{% url 'servicos:ordem_servico_list' %}" class="btn btn-outline-secondary w-100 btn-lg">
+                                    <i class="bi bi-arrow-left me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <form method="post" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger w-100 btn-lg">
+                                        <i class="bi bi-trash3 me-2"></i>Confirmar Exclusão
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
