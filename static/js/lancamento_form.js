@@ -846,6 +846,9 @@
         // Gerar roteiro
         let roteiro = '=== ROTEIRO ===\n\n';
         
+        // Array para armazenar resumo de valores
+        const resumoServicos = [];
+        
         datasOrdenadas.forEach(function(data) {
             roteiro += '📅 ' + formatarData(data) + '\n';
             roteiro += '─'.repeat(50) + '\n\n';
@@ -866,10 +869,55 @@
                 }
                 
                 roteiro += '\n';
+                
+                // Calcular valores do serviço para o resumo
+                const info = servico.info || {};
+                const qtdInteira = parseInt(servico.qtd_inteira) || 0;
+                const qtdMeia = parseInt(servico.qtd_meia) || 0;
+                const qtdInfantil = parseInt(servico.qtd_infantil) || 0;
+                
+                const valorInteira = parseFloat(info.valor_inteira || 0);
+                const valorMeia = parseFloat(info.valor_meia || 0);
+                const valorInfantil = parseFloat(info.valor_infantil || 0);
+                
+                const subtotalIngressos = (qtdInteira * valorInteira) + (qtdMeia * valorMeia) + (qtdInfantil * valorInfantil);
+                
+                // Calcular total de transfers
+                let totalTransfers = 0;
+                if (servico.transfers && servico.transfers.length > 0) {
+                    servico.transfers.forEach(function(t) {
+                        totalTransfers += parseFloat(t.valor || 0);
+                    });
+                }
+                
+                const valorTotal = subtotalIngressos + totalTransfers;
+                
+                // Adicionar ao resumo
+                resumoServicos.push({
+                    nome: servico.servico_nome || servico.descricao,
+                    valorIngressos: subtotalIngressos,
+                    valorTransfers: totalTransfers,
+                    valorTotal: valorTotal
+                });
             });
             
             roteiro += '\n';
         });
+        
+        // Adicionar resumo de valores no final
+        if (resumoServicos.length > 0) {
+            roteiro += '─'.repeat(50) + '\n';
+            roteiro += '💰 RESUMO DE VALORES\n';
+            roteiro += '─'.repeat(50) + '\n\n';
+            
+            resumoServicos.forEach(function(item) {
+                if (item.valorIngressos > 0) {
+                    roteiro += '🎫 ' + item.nome + ' - Ingresso: R$ ' + item.valorIngressos.toFixed(2).replace('.', ',') + '\n';
+                }
+            });
+            
+            roteiro += '─'.repeat(50) + '\n';
+        }
         
         preview.textContent = roteiro;
     }
