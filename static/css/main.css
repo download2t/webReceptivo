@@ -245,10 +245,27 @@ body {
 
 .custom-navbar .navbar-toggler {
   border-color: rgba(255, 255, 255, 0.5);
+  padding: 0.5rem;
+}
+
+.custom-navbar .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
 }
 
 .custom-navbar .navbar-toggler-icon {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.95%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Ajuste para tema claro - garantir que o hambúrguer seja sempre visível */
+[data-bs-theme="light"] .custom-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.95%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Ajuste para tema escuro */
+[data-bs-theme="dark"] .custom-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* Dropdown menus com z-index muito alto */
@@ -343,7 +360,7 @@ body {
 /* Mobile menu improvements */
 @media (max-width: 991.98px) {
   .navbar-collapse {
-    background: rgba(44, 62, 80, 0.95);
+    background: rgba(44, 62, 80, 0.98);
     margin-top: 0.5rem;
     border-radius: var(--border-radius);
     padding: 1rem;
@@ -351,7 +368,19 @@ body {
     backdrop-filter: blur(10px);
   }
   
-  /* Ensure user name is visible and properly styled on mobile */
+  /* Tema claro - fundo mais escuro no menu mobile para manter contraste */
+  [data-bs-theme="light"] .navbar-collapse {
+    background: rgba(44, 62, 80, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Tema escuro - ajuste do fundo */
+  [data-bs-theme="dark"] .navbar-collapse {
+    background: rgba(28, 31, 37, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Ensure user name is visible and properly styled on mobile - BRANCO em ambos temas */
   .navbar-nav .nav-link {
     color: white !important;
     font-weight: 500;
@@ -363,39 +392,55 @@ body {
     color: rgba(255, 255, 255, 0.8) !important;
   }
   
-  .navbar-nav .dropdown-menu {
-    position: static !important;
-    transform: none !important;
-    border: none;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    margin-top: 0.5rem;
-    width: 100%;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
-  }
-  
+  /* Dropdown items também BRANCOS em ambos temas */
   .navbar-nav .dropdown-item {
-    color: var(--text-primary);
+    color: white !important;
     border-radius: var(--border-radius);
     margin-bottom: 0.25rem;
     padding: 0.75rem 1rem;
     font-weight: 500;
+    background: transparent;
   }
   
   .navbar-nav .dropdown-item:hover,
   .navbar-nav .dropdown-item:focus {
-    background: var(--primary-color);
-    color: white;
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
   }
   
   .navbar-nav .dropdown-header {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.9) !important;
     font-weight: 600;
   }
   
+  .navbar-nav .dropdown-item-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+  
   .navbar-nav .dropdown-divider {
-    border-color: var(--border-color);
+    border-color: rgba(255, 255, 255, 0.2);
     margin: 0.5rem 0;
+  }
+  
+  /* Dropdown menu não fica visível por padrão - controlado por JavaScript */
+  .navbar-nav .dropdown-menu {
+    display: none !important;
+    position: static !important;
+    transform: none !important;
+    border: none;
+    background: transparent;
+    margin-top: 0.5rem;
+    width: 100%;
+    padding: 0;
+  }
+  
+  .navbar-nav .dropdown-menu.show {
+    display: block !important;
+  }
+  
+  /* Força ocultar dropdowns em mobile quando não tiverem a classe show */
+  .navbar-nav .dropdown:not(.show) > .dropdown-menu {
+    display: none !important;
   }
   
   .navbar-nav .dropdown-item.text-danger {

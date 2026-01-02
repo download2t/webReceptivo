@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="WebReceptivo - Sistema de Gestão Receptiva">
-    <meta name="author" content="WebReceptivo">
+    <meta name="description" content="WebRoteiros - Sistema de Gestão Receptiva">
+    <meta name="author" content="WebRoteiros">
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -15,7 +15,7 @@
     <meta name="user-theme-preference" content="{{ user.profile.tema_preferido }}">
     {% endif %}
     
-    <title>{% block title %}WebReceptivo{% endblock %}</title>
+    <title>{% block title %}WebRoteiros{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
@@ -39,7 +39,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark custom-navbar fixed-top">
             <div class="container-fluid">
                 <a class="navbar-brand fw-bold" href="{% url 'core:dashboard' %}">
-                    <i class="bi bi-building me-2"></i>WebReceptivo
+                    <i class="bi bi-building me-2"></i>WebRoteiros
                 </a>
                 
                 <!-- Botão do menu mobile -->
@@ -52,7 +52,7 @@
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {% if request.resolver_match.namespace == 'servicos' %}active{% endif %}" href="#" id="servicosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-briefcase me-1"></i>Serviços
+                                <i class="bi me-1"></i>Serviços
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="servicosDropdown">
                                 <li><a class="dropdown-item" href="{% url 'servicos:lancamento_create' %}">
@@ -151,7 +151,7 @@
                 <div class="row align-items-center py-2">
                     <div class="col-md-6">
                         <small class="text-muted">
-                            © {% now "Y" %} WebReceptivo. Todos os direitos reservados.
+                            © {% now "Y" %} WebRoteiros. Todos os direitos reservados.
                         </small>
                     </div>
                     <div class="col-md-6 text-md-end">
@@ -166,6 +166,70 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    
+    <!-- Mobile menu behavior -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Desabilita o comportamento padrão do Bootstrap dropdown no mobile
+        const dropdownToggles = document.querySelectorAll('.navbar-nav .dropdown-toggle');
+        
+        dropdownToggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                const isMobile = window.innerWidth < 992;
+                
+                if (isMobile) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const dropdown = this.closest('.dropdown');
+                    const dropdownMenu = dropdown.querySelector('.dropdown-menu');
+                    const isOpen = dropdown.classList.contains('show');
+                    
+                    // Fecha todos os outros dropdowns primeiro
+                    document.querySelectorAll('.navbar-nav .dropdown').forEach(d => {
+                        if (d !== dropdown) {
+                            d.classList.remove('show');
+                            const m = d.querySelector('.dropdown-menu');
+                            const t = d.querySelector('.dropdown-toggle');
+                            if (m) m.classList.remove('show');
+                            if (t) t.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                    
+                    // Toggle do dropdown atual
+                    if (isOpen) {
+                        dropdown.classList.remove('show');
+                        dropdownMenu.classList.remove('show');
+                        this.setAttribute('aria-expanded', 'false');
+                    } else {
+                        dropdown.classList.add('show');
+                        dropdownMenu.classList.add('show');
+                        this.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            });
+        });
+        
+        // Garante que dropdowns começam fechados no mobile
+        function closeAllDropdowns() {
+            if (window.innerWidth < 992) {
+                document.querySelectorAll('.navbar-nav .dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                    const menu = dropdown.querySelector('.dropdown-menu');
+                    const toggle = dropdown.querySelector('.dropdown-toggle');
+                    if (menu) menu.classList.remove('show');
+                    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+                });
+            }
+        }
+        
+        // Fecha ao carregar
+        closeAllDropdowns();
+        
+        // Fecha dropdowns ao redimensionar
+        window.addEventListener('resize', closeAllDropdowns);
+    });
+    </script>
     
     <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
