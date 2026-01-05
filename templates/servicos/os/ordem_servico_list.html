@@ -1,0 +1,350 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ordem_servico_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 py-3">
+    <div class="row mb-4 mx-0">
+        <div class="col-12 px-3">
+            <!-- Cabeçalho com Título e CTA -->
+            <div class="mb-4 d-flex align-items-center justify-content-between gap-3">
+                <div>
+                    <h1 class="mb-1 fw-700">{{ title }}</h1>
+                    <p class="text-muted mb-0 small">Gerencie todas as ordens de serviço</p>
+                </div>
+                <a href="{% url 'servicos:ordem_servico_create' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-plus-circle me-2"></i>Nova OS
+                </a>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-3">
+                    <!-- Estatísticas -->
+                    {% if stats %}
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="p-2 bg-primary bg-opacity-20 rounded-2">
+                                        <i class="bi bi-file-text text-primary fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Total de OS</p>
+                                        <h3 class="mb-0 fw-700">{{ stats.total_ordens|default:0 }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="p-2 bg-success bg-opacity-20 rounded-2">
+                                        <i class="bi bi-bag-check text-success fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-muted small mb-1">Total de Serviços</p>
+                                        <h3 class="mb-0 fw-700">{{ stats.total_servicos|default:0 }}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Filtros -->
+                    <form method="get" class="filters-card mb-4">
+                        <div class="card-body p-3">
+                            <!-- Desktop Layout -->
+                            <div class="d-none d-lg-flex gap-3 align-items-end">
+                                <div class="flex-grow-1">
+                                    <label for="search_desktop" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-search"></i>Buscar
+                                    </label>
+                                    <input type="text" id="search_desktop" name="search" class="form-control" placeholder="OS, serviço, responsável..." value="{{ search }}">
+                                </div>
+                                <div class="filter-col-lg">
+                                    <label for="categoria_desktop" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-tag"></i>Categoria
+                                    </label>
+                                    <select id="categoria_desktop" name="categoria" class="form-select">
+                                        <option value="">Todas as categorias</option>
+                                        {% for categoria in categorias %}
+                                        <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ categoria.nome }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="filter-col-md">
+                                    <label for="data_inicio_desktop" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-calendar-event"></i>De
+                                    </label>
+                                    <input type="date" id="data_inicio_desktop" name="data_inicio" class="form-control" value="{{ data_inicio }}">
+                                </div>
+                                <div class="filter-col-md">
+                                    <label for="data_fim_desktop" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-calendar-check"></i>Até
+                                    </label>
+                                    <input type="date" id="data_fim_desktop" name="data_fim" class="form-control" value="{{ data_fim }}">
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-funnel me-2"></i>Filtrar
+                                    </button>
+                                    {% if search or categoria_filter or data_inicio or data_fim %}
+                                    <a href="{% url 'servicos:ordem_servico_list' %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle me-2"></i>Limpar
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Mobile Layout -->
+                            <div class="d-lg-none">
+                                <div class="mb-3">
+                                    <label for="search_mobile" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-search"></i>Buscar OS
+                                    </label>
+                                    <input type="text" id="search_mobile" name="search" class="form-control form-control-sm" placeholder="OS, serviço, responsável..." value="{{ search }}">
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label for="categoria_mobile" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                            <i class="bi bi-tag"></i>Categoria
+                                        </label>
+                                        <select id="categoria_mobile" name="categoria" class="form-select form-select-sm">
+                                            <option value="">Todas</option>
+                                            {% for categoria in categorias %}
+                                            <option value="{{ categoria.id }}" {% if categoria_filter == categoria.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ categoria.nome|truncatechars:15 }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="data_inicio_mobile" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                            <i class="bi bi-calendar-event"></i>De
+                                        </label>
+                                        <input type="date" id="data_inicio_mobile" name="data_inicio" class="form-control form-control-sm" value="{{ data_inicio }}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="data_fim_mobile" class="form-label small fw-600 text-muted d-flex align-items-center gap-2 mb-2">
+                                        <i class="bi bi-calendar-check"></i>Data Final
+                                    </label>
+                                    <input type="date" id="data_fim_mobile" name="data_fim" class="form-control form-control-sm" value="{{ data_fim }}">
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-funnel me-2"></i>Aplicar Filtros
+                                    </button>
+                                    {% if search or categoria_filter or data_inicio or data_fim %}
+                                    <a href="{% url 'servicos:ordem_servico_list' %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-circle me-2"></i>Limpar Filtros
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Versão Desktop - Tabela -->
+                    <div class="desktop-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="fw-600 text-dark">OS #</th>
+                                        <th class="fw-600 text-dark">Serviços</th>
+                                        <th class="fw-600 text-dark text-center">Qtd</th>
+                                        <th class="fw-600 text-dark text-end">Valor</th>
+                                        <th class="fw-600 text-dark">Criado Por</th>
+                                        <th class="fw-600 text-dark text-end">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ordem in ordens %}
+                                    <tr>
+                                        <td><strong>{{ ordem.numero_os }}</strong></td>
+                                        <td>
+                                            {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
+                                            {% for lancamento in lancamentos|slice:":2" %}
+                                            <div class="mb-1 small">
+                                                <span class="badge bg-info bg-opacity-50 text-dark">{{ lancamento.data_servico|date:"d/m" }}</span>
+                                                <strong>{{ lancamento.subcategoria.nome }}</strong>
+                                                <small class="text-muted">({{ lancamento.total_pax }} pax)</small>
+                                            </div>
+                                            {% endfor %}
+                                            {% if total > 2 %}
+                                            <small class="text-info"><i class="bi bi-three-dots"></i> +{{ total|add:"-2" }} serviço(s)</small>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ ordem.lancamentos.count }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success fs-5">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}</div>
+                                            <small class="text-muted">{{ ordem.data_criacao|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td class="text-end">
+                                            {% with primeiro_lancamento=ordem.lancamentos.first %}
+                                            {% if primeiro_lancamento %}
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <p class="text-muted mb-0">Nenhuma OS encontrada</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Versão Mobile - Cards -->
+                    <div class="mobile-cards">
+                        {% for ordem in ordens %}
+                        {% with primeiro_lancamento=ordem.lancamentos.first %}
+                        <div class="card ordem-card shadow-sm border-0 mb-3">
+                            <div class="ordem-header bg-gradient py-3 px-3">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1 fw-600 text-white">
+                                            <i class="bi bi-receipt me-2"></i>OS #{{ ordem.numero_os }}
+                                        </h5>
+                                        <small class="text-white-50">
+                                            <i class="bi bi-person me-1"></i>{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-light text-primary fw-600">{{ ordem.lancamentos.count }}</span>
+                                        <small class="d-block text-white-50 mt-2">{{ ordem.data_criacao|date:"d/m/Y" }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-3">
+                                <!-- Serviços -->
+                                <div class="mb-3">
+                                    <h6 class="mb-2 fw-600 text-dark">
+                                        <i class="bi bi-bag-check me-2"></i>Serviços
+                                    </h6>
+                                    {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
+                                    {% for lancamento in lancamentos|slice:":3" %}
+                                    <div class="servico-item mb-2 p-2 bg-light rounded">
+                                        <div class="d-flex justify-content-between align-items-start gap-2">
+                                            <div class="flex-grow-1">
+                                                <span class="badge bg-info bg-opacity-50 text-dark small">{{ lancamento.data_servico|date:"d/m" }}</span>
+                                                <div class="fw-600 text-dark mt-1">{{ lancamento.subcategoria.nome }}</div>
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-tag"></i> {{ lancamento.categoria.nome }}
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    <i class="bi bi-people"></i> {{ lancamento.total_pax }} PAX
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="text-success fw-700">R$ {{ lancamento.valor_total|floatformat:2 }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% if total > 3 %}
+                                    <div class="text-center py-2">
+                                        <small class="text-info"><i class="bi bi-three-dots"></i> +{{ total|add:"-3" }} serviço(s)</small>
+                                    </div>
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+                                
+                                <!-- Total -->
+                                <div class="border-top pt-3 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted fw-600">Total da OS:</span>
+                                        <h4 class="mb-0 text-success fw-700">R$ {{ ordem.valor_total|floatformat:2 }}</h4>
+                                    </div>
+                                </div>
+                                
+                                <!-- Ações -->
+                                {% if primeiro_lancamento %}
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm">
+                                        <i class="bi bi-eye me-1"></i>Detalhes
+                                    </a>
+                                    <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil me-1"></i>Editar
+                                    </a>
+                                    <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash me-1"></i>Excluir
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endwith %}
+                        {% empty %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <p class="text-muted mt-3">Nenhuma OS encontrada</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Paginação -->
+                    {% if ordens.has_other_pages %}
+                    <nav aria-label="Navegação" class="mt-4">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if ordens.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ ordens.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link"><strong>{{ ordens.number }}/{{ ordens.paginator.num_pages }}</strong></span>
+                            </li>
+                            
+                            {% if ordens.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ ordens.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if categoria_filter %}&categoria={{ categoria_filter }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

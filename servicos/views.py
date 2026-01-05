@@ -32,7 +32,7 @@ def categoria_list(request):
         'search': search,
         'title': 'Categorias de Serviços'
     }
-    return render(request, 'servicos/categoria_list.html', context)
+    return render(request, 'servicos/categorias/categoria_list.html', context)
 
 
 @require_permission('servicos.add_categoria')
@@ -52,7 +52,7 @@ def categoria_create(request):
         'title': 'Nova Categoria',
         'action': 'Criar'
     }
-    return render(request, 'servicos/categoria_form.html', context)
+    return render(request, 'servicos/categorias/categoria_form.html', context)
 
 
 @require_permission('servicos.change_categoria')
@@ -75,7 +75,7 @@ def categoria_edit(request, pk):
         'title': f'Editar {categoria.nome}',
         'action': 'Atualizar'
     }
-    return render(request, 'servicos/categoria_form.html', context)
+    return render(request, 'servicos/categorias/categoria_form.html', context)
 
 
 @require_permission('servicos.delete_categoria')
@@ -95,55 +95,55 @@ def categoria_delete(request, pk):
         'categoria': categoria,
         'title': f'Deletar {categoria.nome}'
     }
-    return render(request, 'servicos/categoria_confirm_delete.html', context)
+    return render(request, 'servicos/categorias/categoria_confirm_delete.html', context)
 
 
 # ==================== VIEWS DE SUBCATEGORIA (SERVIÇOS) ====================
 
 @require_permission('servicos.view_subcategoria')
-def subcategoria_list(request):
+def servico_list(request):
     """Lista todos os serviços"""
-    subcategorias = SubCategoria.objects.select_related('categoria').all()
+    servicos = SubCategoria.objects.select_related('categoria').all()
     
     # Filtros
     search = request.GET.get('search', '')
     categoria_id = request.GET.get('categoria', '')
     
     if search:
-        subcategorias = subcategorias.filter(
+        servicos = servicos.filter(
             Q(nome__icontains=search) |
             Q(descricao__icontains=search)
         )
     
     if categoria_id:
-        subcategorias = subcategorias.filter(categoria_id=categoria_id)
+        servicos = servicos.filter(categoria_id=categoria_id)
     
     # Paginação
-    paginator = Paginator(subcategorias, 20)
+    paginator = Paginator(servicos, 20)
     page = request.GET.get('page')
-    subcategorias = paginator.get_page(page)
+    servicos = paginator.get_page(page)
     
     categorias = Categoria.objects.filter(ativo=True)
     
     context = {
-        'subcategorias': subcategorias,
+        'servicos': servicos,
         'categorias': categorias,
         'search': search,
         'categoria_filter': categoria_id,
         'title': 'Serviços Turísticos'
     }
-    return render(request, 'servicos/subcategoria_list.html', context)
+    return render(request, 'servicos/servicos/servico_list.html', context)
 
 
 @require_permission('servicos.add_subcategoria')
-def subcategoria_create(request):
+def servico_create(request):
     """Cria novo serviço"""
     if request.method == 'POST':
         form = SubCategoriaForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, 'Serviço criado com sucesso!')
-            return redirect('servicos:subcategoria_list')
+            return redirect('servicos:servico_list')
     else:
         form = SubCategoriaForm()
     
@@ -152,11 +152,11 @@ def subcategoria_create(request):
         'title': 'Novo Serviço',
         'action': 'Criar'
     }
-    return render(request, 'servicos/subcategoria_form.html', context)
+    return render(request, 'servicos/servicos/servico_form.html', context)
 
 
 @require_permission('servicos.change_subcategoria')
-def subcategoria_edit(request, pk):
+def servico_edit(request, pk):
     """Edita serviço existente"""
     subcategoria = get_object_or_404(SubCategoria, pk=pk)
     
@@ -165,21 +165,21 @@ def subcategoria_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Serviço atualizado com sucesso!')
-            return redirect('servicos:subcategoria_list')
+            return redirect('servicos:servico_list')
     else:
         form = SubCategoriaForm(instance=subcategoria)
     
     context = {
         'form': form,
-        'subcategoria': subcategoria,
+        'servico': subcategoria,
         'title': f'Editar {subcategoria.nome}',
         'action': 'Atualizar'
     }
-    return render(request, 'servicos/subcategoria_form.html', context)
+    return render(request, 'servicos/servicos/servico_form.html', context)
 
 
 @require_permission('servicos.delete_subcategoria')
-def subcategoria_delete(request, pk):
+def servico_delete(request, pk):
     """Deleta serviço"""
     subcategoria = get_object_or_404(SubCategoria, pk=pk)
     
@@ -189,13 +189,13 @@ def subcategoria_delete(request, pk):
             messages.success(request, f'Serviço "{subcategoria.nome}" deletado com sucesso!')
         except Exception as e:
             messages.error(request, f'Erro ao deletar serviço: {str(e)}')
-        return redirect('servicos:subcategoria_list')
+        return redirect('servicos:servico_list')
     
     context = {
-        'subcategoria': subcategoria,
+        'servico': subcategoria,
         'title': f'Deletar {subcategoria.nome}'
     }
-    return render(request, 'servicos/subcategoria_confirm_delete.html', context)
+    return render(request, 'servicos/servicos/servico_confirm_delete.html', context)
 
 
 # ==================== VIEWS DE TIPO DE MEIA ENTRADA ====================
@@ -214,7 +214,7 @@ def tipo_meia_list(request):
         'search': search,
         'title': 'Tipos de Meia Entrada'
     }
-    return render(request, 'servicos/tipo_meia_list.html', context)
+    return render(request, 'servicos/meias/tipo_meia_list.html', context)
 
 
 @require_permission('servicos.add_tipomeiaentrada')
@@ -234,7 +234,7 @@ def tipo_meia_create(request):
         'title': 'Novo Tipo de Meia Entrada',
         'action': 'Criar'
     }
-    return render(request, 'servicos/tipo_meia_form.html', context)
+    return render(request, 'servicos/meias/tipo_meia_form.html', context)
 
 
 @require_permission('servicos.change_tipomeiaentrada')
@@ -257,7 +257,7 @@ def tipo_meia_edit(request, pk):
         'title': f'Editar {tipo.nome}',
         'action': 'Atualizar'
     }
-    return render(request, 'servicos/tipo_meia_form.html', context)
+    return render(request, 'servicos/meias/tipo_meia_form.html', context)
 
 
 @require_permission('servicos.delete_tipomeiaentrada')
@@ -277,7 +277,7 @@ def tipo_meia_delete(request, pk):
         'tipo': tipo,
         'title': f'Deletar {tipo.nome}'
     }
-    return render(request, 'servicos/tipo_meia_confirm_delete.html', context)
+    return render(request, 'servicos/meias/tipo_meia_confirm_delete.html', context)
 
 
 # ==================== VIEWS DE ORDEM DE SERVIÇO ====================
@@ -335,7 +335,7 @@ def ordem_servico_list(request):
         'data_fim': data_fim,
         'title': 'Ordens de Serviço'
     }
-    return render(request, 'servicos/ordem_servico_list.html', context)
+    return render(request, 'servicos/os/ordem_servico_list.html', context)
 
 # Alias para retrocompatibilidade
 lancamento_list = ordem_servico_list
@@ -468,7 +468,7 @@ def ordem_servico_create(request):
             'transfers': transfers,
             'title': 'Nova Ordem de Serviço'
         }
-        return render(request, 'servicos/ordem_servico_form.html', context)
+        return render(request, 'servicos/os/ordem_servico_form.html', context)
 
 # Alias para retrocompatibilidade
 lancamento_create = ordem_servico_create
@@ -682,7 +682,7 @@ def ordem_servico_edit(request, pk):
         'lancamentos_json': json.dumps(lancamentos_data),
         'roteiro': roteiro,
     }
-    return render(request, 'servicos/ordem_servico_form.html', context)
+    return render(request, 'servicos/os/ordem_servico_form.html', context)
 
 # Alias para retrocompatibilidade
 lancamento_edit = ordem_servico_edit
@@ -718,7 +718,7 @@ def ordem_servico_delete(request, pk):
         'lancamentos': lancamentos,
         'title': f'Deletar OS #{ordem.numero_os if ordem else lancamento.id}'
     }
-    return render(request, 'servicos/ordem_servico_confirm_delete.html', context)
+    return render(request, 'servicos/os/ordem_servico_confirm_delete.html', context)
 
 
 @require_permission('servicos.view_ordemservico')
@@ -745,7 +745,7 @@ def ordem_servico_detail(request, pk):
         'todos_lancamentos': todos_lancamentos,
         'title': f'OS #{ordem.numero_os if ordem else lancamento.id}'
     }
-    return render(request, 'servicos/ordem_servico_detail.html', context)
+    return render(request, 'servicos/os/ordem_servico_detail.html', context)
 
 # Alias para retrocompatibilidade  
 lancamento_detail = ordem_servico_detail
@@ -835,7 +835,7 @@ def transfer_list(request):
         'search': search,
         'title': 'Transfers'
     }
-    return render(request, 'servicos/transfer_list.html', context)
+    return render(request, 'servicos/transfers/transfer_list.html', context)
 
 
 @require_permission('servicos.add_transfer')
@@ -855,7 +855,7 @@ def transfer_create(request):
         'title': 'Novo Transfer',
         'button_text': 'Criar Transfer'
     }
-    return render(request, 'servicos/transfer_form.html', context)
+    return render(request, 'servicos/transfers/transfer_form.html', context)
 
 
 @require_permission('servicos.change_transfer')
@@ -878,7 +878,7 @@ def transfer_edit(request, pk):
         'title': f'Editar Transfer: {transfer.nome}',
         'button_text': 'Salvar Alterações'
     }
-    return render(request, 'servicos/transfer_form.html', context)
+    return render(request, 'servicos/transfers/transfer_form.html', context)
 
 
 @require_permission('servicos.delete_transfer')
@@ -896,7 +896,7 @@ def transfer_delete(request, pk):
         'transfer': transfer,
         'title': f'Deletar Transfer: {transfer.nome}'
     }
-    return render(request, 'servicos/transfer_confirm_delete.html', context)
+    return render(request, 'servicos/transfers/transfer_confirm_delete.html', context)
 
 
 # ==================== ENDPOINT AJAX PARA INFORMAÇÕES DO SERVIÇO ====================

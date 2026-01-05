@@ -13,11 +13,11 @@ urlpatterns = [
     path('categorias/<int:pk>/editar/', views.categoria_edit, name='categoria_edit'),
     path('categorias/<int:pk>/deletar/', views.categoria_delete, name='categoria_delete'),
     
-    # Subcategorias (Serviços)
-    path('servicos/', views.subcategoria_list, name='subcategoria_list'),
-    path('servicos/criar/', views.subcategoria_create, name='subcategoria_create'),
-    path('servicos/<int:pk>/editar/', views.subcategoria_edit, name='subcategoria_edit'),
-    path('servicos/<int:pk>/deletar/', views.subcategoria_delete, name='subcategoria_delete'),
+    # Serviços
+    path('servicos/', views.servico_list, name='servico_list'),
+    path('servicos/criar/', views.servico_create, name='servico_create'),
+    path('servicos/<int:pk>/editar/', views.servico_edit, name='servico_edit'),
+    path('servicos/<int:pk>/deletar/', views.servico_delete, name='servico_delete'),
     
     # Tipos de Meia Entrada
     path('tipos-meia/', views.tipo_meia_list, name='tipo_meia_list'),

@@ -18,6 +18,21 @@
   --text-secondary: #6c757d;
   --border-color: #dee2e6;
   
+  /* Type scale */
+  --font-size-xs: 0.8125rem; /* 13px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+  
+  /* Line heights */
+  --lh-tight: 1.25;
+  --lh-base: 1.6;
+  --lh-relaxed: 1.75;
+  
   --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   --border-radius: 0.375rem;
   --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -54,13 +69,77 @@ html, body {
 
 body {
   font-family: var(--font-family-base);
-  line-height: 1.6;
+  font-size: var(--font-size-base);
+  line-height: var(--lh-base);
   color: var(--text-primary);
   background-color: var(--bg-body);
   display: flex;
   flex-direction: column;
   transition: var(--transition);
 }
+
+/* Typography scale */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  margin-bottom: 0.35em;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+  line-height: var(--lh-tight);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+  line-height: var(--lh-tight);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+  line-height: 1.3;
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+  line-height: 1.35;
+}
+
+h6 {
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+p {
+  line-height: var(--lh-base);
+  margin-bottom: 0.75rem;
+}
+
+small,
+.small {
+  font-size: var(--font-size-sm);
+  line-height: var(--lh-tight);
+}
+
+.text-xs { font-size: var(--font-size-xs); }
+.text-sm { font-size: var(--font-size-sm); }
+.text-base { font-size: var(--font-size-base); }
+.text-lg { font-size: var(--font-size-lg); }
+.text-xl { font-size: var(--font-size-xl); }
+
+.lh-tight { line-height: var(--lh-tight); }
+.lh-base { line-height: var(--lh-base); }
+.lh-relaxed { line-height: var(--lh-relaxed); }
+
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
 
 /* Main Content Layout */
 .main-content {
@@ -238,6 +317,29 @@ body {
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
+[data-bs-theme="dark"] .custom-navbar .navbar-brand,
+[data-bs-theme="dark"] .custom-navbar .nav-link {
+  color: rgba(255, 255, 255, 0.98) !important;
+}
+
+.custom-navbar .nav-link {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.custom-navbar .dropdown-menu .dropdown-item {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.custom-navbar .dropdown-header {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .custom-navbar .nav-link:hover,
 .custom-navbar .nav-link:focus {
   color: rgba(255, 255, 255, 1) !important;
@@ -287,6 +389,99 @@ body {
 .navbar-brand {
   font-size: 1.5rem;
   font-weight: 600;
+}
+
+/* Page hero used on dashboard and standard pages */
+.page-hero {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: #f8f9fa;
+  border-radius: 1rem;
+  padding: 1.75rem;
+  box-shadow: var(--box-shadow-lg);
+}
+
+.page-hero h1,
+.page-hero p {
+  color: #f8f9fa;
+}
+
+.page-hero .hero-meta {
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.page-hero .hero-meta .badge {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f8f9fa;
+}
+
+/* Stat cards for quick metrics */
+.stat-card {
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: var(--bg-surface);
+  box-shadow: var(--box-shadow);
+  transition: var(--transition);
+  height: 100%;
+}
+
+[data-bs-theme="dark"] .stat-card {
+  border-color: #39404a;
+  background: #222730;
+}
+
+.stat-card .label {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-card .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.stat-card .hint {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* List/card panels */
+.panel-card {
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: var(--box-shadow);
+  background: var(--bg-surface);
+}
+
+[data-bs-theme="dark"] .panel-card {
+  border-color: #39404a;
+  background: #1f232b;
+}
+
+.panel-card .card-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+[data-bs-theme="dark"] .panel-card .card-header h1,
+[data-bs-theme="dark"] .panel-card .card-header h2,
+[data-bs-theme="dark"] .panel-card .card-header h3,
+[data-bs-theme="dark"] .panel-card .card-header h4,
+[data-bs-theme="dark"] .panel-card .card-header h5,
+[data-bs-theme="dark"] .panel-card .card-header h6,
+[data-bs-theme="dark"] .panel-card .card-header .badge,
+[data-bs-theme="dark"] .panel-card .card-header .text-muted {
+  color: #f8f9fa !important;
+}
+
+[data-bs-theme="dark"] .panel-card .card-header .badge {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .nav-link {
@@ -417,9 +612,26 @@ body {
     color: rgba(255, 255, 255, 0.7) !important;
   }
   
+  /* Dropdown dividers - subtle and elegant */
+  .dropdown-divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.12) 25%, rgba(255, 255, 255, 0.12) 75%, transparent 100%);
+    margin: 0.75rem 0;
+    opacity: 1;
+  }
+  
   .navbar-nav .dropdown-divider {
-    border-color: rgba(255, 255, 255, 0.2);
-    margin: 0.5rem 0;
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.12) 25%, rgba(255, 255, 255, 0.12) 75%, transparent 100%);
+  }
+  
+  /* Também estilizar hr tags */
+  .navbar-nav hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.12) 25%, rgba(255, 255, 255, 0.12) 75%, transparent 100%);
+    margin: 0.75rem 0;
+    opacity: 1;
   }
   
   /* Dropdown menu não fica visível por padrão - controlado por JavaScript */

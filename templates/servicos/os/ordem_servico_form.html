@@ -9,41 +9,50 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <h2 class="mb-4">
-        <i class="bi bi-{% if editando %}pencil-square{% else %}file-earmark-text{% endif %} me-2"></i>
-        {{ title|default:"Nova Ordem de Serviço" }}
-    </h2>
+    <!-- Cabeçalho Principal -->
+    <div class="mb-5">
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="p-3 bg-primary bg-opacity-10 rounded-3">
+                <i class="bi bi-{% if editando %}pencil-square{% else %}file-earmark-text{% endif %} text-primary fs-4"></i>
+            </div>
+            <div>
+                <h1 class="mb-0 fw-700">{{ title|default:"Nova Ordem de Serviço" }}</h1>
+                <p class="text-muted mb-0 small">{% if editando %}Atualize os dados da ordem de serviço{% else %}Crie uma nova ordem de serviço adicionando serviços{% endif %}</p>
+            </div>
+        </div>
+    </div>
 
     <div class="row g-4">
         <!-- Coluna Esquerda: Formulário -->
         <div class="col-lg-7">
-            <!-- Card: Adicionar Serviço -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
+            <!-- Card: Adicionar Serviço (Primário) -->
+            <div class="card shadow-sm mb-4 border-0 card-primary">
+                <div class="card-header bg-primary text-white py-3 border-0">
+                    <h5 class="mb-0 fw-600">
                         <i class="bi bi-plus-circle me-2"></i>Adicionar Serviço
                     </h5>
+                    <p class="text-white-50 small mb-0 mt-1">Selecione categoria, serviço e quantidades</p>
                 </div>
                 <div class="card-body">
                     <!-- Seleção Básica -->
-                    <div class="row g-3 mb-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Data do Serviço *</label>
+                            <label class="form-label fw-600 text-dark">Data do Serviço <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="dataServico" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Categoria *</label>
+                            <label class="form-label fw-600 text-dark">Categoria <span class="text-danger">*</span></label>
                             <select class="form-select" id="categoria" required>
-                                <option value="">Selecione...</option>
+                                <option value="" class="text-muted">Selecione uma categoria...</option>
                                 {% for cat in categorias %}
                                 <option value="{{ cat.id }}">{{ cat.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold">Serviço *</label>
+                            <label class="form-label fw-600 text-dark">Serviço <span class="text-danger">*</span></label>
                             <select class="form-select" id="servico" required disabled>
-                                <option value="">Primeiro selecione uma categoria</option>
+                                <option value="" class="text-muted">Selecione uma categoria acima</option>
                             </select>
                         </div>
                     </div>
@@ -62,24 +71,24 @@
                         </div>
 
                         <!-- Quantidades -->
-                        <div class="row g-3 mb-3">
+                        <div class="row g-3 mb-4">
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">Qtd Inteira</label>
+                                <label class="form-label fw-600 text-dark">Quantidade Inteira</label>
                                 <input type="number" class="form-control" id="qtdInteira" min="0" value="0">
                             </div>
                             <div class="col-md-4" id="campoQtdMeia" style="display:none;">
-                                <label class="form-label fw-bold">Qtd Meia</label>
+                                <label class="form-label fw-600 text-dark">Quantidade Meia</label>
                                 <input type="number" class="form-control" id="qtdMeia" min="0" value="0">
                             </div>
                             <div class="col-md-4" id="campoQtdInfantil" style="display:none;">
-                                <label class="form-label fw-bold">Qtd Infantil</label>
+                                <label class="form-label fw-600 text-dark">Quantidade Infantil</label>
                                 <input type="number" class="form-control" id="qtdInfantil" min="0" value="0">
                             </div>
                         </div>
 
                         <!-- Idades das Crianças -->
-                        <div id="campoIdades" style="display:none;" class="mb-3">
-                            <label class="form-label fw-bold">Idades das Crianças *</label>
+                        <div id="campoIdades" style="display:none;" class="mb-4">
+                            <label class="form-label fw-600 text-dark">Idades das Crianças <span class="text-danger">*</span></label>
                             <div class="alert alert-light py-2 mb-2">
                                 <small class="d-block mb-2"><strong>Legenda de cores:</strong></small>
                                 <div class="legenda-cores">
@@ -105,21 +114,21 @@
                         </div>
 
                         <!-- Tipos de Meia Entrada -->
-                        <div id="campoTiposMeia" style="display:none;" class="mb-3">
-                            <label class="form-label fw-bold">Tipos de Meia Entrada *</label>
+                        <div id="campoTiposMeia" style="display:none;" class="mb-4">
+                            <label class="form-label fw-600 text-dark">Tipos de Meia Entrada <span class="text-danger">*</span></label>
                             <div id="containerTiposMeia" class="row g-2"></div>
                         </div>
 
                         <!-- Descrição Editável -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Descrição (editável)</label>
+                        <div class="mb-4">
+                            <label class="form-label fw-600 text-dark">Descrição <span class="text-secondary small">(editável)</span></label>
                             <textarea class="form-control" id="descricaoServico" rows="3" 
                                       placeholder="Será gerada automaticamente, mas você pode editar"></textarea>
                         </div>
 
                         <!-- Transfers -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Transfers (opcional)</label>
+                        <div class="mb-4">
+                            <label class="form-label fw-600 text-dark">Transfers <span class="text-secondary small">(opcional)</span></label>
                             <div id="containerTransfers"></div>
                             <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddTransfer">
                                 <i class="bi bi-plus-circle me-1"></i>Adicionar Transfer
@@ -127,29 +136,28 @@
                         </div>
 
                         <!-- Botões de Ação -->
-                        <div class="d-flex gap-2 mb-2">
-                            <button type="button" class="btn btn-outline-info btn-sm" id="btnVerRegras" style="display:none;">
-                                <i class="bi bi-shield-check me-1"></i>Ver Regras de Negócio
-                            </button>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-success flex-grow-1" id="btnAdicionarServico">
+                        <div class="d-grid gap-2 pt-2 border-top">
+                            <button type="button" class="btn btn-success btn-lg fw-600" id="btnAdicionarServico">
                                 <i class="bi bi-check-circle me-2"></i>Adicionar Serviço
                             </button>
                             <button type="button" class="btn btn-outline-secondary" id="btnLimparForm">
-                                <i class="bi bi-eraser me-2"></i>Limpar
+                                <i class="bi bi-eraser me-1"></i>Limpar Formulário
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm text-muted" id="btnVerRegras" style="display:none;">
+                                <i class="bi bi-shield-check me-1"></i>Ver Regras de Negócio
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Card: Serviços Adicionados -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
+            <!-- Card: Serviços Adicionados (Secundário) -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success bg-opacity-10 text-success py-3 border-0">
+                    <h5 class="mb-0 fw-600">
                         <i class="bi bi-list-check me-2"></i>Serviços Adicionados
                     </h5>
+                    <p class="text-success-emphasis small mb-0 mt-1">Lista dos serviços incluídos na OS</p>
                 </div>
                 <div class="card-body">
                     <div id="listaServicos">
@@ -165,11 +173,12 @@
         <!-- Coluna Direita: Preview do Roteiro -->
         <div class="col-lg-5">
             <!-- Card: Resumo Detalhado (Nota Fiscal) -->
-            <div class="card shadow-sm mb-3">
-                <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-receipt me-2"></i>Resumo Detalhado da OS
+            <div class="card shadow-sm mb-3 border-0">
+                <div class="card-header bg-dark bg-opacity-90 text-white py-3 border-0">
+                    <h6 class="mb-0 fw-600">
+                        <i class="bi bi-receipt me-2"></i>Resumo Detalhado
                     </h6>
+                    <p class="text-white-50 small mb-0 mt-1">Informações dos serviços</p>
                 </div>
                 <div class="card-body p-0">
                     <div id="resumoDetalhado" class="p-3">
@@ -192,12 +201,13 @@
                 </div>
             </div>
             
-            <!-- Card: Preview do Roteiro -->
-            <div class="card shadow-sm sticky-top" style="top: 1rem;">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">
+            <!-- Card: Preview do Roteiro (Ação Principal) -->
+            <div class="card shadow-sm sticky-top border-0 border-top border-primary border-3" style="top: 1rem;">
+                <div class="card-header bg-info bg-opacity-10 text-info py-3 border-0">
+                    <h5 class="mb-0 fw-600">
                         <i class="bi bi-eye me-2"></i>Preview do Roteiro
                     </h5>
+                    <p class="text-info-emphasis small mb-0 mt-1">Visualização para cópia</p>
                 </div>
                 <div class="card-body">
                     <div class="roteiro-preview" id="roteiroPreview">

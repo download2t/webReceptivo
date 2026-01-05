@@ -15,18 +15,18 @@
                         <p class="mb-0"><strong>Atenção:</strong> Esta ação não pode ser desfeita!</p>
                     </div>
                     
-                    <p class="mb-3">Você tem certeza que deseja deletar o serviço <strong>"{{ subcategoria.nome }}"</strong>?</p>
+                    <p class="mb-3">Você tem certeza que deseja deletar o serviço <strong>"{{ servico.nome }}"</strong>?</p>
                     
                     <div class="border rounded p-3 bg-light mb-3">
-                        <p class="mb-2"><strong>Categoria:</strong> {{ subcategoria.categoria.nome }}</p>
-                        <p class="mb-2"><strong>Valor Inteira:</strong> R$ {{ subcategoria.valor_inteira|floatformat:2 }}</p>
-                        <p class="mb-2"><strong>Valor Meia:</strong> R$ {{ subcategoria.valor_meia|floatformat:2 }}</p>
-                        <p class="mb-0"><strong>Valor Infantil:</strong> R$ {{ subcategoria.valor_infantil|floatformat:2 }}</p>
+                        <p class="mb-2"><strong>Categoria:</strong> {{ servico.categoria.nome }}</p>
+                        <p class="mb-2"><strong>Valor Inteira:</strong> R$ {{ servico.valor_inteira|floatformat:2 }}</p>
+                        <p class="mb-2"><strong>Valor Meia:</strong> R$ {{ servico.valor_meia|floatformat:2 }}</p>
+                        <p class="mb-0"><strong>Valor Infantil:</strong> R$ {{ servico.valor_infantil|floatformat:2 }}</p>
                     </div>
                     
                     <form method="post" class="d-flex justify-content-between">
                         {% csrf_token %}
-                        <a href="{% url 'servicos:subcategoria_list' %}" class="btn btn-secondary">
+                        <a href="{% url 'servicos:servico_list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-danger">

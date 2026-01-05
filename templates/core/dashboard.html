@@ -4,49 +4,115 @@
 {% block title %}Dashboard - WebReceptivo{% endblock %}
 
 {% block content %}
-<div class="dashboard-container fade-in">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-                <div class="mb-3 mb-md-0">
-                    <h1 class="h2 mb-2 fw-bold">Dashboard</h1>
-                    <p class="text-muted mb-0 fs-5">Bem-vindo ao WebRoteiros, {{ user.get_full_name|default:user.username }}!</p>
+<div class="container-fluid py-4 fade-in">
+    <!-- Hero -->
+    <div class="page-hero mb-4 d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="p-3 bg-light bg-opacity-10 rounded-3 border border-white border-opacity-25">
+                    <i class="bi bi-speedometer text-white fs-4"></i>
                 </div>
-                <div class="d-flex">
-                    <span class="badge bg-success fs-6 px-3 py-2">
-                        <i class="bi bi-circle-fill me-2"></i>Sistema Online
-                    </span>
+                <div>
+                    <h1 class="mb-1 fw-700">Dashboard</h1>
+                    <p class="mb-0 opacity-75">Bem-vindo ao WebRoteiros, {{ user.get_full_name|default:user.username }}.</p>
                 </div>
+            </div>
+            <div class="hero-meta d-flex flex-wrap">
+                <span class="badge rounded-pill">
+                    <i class="bi bi-person-check me-2"></i>Autenticado
+                </span>
+                <span class="badge rounded-pill">
+                    <i class="bi bi-clock-history me-2"></i>Último acesso: {{ user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso" }}
+                </span>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-light text-primary fw-600" href="{% url 'servicos:lancamento_create' %}">
+                <i class="bi bi-plus-circle me-2"></i>Nova OS
+            </a>
+            <a class="btn btn-outline-light fw-600" href="{% url 'servicos:servico_list' %}">
+                <i class="bi bi-tags me-2"></i>Serviços
+            </a>
+            <a class="btn btn-outline-light fw-600" href="{% url 'servicos:categoria_list' %}">
+                <i class="bi bi-folder2-open me-2"></i>Categorias
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="label">Versão</div>
+                <div class="value">1.1.0</div>
+                <div class="hint">Build estável</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="label">Último login</div>
+                <div class="value">{{ user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso" }}</div>
+                <div class="hint">Atividade recente do usuário</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="label">Perfil</div>
+                <div class="value">{{ user.username }}</div>
+                <div class="hint">Sessão autenticada</div>
             </div>
         </div>
     </div>
-    
-    <!-- Main Content Row -->
-    <div class="row dashboard-content g-4">
-            <!-- System Info -->
-            <div class="card dashboard-card mt-4">
-                <div class="card-header bg-transparent">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-info-circle me-2"></i>Informações do Sistema
-                    </h5>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="panel-card card h-100">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                     <span class="text-muted">Informações do Sistema</span>
+                    <span class="text-muted small">Atualizado automaticamente</span>
                 </div>
                 <div class="card-body">
-                    <div class="small text-muted">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Versão:</span>
-                            <span class="fw-bold">1.1.0</span>
+                    <div class="row g-3 small text-muted">
+                        <div class="col-md-6 d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.02);">
+                            <span>Ambiente</span>
+                            <span class="fw-bold text-primary">Produção</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Último Login:</span>
-                            <span class="fw-bold">{{ user.last_login|date:"d/m/Y H:i"|default:"Primeiro acesso" }}</span>
+                        <div class="col-md-6 d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.02);">
+                            <span>Servidor</span>
+                            <span class="fw-bold">Django 5.2</span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Status:</span>
-                            <span class="text-success fw-bold">
-                                <i class="bi bi-circle-fill me-1"></i>Online
-                            </span>
+                        <div class="col-md-6 d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.02);">
+                            <span>Timezone</span>
+                            <span class="fw-bold">{{ TIME_ZONE|default:"UTC" }}</span>
                         </div>
+                        <div class="col-md-6 d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.02);">
+                            <span>Usuário</span>
+                            <span class="fw-bold">{{ user.username }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="panel-card card h-100">
+                <div class="card-header bg-transparent">
+                    <h6 class="mb-0">Acessos Rápidos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-primary d-flex justify-content-between align-items-center" href="{% url 'servicos:lancamento_list' %}">
+                            Ordens de Serviço <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a class="btn btn-outline-primary d-flex justify-content-between align-items-center" href="{% url 'servicos:transfer_list' %}">
+                            Transfers <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a class="btn btn-outline-primary d-flex justify-content-between align-items-center" href="{% url 'servicos:tipo_meia_list' %}">
+                            Meia Entrada <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a class="btn btn-outline-secondary d-flex justify-content-between align-items-center" href="{% url 'accounts:profile' %}">
+                            Perfil <i class="bi bi-person"></i>
+                        </a>
                     </div>
                 </div>
             </div>

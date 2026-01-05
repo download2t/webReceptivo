@@ -1,54 +1,168 @@
 /* Ordem de Serviço - Formulário de Criação/Edição */
-    @media (max-width: 768px) {
-        .stats-card {
-            margin-bottom: 1rem;
-        }
-        
-        .filter-section {
-            margin-bottom: 1rem;
-        }
-        
-        .ordem-card {
-            margin-bottom: 1rem;
-            border-left: 4px solid #0d6efd;
-        }
-        
-        .ordem-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 0.75rem;
-            border-radius: 0.375rem 0.375rem 0 0;
-        }
-        
-        .servico-item {
-            border-left: 3px solid #17a2b8;
-            padding-left: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .action-buttons .btn {
-            flex: 1;
-        }
-    }
-    
-    .desktop-table {
-        display: table;
-    }
-    
-    .mobile-cards {
-        display: none;
-    }
-    
-    @media (max-width: 768px) {
-        .desktop-table {
-            display: none;
-        }
-        
-        .mobile-cards {
-            display: block;
-        }
-    }
-/* Tema escuro adaptativo */
+
+/* ===== HIERARQUIA VISUAL - Refactoring UI Principles ===== */
+
+/* Títulos e Headers - Diferenciação Clara */
+h1 {
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: #1a202c;
+}
+
+[data-bs-theme="dark"] h1 {
+    color: #f7fafc;
+}
+
+.card-header {
+    padding: 1rem !important;
+    border-bottom: none !important;
+}
+
+.card-header h5,
+.card-header h6 {
+    color: inherit;
+    letter-spacing: -0.015em;
+}
+
+.card-header p {
+    opacity: 0.8;
+    font-size: 0.875rem;
+    margin: 0.5rem 0 0 0 !important;
+}
+
+/* Cards - Diferenciação por Importância */
+.card-primary {
+    border: 1px solid #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .card-primary {
+    border-color: #2d3748 !important;
+}
+
+.card {
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Form Labels - Hierarquia Clara */
+.form-label {
+    margin-bottom: 0.5rem;
+    color: #2d3748;
+    font-size: 0.9375rem;
+}
+
+[data-bs-theme="dark"] .form-label {
+    color: #e2e8f0;
+}
+
+/* Força contraste mesmo quando usar utilitário text-dark nas labels */
+[data-bs-theme="dark"] .form-label.text-dark,
+[data-bs-theme="dark"] label.text-dark {
+    color: #f8f9fa !important;
+}
+
+.form-label.fw-600 {
+    font-weight: 600;
+}
+
+.form-label .text-danger {
+    margin-left: 0.25rem;
+}
+
+.form-label .text-secondary {
+    font-weight: normal;
+    opacity: 0.75;
+}
+
+/* Form Controls - Melhor Visual */
+.form-control,
+.form-select {
+    border: 1px solid #cbd5e0;
+    border-radius: 0.375rem;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    border-color: #4a5568;
+    background-color: #2d3748;
+    color: #e2e8f0;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+/* Botões - Hierarquia Clara */
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0.375rem;
+}
+
+.btn-success {
+    background-color: #38a169;
+    border-color: #38a169;
+}
+
+.btn-success:hover {
+    background-color: #2f855a;
+    border-color: #2f855a;
+}
+
+.btn-outline-secondary {
+    color: #718096;
+    border-color: #cbd5e0;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+    color: #cbd5e0;
+    border-color: #4a5568;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #edf2f7;
+    color: #2d3748;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+    background-color: #4a5568;
+    color: #e2e8f0;
+}
+
+.btn-link {
+    color: #718096;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-link:hover {
+    color: #2d3748;
+    text-decoration: none;
+}
+
+[data-bs-theme="dark"] .btn-link {
+    color: #cbd5e0;
+}
+
+[data-bs-theme="dark"] .btn-link:hover {
+    color: #f7fafc;
+}
+
+/* ===== Tema escuro adaptativo =====
+
 [data-bs-theme="dark"] .roteiro-preview {
     background: var(--bs-dark);
     border: 1px solid var(--bs-border-color);
