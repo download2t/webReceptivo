@@ -565,6 +565,7 @@
                 servicosAdicionados[index] = servico;
             }
             editandoId = null;
+            atualizarTextoBotaoServico();
         } else {
             servicosAdicionados.push(servico);
         }
@@ -587,6 +588,7 @@
         if (!servico) return;
         
         editandoId = id;
+        atualizarTextoBotaoServico();
         
         // Preencher form
         document.getElementById('dataServico').value = servico.data;
@@ -677,6 +679,21 @@
                 document.getElementById('camposServico').scrollIntoView({ behavior: 'smooth' });
             }, 500);
         }, 500);
+    }
+
+    function atualizarTextoBotaoServico() {
+        const btnAdicionarServico = document.getElementById('btnAdicionarServico');
+        if (!btnAdicionarServico) return;
+        
+        if (editandoId) {
+            btnAdicionarServico.innerHTML = '<i class="bi bi-check-circle me-2"></i>Salvar Alterações';
+            btnAdicionarServico.classList.remove('btn-success');
+            btnAdicionarServico.classList.add('btn-primary');
+        } else {
+            btnAdicionarServico.innerHTML = '<i class="bi bi-check-circle me-2"></i>Adicionar Serviço';
+            btnAdicionarServico.classList.remove('btn-primary');
+            btnAdicionarServico.classList.add('btn-success');
+        }
     }
 
     function removerServico(id) {
@@ -1083,6 +1100,7 @@
         servicoAtualInfo = null;
         contadorTransfers = 0;
         editandoId = null;
+        atualizarTextoBotaoServico();
     }
 
     function salvarOrdemServico() {
