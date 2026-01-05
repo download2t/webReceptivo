@@ -1,0 +1,97 @@
+/* Lista de Tipos de Meia - Layout Responsivo */
+
+/* Desktop: Mostrar tabela, esconder cards */
+.desktop-table {
+    display: block;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+}
+
+.desktop-table .table {
+    margin-bottom: 0;
+}
+
+.desktop-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.desktop-table thead th {
+    border: none;
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.desktop-table tbody tr {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.desktop-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.desktop-table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.mobile-cards {
+    display: none !important;
+}
+
+/* Mobile: Esconder tabela, mostrar cards */
+@media (max-width: 768px) {
+    .desktop-table {
+        display: none !important;
+    }
+    
+    .mobile-cards {
+        display: block !important;
+    }
+    
+    /* Estilo dos cards mobile */
+    .tipo-meia-card {
+        margin-bottom: 1rem;
+        border-left: 4px solid #0d6efd;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tipo-meia-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    [data-bs-theme="dark"] .tipo-meia-header,
+    [data-bs-theme="dark"] .tipo-meia-header h6 {
+        color: #f8f9fa !important;
+    }
+    
+    .tipo-meia-header h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 0;
+        color: white !important;
+        flex: 1;
+    }
+    
+    .tipo-meia-card .card-body {
+        padding: 1rem;
+    }
+    
+    .tipo-meia-card small {
+        font-size: 0.75rem;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .tipo-meia-card .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+}

@@ -1,0 +1,341 @@
+/* WebReceptivo - Django Admin CSS */
+/* Base styles for admin interface using existing theme variables */
+
+/* ================================
+   ADMIN BASE STYLES
+   ================================ */
+
+/* Admin container */
+.admin-breadcrumb {
+    background: var(--bg-body);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.admin-breadcrumb .breadcrumb {
+    margin: 0;
+}
+
+.admin-breadcrumb .breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.admin-breadcrumb .breadcrumb-item.active {
+    color: var(--text-secondary);
+}
+
+/* Admin cards */
+.admin-card {
+    background: var(--bg-body);
+    border-radius: 12px;
+    box-shadow: var(--box-shadow-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-lg);
+}
+
+.admin-card .card-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-weight: 600;
+}
+
+.admin-card .card-body {
+    padding: 20px;
+    color: var(--text-primary);
+}
+
+/* ================================
+   BUTTONS AND FORMS
+   ================================ */
+
+/* Admin buttons */
+.btn-admin-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: var(--transition);
+    text-decoration: none !important;
+}
+
+.btn-admin-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #1a252f 100%);
+    transform: translateY(-1px);
+    color: white !important;
+}
+
+.btn-admin-secondary {
+    background: var(--secondary-color);
+    border: none;
+    color: white !important;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: var(--transition);
+    text-decoration: none !important;
+}
+
+.btn-admin-secondary:hover {
+    background: #5a6268;
+    color: white !important;
+}
+
+/* Django admin default buttons */
+.default, .addlink, .changelink, .deletelink,
+input[type="submit"], button[type="submit"],
+.submit-row input[type="submit"],
+.button {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: var(--border-radius) !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: var(--transition) !important;
+    display: inline-block !important;
+}
+
+.default:hover, .addlink:hover, .changelink:hover,
+input[type="submit"]:hover, button[type="submit"]:hover,
+.submit-row input[type="submit"]:hover,
+.button:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #1a252f 100%) !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Delete button with danger color */
+.deletelink {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%) !important;
+}
+
+.deletelink:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+}
+
+/* Form elements */
+input[type="text"], input[type="password"], input[type="email"],
+input[type="number"], input[type="date"], input[type="datetime-local"],
+select, textarea {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 8px 12px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    transition: var(--transition) !important;
+    font-family: var(--font-family-base) !important;
+}
+
+input[type="text"]:focus, input[type="password"]:focus, 
+input[type="email"]:focus, input[type="number"]:focus,
+input[type="date"]:focus, input[type="datetime-local"]:focus,
+select:focus, textarea:focus {
+    border-color: var(--primary-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1) !important;
+}
+
+/* Labels */
+.form-row label, label {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+    margin-bottom: 5px !important;
+}
+
+/* Help text */
+.help, .helptext {
+    color: var(--text-secondary) !important;
+    font-size: 0.875rem !important;
+}
+
+/* ================================
+   PAGE TITLES AND CONTENT
+   ================================ */
+
+/* Page titles */
+#content h1 {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    margin-bottom: 20px !important;
+    font-size: 28px !important;
+}
+
+#content h2 {
+    color: var(--text-primary) !important;
+    font-weight: 500 !important;
+    margin-bottom: 15px !important;
+    font-size: 20px !important;
+}
+
+/* Links */
+a:link, a:visited {
+    color: var(--primary-color) !important;
+    text-decoration: none !important;
+}
+
+a:hover {
+    color: var(--primary-dark) !important;
+}
+
+/* ================================
+   MESSAGES AND ALERTS
+   ================================ */
+
+/* Django messages */
+.messagelist {
+    margin: 0 0 20px 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.messagelist li {
+    background: var(--success-color) !important;
+    color: white !important;
+    padding: 12px 16px !important;
+    margin-bottom: 10px !important;
+    border-radius: var(--border-radius) !important;
+    list-style: none !important;
+    box-shadow: var(--box-shadow) !important;
+}
+
+.messagelist .error {
+    background: var(--danger-color) !important;
+}
+
+.messagelist .warning {
+    background: var(--warning-color) !important;
+    color: var(--dark-color) !important;
+}
+
+/* Error lists */
+.errorlist {
+    background: var(--danger-color) !important;
+    color: white !important;
+    padding: 8px 12px !important;
+    border-radius: var(--border-radius) !important;
+    margin: 5px 0 !important;
+    list-style: none !important;
+}
+
+/* ================================
+   MODULES (Admin Index)
+   ================================ */
+
+/* Admin modules on index page */
+.module {
+    background: var(--bg-body) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    margin-bottom: 15px !important;
+    overflow: hidden !important;
+    box-shadow: var(--box-shadow) !important;
+}
+
+.module h2 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: white !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    padding: 12px 15px !important;
+    margin: 0 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+.module table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+.module td {
+    padding: 10px 15px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.module tr:last-child td {
+    border-bottom: none !important;
+}
+
+.module tr:hover {
+    background: var(--bg-surface) !important;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media (max-width: 768px) {
+    .admin-card .card-body {
+        padding: 15px !important;
+    }
+    
+    .admin-breadcrumb {
+        padding: 10px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    #content h1 {
+        font-size: 24px !important;
+    }
+    
+    .btn-admin-primary, .btn-admin-secondary {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* ================================
+   HIDE DJANGO ADMIN SIDEBAR
+   ================================ */
+
+/* Hide the native Django admin sidebar since we use top navigation */
+#nav-sidebar {
+    display: none !important;
+}
+
+/* Adjust main content area */
+.main {
+    margin-left: 0 !important;
+}
+
+/* Ensure breadcrumbs don't have Django's default styling */
+.breadcrumbs {
+    display: none !important;
+}
+
+/* ================================
+   SCROLLBARS (WORKS WITH BOTH THEMES)
+   ================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-surface);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}

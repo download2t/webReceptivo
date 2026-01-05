@@ -1,0 +1,226 @@
+/* ============================================
+   SIDEBAR CONFIGURAÇÕES - ESTILOS DEDICADOS
+   ============================================ */
+
+/* ========== JAVASCRIPT HELPERS ========== */
+.settings-sidebar-js {
+    position: relative;
+}
+
+/* ========== STATES E INTERAÇÕES ========== */
+.sidebar-nav .nav-item {
+    position: relative;
+}
+
+.sidebar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: var(--primary-color);
+    border-radius: 2px;
+    transition: height 0.3s ease;
+}
+
+.sidebar-nav .nav-link.active::after {
+    height: 60%;
+}
+
+.sidebar-nav .nav-link:hover::after {
+    height: 40%;
+    background: rgba(var(--bs-primary-rgb), 0.6);
+}
+
+/* ========== SIDEBAR INDICATORS ========== */
+.nav-link-indicator {
+    position: absolute;
+    right: var(--spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    opacity: 0;
+    transition: var(--transition-standard);
+}
+
+.sidebar-nav .nav-link.active .nav-link-indicator {
+    opacity: 1;
+}
+
+/* ========== SIDEBAR BADGES ========== */
+.sidebar-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    font-weight: 600;
+}
+
+.sidebar-badge-new {
+    background: var(--success-color);
+    color: white;
+}
+
+.sidebar-badge-updated {
+    background: #ffc107;
+    color: #000;
+}
+
+/* ========== LOADING STATES ========== */
+.sidebar-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    animation: sidebarLoading 1.5s infinite;
+}
+
+@keyframes sidebarLoading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* ========== TIME DISPLAY MELHORADO ========== */
+.current-time {
+    position: relative;
+    padding: var(--spacing-sm);
+    background: rgba(var(--bs-success-rgb), 0.1);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--success-color);
+}
+
+.current-time::before {
+    content: '';
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+    width: 6px;
+    height: 6px;
+    background: var(--success-color);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ========== COLLAPSE/EXPAND ANIMATION ========== */
+.sidebar-collapsible {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.sidebar-collapsible.collapsed {
+    max-height: 0;
+}
+
+/* ========== MICRO INTERAÇÕES ========== */
+.sidebar-nav .nav-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-nav .nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.sidebar-nav .nav-link:hover::before {
+    left: 100%;
+}
+
+/* ========== FOOTER MELHORADO ========== */
+.sidebar-footer {
+    position: relative;
+}
+
+.sidebar-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: var(--spacing-md);
+    right: var(--spacing-md);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+}
+
+/* ========== ACCESSIBILITY IMPROVEMENTS ========== */
+.sidebar-nav .nav-link:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+    border-radius: var(--border-radius);
+}
+
+.sidebar-toggle:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* ========== MOBILE SPECIFIC ========== */
+@media (max-width: 991px) {
+    .settings-sidebar {
+        backdrop-filter: blur(10px);
+    }
+    
+    .sidebar-mobile-toggle {
+        backdrop-filter: blur(10px);
+    }
+}
+
+/* ========== HIGH CONTRAST MODE ========== */
+@media (prefers-contrast: high) {
+    .sidebar-nav .nav-link {
+        border: 1px solid transparent;
+    }
+    
+    .sidebar-nav .nav-link:focus,
+    .sidebar-nav .nav-link.active {
+        border-color: var(--primary-color);
+    }
+}
+
+/* ========== REDUCED MOTION ========== */
+@media (prefers-reduced-motion: reduce) {
+    .settings-sidebar,
+    .sidebar-nav .nav-link,
+    .sidebar-toggle,
+    .sidebar-overlay {
+        transition: none;
+    }
+    
+    .sidebar-loading::after {
+        animation: none;
+    }
+    
+    .current-time::before {
+        animation: none;
+    }
+}

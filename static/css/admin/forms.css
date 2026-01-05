@@ -1,0 +1,548 @@
+/* WebReceptivo - Django Admin Forms CSS */
+/* Styles for add/change forms */
+
+/* ================================
+   FORM LAYOUT
+   ================================ */
+
+/* Form container */
+.form-row {
+    margin-bottom: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+}
+
+.form-row.field-box {
+    background: var(--bg-body) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    box-shadow: var(--box-shadow) !important;
+}
+
+/* Fieldsets */
+fieldset {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 0 !important;
+    margin-bottom: 20px !important;
+    background: var(--bg-body) !important;
+    box-shadow: var(--box-shadow) !important;
+}
+
+fieldset h2 {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: white !important;
+    margin: 0 !important;
+    padding: 15px 20px !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+fieldset .form-row {
+    padding: 0 20px !important;
+}
+
+fieldset .form-row:last-child {
+    padding-bottom: 20px !important;
+}
+
+/* ================================
+   FORM ELEMENTS
+   ================================ */
+
+/* Labels */
+.form-row label {
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 8px !important;
+    font-size: 14px !important;
+    display: block !important;
+}
+
+.form-row label.required:after {
+    content: " *" !important;
+    color: var(--danger-color) !important;
+    font-weight: bold !important;
+}
+
+/* Input fields */
+.form-row input[type="text"],
+.form-row input[type="password"],
+.form-row input[type="email"],
+.form-row input[type="number"],
+.form-row input[type="url"],
+.form-row input[type="date"],
+.form-row input[type="datetime-local"],
+.form-row input[type="time"],
+.form-row select,
+.form-row textarea {
+    width: 100% !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    transition: var(--transition) !important;
+    font-family: var(--font-family-base) !important;
+    box-sizing: border-box !important;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+    border-color: var(--primary-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1) !important;
+}
+
+/* Textareas */
+.form-row textarea {
+    min-height: 120px !important;
+    resize: vertical !important;
+}
+
+/* Select fields */
+.form-row select {
+    cursor: pointer !important;
+}
+
+/* Multiple select */
+.form-row select[multiple] {
+    min-height: 120px !important;
+}
+
+/* Checkbox and radio inputs */
+.form-row input[type="checkbox"],
+.form-row input[type="radio"] {
+    width: auto !important;
+    margin-right: 8px !important;
+}
+
+/* File inputs */
+.form-row input[type="file"] {
+    border: 2px dashed var(--border-color) !important;
+    padding: 20px !important;
+    text-align: center !important;
+    background: var(--bg-surface) !important;
+}
+
+.form-row input[type="file"]:hover {
+    border-color: var(--primary-color) !important;
+    background: rgba(44, 62, 80, 0.05) !important;
+}
+
+/* ================================
+   HELP TEXT AND ERRORS
+   ================================ */
+
+/* Help text */
+.help, .helptext {
+    color: var(--text-secondary) !important;
+    font-size: 13px !important;
+    margin-top: 5px !important;
+    line-height: 1.4 !important;
+}
+
+/* Field errors */
+.form-row .errorlist {
+    background: var(--danger-color) !important;
+    color: white !important;
+    padding: 8px 12px !important;
+    border-radius: var(--border-radius) !important;
+    margin: 5px 0 !important;
+    list-style: none !important;
+    font-size: 14px !important;
+}
+
+.form-row .errorlist li {
+    margin: 0 !important;
+}
+
+.form-row.errors input,
+.form-row.errors select,
+.form-row.errors textarea {
+    border-color: var(--danger-color) !important;
+}
+
+/* ================================
+   INLINE FORMSETS
+   ================================ */
+
+/* Inline forms container */
+.inline-group {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    margin-bottom: 20px !important;
+    background: var(--bg-body) !important;
+    box-shadow: var(--box-shadow) !important;
+}
+
+.inline-group h2 {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-color) 100%) !important;
+    color: white !important;
+    margin: 0 !important;
+    padding: 12px 15px !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+}
+
+.inline-related {
+    padding: 15px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.inline-related:last-child {
+    border-bottom: none !important;
+}
+
+/* Add another button */
+.add-row {
+    background: var(--success-color) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 15px !important;
+    border-radius: var(--border-radius) !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    margin: 10px 15px 15px 15px !important;
+    transition: var(--transition) !important;
+}
+
+.add-row:hover {
+    background: var(--success-color) !important;
+}
+
+/* ================================
+   SUBMIT ROW
+   ================================ */
+
+/* Submit buttons container */
+.submit-row {
+    background: var(--bg-surface) !important;
+    padding: 20px !important;
+    border-top: 1px solid var(--border-color) !important;
+    text-align: right !important;
+    margin-top: 30px !important;
+    border-radius: var(--border-radius) !important;
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+}
+
+/* Submit buttons */
+.submit-row input[type="submit"] {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: var(--border-radius) !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: var(--transition) !important;
+    font-size: 14px !important;
+}
+
+.submit-row input[type="submit"]:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Delete button */
+.submit-row .deletelink {
+    background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-color) 100%) !important;
+    color: white !important;
+    text-decoration: none !important;
+    padding: 12px 24px !important;
+    border-radius: var(--border-radius) !important;
+    font-weight: 600 !important;
+    transition: var(--transition) !important;
+    font-size: 14px !important;
+    display: inline-block !important;
+}
+
+.submit-row .deletelink:hover {
+    background: linear-gradient(135deg, var(--danger-color) 0%, var(--danger-color) 100%) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ================================
+   RELATED OBJECT LOOKUPS
+   ================================ */
+
+/* Related object lookup buttons */
+.related-lookup {
+    background: var(--info-color) !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 10px !important;
+    border-radius: var(--border-radius) !important;
+    cursor: pointer !important;
+    margin-left: 5px !important;
+    font-size: 12px !important;
+}
+
+.related-lookup:hover {
+    background: var(--info-color) !important;
+}
+
+/* ================================
+   RESPONSIVE FORMS
+   ================================ */
+
+@media (max-width: 768px) {
+    .form-row {
+        margin-bottom: 15px !important;
+    }
+    
+    .form-row.field-box {
+        padding: 15px !important;
+    }
+    
+    fieldset .form-row {
+        padding: 0 15px !important;
+    }
+    
+    fieldset .form-row:last-child {
+        padding-bottom: 15px !important;
+    }
+    
+    .submit-row {
+        padding: 15px !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .submit-row input[type="submit"],
+    .submit-row .deletelink {
+        width: 100% !important;
+        text-align: center !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+        padding: 10px 12px !important;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    fieldset h2 {
+        padding: 12px 15px !important;
+        font-size: 14px !important;
+    }
+    
+    .inline-group h2 {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+    }
+}
+
+/* ================================
+   ADMIN FORM SPECIFIC STYLES
+   ================================ */
+
+/* Bootstrap form styles for admin */
+.form-label {
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 8px !important;
+}
+
+.form-control, .form-select {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    transition: var(--transition) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1) !important;
+}
+
+/* Textarea specific */
+textarea.form-control {
+    min-height: 100px !important;
+    resize: vertical !important;
+}
+
+/* File input */
+input[type="file"] {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 8px 12px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Checkbox and radio */
+input[type="checkbox"], input[type="radio"] {
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px !important;
+}
+
+/* Admin specific field styles */
+.vTextField, .vURLField, .vEmailField, .vIntegerField, .vFloatField {
+    width: 100% !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    transition: var(--transition) !important;
+}
+
+.vTextField:focus, .vURLField:focus, .vEmailField:focus, .vIntegerField:focus, .vFloatField:focus {
+    border-color: var(--primary-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1) !important;
+}
+
+.vLargeTextField {
+    width: 100% !important;
+    min-height: 120px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 12px 15px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    resize: vertical !important;
+}
+
+/* Select fields */
+.vSelectField, select {
+    width: 100% !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Date and time fields */
+.vDateField, .vTimeField, .vDateTimeField {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Foreign key fields */
+.vForeignKeyField {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 10px 15px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Help text */
+.form-text, .help {
+    font-size: 13px !important;
+    color: var(--text-secondary) !important;
+    margin-top: 5px !important;
+}
+
+/* Required field indicator */
+.required {
+    color: var(--danger-color) !important;
+}
+
+/* Field errors */
+.errorlist {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 5px 0 0 0 !important;
+}
+
+.errorlist li {
+    color: var(--danger-color) !important;
+    font-size: 13px !important;
+    margin-bottom: 5px !important;
+}
+
+/* Form row improvements */
+.form-row {
+    margin-bottom: 20px !important;
+}
+
+.form-row label {
+    display: block !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 8px !important;
+}
+
+/* Admin cards for forms */
+.admin-card .form-label {
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 8px !important;
+}
+
+.admin-card .form-control,
+.admin-card .form-select,
+.admin-card input,
+.admin-card textarea,
+.admin-card select {
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+    background: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    width: 100% !important;
+    transition: all 0.2s ease !important;
+}
+
+.admin-card .form-control:focus,
+.admin-card .form-select:focus,
+.admin-card input:focus,
+.admin-card textarea:focus,
+.admin-card select:focus {
+    border-color: var(--primary-color) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1) !important;
+}
+
+/* File upload styling */
+input[type="file"] {
+    padding: 8px 0 !important;
+    border: 2px dashed var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    background: var(--bg-surface) !important;
+}
+
+/* Clear file checkbox */
+input[type="checkbox"][name*="clear"] {
+    width: auto !important;
+    margin-right: 8px !important;
+}
+
+/* Current file info */
+.file-upload .current {
+    margin-bottom: 10px !important;
+    padding: 8px 12px !important;
+    background: var(--bg-surface) !important;
+    border-radius: var(--border-radius) !important;
+    font-size: 13px !important;
+}

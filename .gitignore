@@ -155,7 +155,7 @@ media/
 
 # Static files (Django)
 staticfiles/
-static/
+static/images/
 
 # Secret key and sensitive data
 secret_key.txt

@@ -1,0 +1,329 @@
+/**
+ * theme-colors.css
+ * Padronização de cores para todo o sistema WebReceptivo
+ * Sobrescreve cores padrão do Bootstrap com a paleta do menu
+ */
+
+/* ==== TEMA CLARO ==== */
+:root {
+    /* Cor principal - mesmo tom do menu superior */
+    --bs-primary: #2c3e50;
+    --bs-primary-rgb: 44, 62, 80;
+    
+    /* Variações da cor principal */
+    --bs-primary-dark: #1a252f;
+    --bs-primary-light: #34495e;
+    
+    /* Outras cores do sistema */
+    --bs-success: #27ae60;
+    --bs-success-rgb: 39, 174, 96;
+    
+    --bs-info: #16a085;
+    --bs-info-rgb: 22, 160, 133;
+    
+    --bs-warning: #f39c12;
+    --bs-warning-rgb: 243, 156, 18;
+    
+    --bs-danger: #e74c3c;
+    --bs-danger-rgb: 231, 76, 60;
+    
+    /* Backgrounds e borders */
+    --bs-light: #ecf0f1;
+    --bs-dark: #2c3e50;
+    
+    /* Estados de hover e foco */
+    --bs-primary-hover: #1a252f;
+    --bs-primary-active: #162029;
+}
+
+/* ==== TEMA ESCURO ==== */
+[data-bs-theme="dark"] {
+    --bs-primary: #34495e;
+    --bs-primary-rgb: 52, 73, 94;
+    
+    --bs-primary-dark: #2c3e50;
+    --bs-primary-light: #4a5f7f;
+    
+    --bs-success: #2ecc71;
+    --bs-success-rgb: 46, 204, 113;
+    
+    --bs-info: #1abc9c;
+    --bs-info-rgb: 26, 188, 156;
+    
+    --bs-warning: #f4d03f;
+    --bs-warning-rgb: 244, 208, 63;
+    
+    --bs-danger: #ec7063;
+    --bs-danger-rgb: 236, 112, 99;
+    
+    --bs-primary-hover: #4a5f7f;
+    --bs-primary-active: #556b8a;
+}
+
+/* ==== BOTÕES ==== */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary-dark);
+    --bs-btn-hover-border-color: var(--bs-primary-dark);
+    --bs-btn-active-bg: var(--bs-primary-dark);
+    --bs-btn-active-border-color: var(--bs-primary-dark);
+    --bs-btn-disabled-bg: var(--bs-primary);
+    --bs-btn-disabled-border-color: var(--bs-primary);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: var(--bs-primary);
+    --bs-btn-active-border-color: var(--bs-primary);
+}
+
+/* ==== BADGES ==== */
+.badge.bg-primary {
+    background-color: var(--bs-primary) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--bs-info) !important;
+}
+
+/* ==== CARDS ==== */
+.card-header.bg-primary {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* ==== ALERTS ==== */
+.alert-primary {
+    --bs-alert-color: #1a252f;
+    --bs-alert-bg: #d4dce4;
+    --bs-alert-border-color: #b8c5d3;
+}
+
+[data-bs-theme="dark"] .alert-primary {
+    --bs-alert-color: #d4dce4;
+    --bs-alert-bg: #1a252f;
+    --bs-alert-border-color: #2c3e50;
+}
+
+/* ==== LINKS ==== */
+.link-primary {
+    color: var(--bs-primary) !important;
+}
+
+.link-primary:hover {
+    color: var(--bs-primary-dark) !important;
+}
+
+/* ==== BORDERS ==== */
+.border-primary {
+    border-color: var(--bs-primary) !important;
+}
+
+/* ==== TEXT ==== */
+.text-primary {
+    color: var(--bs-primary) !important;
+}
+
+.text-bg-primary {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* ==== TABLES ==== */
+.table-primary {
+    --bs-table-bg: rgba(var(--bs-primary-rgb), 0.1);
+    --bs-table-color: var(--bs-primary);
+}
+
+/* ==== FORMULÁRIOS ==== */
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* ==== PROGRESS BARS ==== */
+.progress-bar {
+    background-color: var(--bs-primary);
+}
+
+/* ==== NAVS & TABS ==== */
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+}
+
+.nav-link {
+    color: var(--bs-primary);
+}
+
+.nav-link:hover {
+    color: var(--bs-primary-dark);
+}
+
+/* ==== PAGINATION ==== */
+.pagination .page-link {
+    color: var(--bs-primary);
+    background-color: var(--bg-surface);
+    border-color: var(--border-color);
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    color: var(--bs-primary-dark);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+[data-bs-theme="dark"] .pagination .page-link {
+    color: var(--text-primary);
+    background-color: var(--bg-surface);
+    border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .pagination .page-link:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.2);
+    color: var(--text-primary);
+}
+
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+    color: #fff;
+}
+
+/* ==== LISTAGENS - Melhorias Profissionais ==== */
+.table thead {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+    border-bottom: 2px solid var(--bs-primary);
+}
+
+[data-bs-theme="dark"] .table thead {
+    background-color: rgba(var(--bs-primary-rgb), 0.15);
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    color: var(--bs-primary);
+    padding: 1rem 0.75rem;
+}
+
+[data-bs-theme="dark"] .table thead th {
+    color: #f8f9fa;
+}
+
+/* Forçar contraste claro em headers genéricos no tema escuro */
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-header h1,
+[data-bs-theme="dark"] .card-header h2,
+[data-bs-theme="dark"] .card-header h3,
+[data-bs-theme="dark"] .card-header h4,
+[data-bs-theme="dark"] .card-header h5,
+[data-bs-theme="dark"] .card-header h6 {
+    color: #f8f9fa !important;
+}
+
+/* Sobrescreve utilitários text-dark em header no tema escuro */
+[data-bs-theme="dark"] .card-header .text-dark,
+[data-bs-theme="dark"] .table thead .text-dark {
+    color: #f8f9fa !important;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    transform: scale(1.001);
+}
+
+[data-bs-theme="dark"] .table tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+/* Cards de listagem com header estilizado */
+.list-card .card-header {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-primary-dark) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+    border-bottom: none;
+}
+
+[data-bs-theme="dark"] .list-card .card-header,
+[data-bs-theme="dark"] .list-card .card-header h5,
+[data-bs-theme="dark"] .list-card .card-header .h5,
+[data-bs-theme="dark"] .list-card .card-header i {
+    color: #f8f9fa !important;
+}
+
+.list-card .card-header h5,
+.list-card .card-header .h5 {
+    color: white !important;
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.list-card .card-header i {
+    opacity: 0.9;
+}
+
+/* Botões de ação nas listagens */
+.btn-group .btn-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.875rem;
+}
+
+.btn-group .btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+/* Filtros de busca */
+.filter-section {
+    background-color: rgba(var(--bs-primary-rgb), 0.03);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.1);
+}
+
+[data-bs-theme="dark"] .filter-section {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+    border-color: rgba(var(--bs-primary-rgb), 0.2);
+}
+
+/* Badges de status */
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.65em;
+    font-size: 0.875em;
+}
+
+/* Empty states nas listagens */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--bs-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    opacity: 0.5;
+    margin-bottom: 1rem;
+    color: var(--bs-primary);
+}
