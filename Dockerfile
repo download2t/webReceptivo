@@ -1,18 +1,21 @@
-# Use uma imagem base do Python
+# Use uma imagem base do Python 3.12
 FROM python:3.12-slim
+
+# Define variáveis de ambiente
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
 # Define o diretório de trabalho
 WORKDIR /app
 
 # Instala dependências do sistema
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
+    postgresql-client \
     netcat-openbsd \
     libjpeg-dev \
     libpng-dev \
-    libtiff-dev \
     libfreetype6-dev \
     liblcms2-dev \
     libwebp-dev \
@@ -24,28 +27,32 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Instala as dependências Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt
 
 # Copia o código da aplicação
 COPY . .
 
-# Cria diretórios para media files
+# Cria diretórios para media files e static files
 RUN mkdir -p /app/media/avatars \
-    && mkdir -p /app/staticfiles
+    && mkdir -p /app/staticfiles \
+    && mkdir -p /app/backups
 
 # Torna o script de entrada executável
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh || echo "entrypoint.sh não encontrado, usando comando padrão"
 
 # Cria um usuário não-root para executar a aplicação
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /app
+
+# Define permissões adequadas
+RUN chmod -R 755 /app
+
 USER app
 
 # Expõe a porta 8000
 EXPOSE 8000
 
-# Define o script de entrada
-ENTRYPOINT ["./entrypoint.sh"]
-
-# Comando para executar a aplicação
+# Comando padrão
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

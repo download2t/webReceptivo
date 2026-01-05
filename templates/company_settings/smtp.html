@@ -3,10 +3,8 @@
 {% block page_title_text %}Configurações de E-mail (SMTP){% endblock %}
 
 {% block page_icon %}<i class="fas fa-envelope"></i>{% endblock %}
-{% block page_title %}Configurações de E-mail (SMTP){% endblock %}
-{% block page_description %}
-    <p class="settings-page-description">Configure o servidor de e-mail para envio de mensagens</p>
-{% endblock %}
+{% block page_main_title %}Configurações de E-mail (SMTP){% endblock %}
+{% block subtitle %}Configure o servidor de e-mail para envio de mensagens{% endblock %}
 
 {% block settings_content %}
 <form method="post" id="smtpForm" class="needs-validation" novalidate>
@@ -340,23 +338,23 @@
         </div>
     </div>
 
-    <!-- Quick Status Check -->
+    <!-- Current Configuration Status -->
     <div class="content-card mb-4">
         <div class="content-card-header">
             <h5 class="mb-0">
-                <i class="fas fa-clipboard-check text-warning me-2"></i>
-                Checklist de Configuração
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                Status da Configuração
             </h5>
         </div>
         <div class="content-card-body">
             <div class="row">
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-server fa-2x {% if form.instance.smtp_server %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <i class="fas fa-server fa-2x {% if form.instance.host %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Servidor</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.smtp_server %}success{% else %}danger{% endif %}">
-                                {% if form.instance.smtp_server %}✓ Configurado{% else %}✗ Não Configurado{% endif %}
+                            <span class="badge bg-{% if form.instance.host %}success{% else %}danger{% endif %}">
+                                {% if form.instance.host %}Configurado{% else %}Não Configurado{% endif %}
                             </span>
                         </p>
                     </div>
@@ -364,11 +362,11 @@
                 
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-key fa-2x {% if form.instance.smtp_password %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <i class="fas fa-key fa-2x {% if form.instance.password_hash %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Autenticação</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.smtp_password %}success{% else %}danger{% endif %}">
-                                {% if form.instance.smtp_password %}✓ Configurada{% else %}✗ Não Configurada{% endif %}
+                            <span class="badge bg-{% if form.instance.password_hash %}success{% else %}danger{% endif %}">
+                                {% if form.instance.password_hash %}Configurada{% else %}Não Configurada{% endif %}
                             </span>
                         </p>
                     </div>
@@ -376,14 +374,13 @@
                 
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-shield-alt fa-2x {% if form.instance.connection_security and form.instance.connection_security != 'none' %}text-success{% else %}text-warning{% endif %} mb-2"></i>
+                        <i class="fas fa-shield-alt fa-2x {% if form.instance.use_tls or form.instance.use_ssl %}text-success{% else %}text-warning{% endif %} mb-2"></i>
                         <h6>Segurança</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.connection_security and form.instance.connection_security != 'none' %}success{% else %}warning{% endif %}">
-                                {% if form.instance.connection_security == 'tls' %}✓ TLS
-                                {% elif form.instance.connection_security == 'ssl' %}✓ SSL
-                                {% elif form.instance.connection_security == 'starttls' %}✓ STARTTLS
-                                {% else %}⚠ Nenhuma
+                            <span class="badge bg-{% if form.instance.use_tls or form.instance.use_ssl %}success{% else %}warning{% endif %}">
+                                {% if form.instance.use_tls %}TLS
+                                {% elif form.instance.use_ssl %}SSL
+                                {% else %}Nenhuma
                                 {% endif %}
                             </span>
                         </p>
@@ -392,23 +389,16 @@
                 
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="status-item text-center p-3 rounded">
-                        <i class="fas fa-check-circle fa-2x {% if form.instance.smtp_server and form.instance.email and form.instance.smtp_password %}text-success{% else %}text-danger{% endif %} mb-2"></i>
+                        <i class="fas fa-check-circle fa-2x {% if form.instance.is_configured %}text-success{% else %}text-danger{% endif %} mb-2"></i>
                         <h6>Status Geral</h6>
                         <p class="mb-0">
-                            <span class="badge bg-{% if form.instance.smtp_server and form.instance.email and form.instance.smtp_password %}success{% else %}danger{% endif %}">
-                                {% if form.instance.smtp_server and form.instance.email and form.instance.smtp_password %}✓ Completo{% else %}✗ Incompleto{% endif %}
+                            <span class="badge bg-{% if form.instance.is_configured %}success{% else %}danger{% endif %}">
+                                {% if form.instance.is_configured %}Completo{% else %}Incompleto{% endif %}
                             </span>
                         </p>
                     </div>
                 </div>
             </div>
-            
-            {% if not form.instance.smtp_server or not form.instance.email or not form.instance.smtp_password %}
-            <div class="alert alert-warning mb-0 mt-3">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Atenção:</strong> Preencha todos os campos obrigatórios acima antes de salvar e ativar a configuração.
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -473,10 +463,10 @@
                         
                         <h6><i class="fas fa-cog me-2"></i>Como Funciona</h6>
                         <ul class="small">
-                            <li><strong>E-mail SMTP:</strong> Suas credenciais para login no servidor de e-mail</li>
-                            <li><strong>Remetente:</strong> E-mail que aparece como remetente das mensagens</li>
-                            <li><strong>Destino (Teste):</strong> E-mail para onde enviar mensagem de teste</li>
-                            <li><strong>Exemplo:</strong> De: contato@webreceptivo.com.br → Para: cliente@empresa.com</li>
+                            <li><strong>E-mail SMTP:</strong> Suas credenciais para login (ex: suportesanma@gmail.com)</li>
+                            <li><strong>Remetente:</strong> Quem aparece enviando (normalmente o mesmo e-mail SMTP)</li>
+                            <li><strong>Destino (Teste):</strong> Qualquer e-mail para receber o teste</li>
+                            <li><strong>Exemplo:</strong> De: suportesanma@gmail.com → Para: cliente@empresa.com</li>
                         </ul>
                         
                         <h6><i class="fas fa-lightbulb me-2"></i>Dicas</h6>
@@ -757,6 +747,7 @@
 
     // Initialize everything
     document.addEventListener('DOMContentLoaded', function() {
+        setupProviderButtons();
         setupSecurityValidation();
         setupPortSuggestions();
         setupFormValidation();

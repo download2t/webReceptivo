@@ -1,6 +1,36 @@
+version: '3.9'
+
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: webreceptivo_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-webreceptivo}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - webreceptivo_network
+
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webreceptivo_web
+    command: >
+      bash -c "
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        python manage.py runserver 0.0.0.0:8000
+      "
     ports:
       - "8000:8000"
     volumes:
@@ -11,22 +41,21 @@ services:
       - .env
     environment:
       - DJANGO_SETTINGS_MODULE=webreceptivo.settings
+      - PYTHONUNBUFFERED=1
     depends_on:
-      - db
-    command: python manage.py runserver 0.0.0.0:8000
-
-  db:
-    image: postgres:15-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=webreceptivo
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5432:5432"
+      db:
+        condition: service_healthy
+    networks:
+      - webreceptivo_network
 
 volumes:
   postgres_data:
+    driver: local
   media_files:
+    driver: local
   static_files:
+    driver: local
+
+networks:
+  webreceptivo_network:
+    driver: bridge
