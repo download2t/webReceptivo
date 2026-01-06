@@ -155,6 +155,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.WARNING(f'🔄 Grupo "{group_name}" já existe, atualizando permissões...')
                 )
+                perms_antes = group.permissions.count()
             
             # Coletar permissões
             permissions = []
@@ -173,6 +174,11 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.WARNING(f'   ⚠️  Permissão "{perm_string}" não encontrada')
                     )
+            
+            # Atribuir permissões ao grupo
+            group.permissions.set(permissions)
+            perms_depois = group.permissions.count()
+            
             # Mostrar resultado
             if created:
                 self.stdout.write(f'   ➕ {len(permissions)} permissões adicionadas')
