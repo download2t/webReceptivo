@@ -447,8 +447,10 @@ def ordem_servico_create(request):
                 
             except Exception as e:
                 import traceback
+                error_msg = str(e)
                 traceback.print_exc()
-                return JsonResponse({'error': str(e)}, status=500)
+                print(f"ERRO AO SALVAR OS: {error_msg}")
+                return JsonResponse({'error': error_msg}, status=500, json_dumps_params={'ensure_ascii': False})
         else:
             # Formulário tradicional (manter compatibilidade)
             form = LancamentoServicoForm(request.POST)
@@ -569,7 +571,11 @@ def ordem_servico_edit(request, pk):
                     return JsonResponse({'error': 'Lançamento não possui Ordem de Serviço vinculada'}, status=400)
                 
             except Exception as e:
-                return JsonResponse({'error': str(e)}, status=500)
+                import traceback
+                error_msg = str(e)
+                traceback.print_exc()
+                print(f"ERRO AO EDITAR OS: {error_msg}")
+                return JsonResponse({'error': error_msg}, status=500, json_dumps_params={'ensure_ascii': False})
         else:
             # Form tradicional (fallback)
             form = LancamentoServicoForm(request.POST, instance=lancamento)
