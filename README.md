@@ -1,263 +1,54 @@
-# � WebReceptivo
+# WebReceptivo
 
-[![Versão](https://img.shields.io/badge/versão-1.2.0-blue.svg)](https://github.com/your-repo/WebReceptivo/releases)
-[![Django](https://img.shields.io/badge/Django-5.2.7-green## 📚 Documentação
+Aplicação Django focada em operação receptiva: cadastros de serviços e ordens, gestão de usuários com regras hierárquicas e trilha completa de auditoria. Este projeto agora é **local-only** (SQLite), sem dependências de Docker ou servidores externos.
 
-Toda a documentação técnica e## 🔗 Acesso Rápido às Funcionalidades
+## Requisitos
+- Python 3.12+
+- pip
+- Windows: use PowerShell; recomendo virtualenv (`python -m venv .venv`).
 
-### 🏢 **Configurações da Empresa** 
-```
-URL: http://127.0.0.1:8000/configuracoes/
-Login: admin / admin123
-```
-- **Visão Geral**: `/configuracoes/` - Dashboard das configurações
-- **Dados da Empresa**: `/configuracoes/empresa/` - Formulário completo
-- **Sistema**: `/configuracoes/sistema/` - Data/hora/fuso horário  
-- **E-mail SMTP**: `/configuracoes/smtp/` - Configuração e teste
+## Como rodar localmente
+1. Ative o ambiente virtual
+	- `python -m venv .venv`
+	- `.venv\Scripts\activate`
+2. Instale dependências: `pip install -r requirements.txt`
+3. Aplique migrações: `python manage.py migrate`
+4. Crie um superusuário (opcional, mas recomendado): `python manage.py createsuperuser`
+5. Configure grupos iniciais (ambos podem ser executados em qualquer ordem):
+	- Permissões do módulo de serviços: `python manage.py criar_grupos`
+	- Hierarquia do módulo de usuários: `python manage.py setup_groups`
+6. Suba o servidor: `python manage.py runserver`
 
-### 📊 **Sistema de Auditoria**
-```
-URL: http://127.0.0.1:8000/audit/
-Login: admin (necessário)
-```
-- **Dashboard**: `/audit/` - Estatísticas e gráficos
-- **Lista de Logs**: `/audit/logs/` - Busca e filtros
-- **Exportação**: `/audit/export-csv/` - Relatório CSV
+## URLs úteis (local)
+- Admin Django: http://127.0.0.1:8000/admin/
+- Configurações da empresa: http://127.0.0.1:8000/configuracoes/
+- Auditoria: http://127.0.0.1:8000/audit/
+- Gestão de usuários: http://127.0.0.1:8000/usuarios/
 
-### 👥 **Gerenciamento de Usuários**
-```
-URL: http://127.0.0.1:8000/usuarios/
-Login: admin ou gerente
-```
-- **Lista**: `/usuarios/` - Todos os usuários
-- **Grupos**: `/usuarios/groups/` - Cargos e funções
-- **Criar**: `/usuarios/create/` - Novo usuário
+## Regras e módulos (resumo)
+- **Permissões de serviços**: quatro grupos padrão (`Operador`, `Coordenador`, `Gestor de Cadastros`, `Gerente`) controlam criação/edição de categorias, serviços, transfers e ordens. Veja [docs/PERMISSOES.md](docs/PERMISSOES.md).
+- **Hierarquia de usuários**: níveis protegidos (Admin Principal, Administradores, Gerentes, Operadores, Usuários Básicos) com restrições claras para visualizar/editar/excluir. Veja [docs/PERMISSIONS_DOCUMENTATION.md](docs/PERMISSIONS_DOCUMENTATION.md).
+- **Configurações da empresa**: módulo para dados da empresa, fuso horário, SMTP com teste e aplicação dinâmica. Veja [docs/COMPANY_SETTINGS_GUIDE.md](docs/COMPANY_SETTINGS_GUIDE.md) e [docs/SETUP_CONFIG.md](docs/SETUP_CONFIG.md).
+- **Auditoria**: dashboard, busca e exportação de logs; todas as ações relevantes são registradas. Veja [docs/RESUMO_EXECUTIVO_AUDITORIA.md](docs/RESUMO_EXECUTIVO_AUDITORIA.md) e [docs/SISTEMA_AUDITORIA_COMPLETO.md](docs/SISTEMA_AUDITORIA_COMPLETO.md).
 
-## 🚀 Próximas Funcionalidades
-- [ ] API REST para integração com outros sistemas
-- [ ] Sistema de notificações internas em tempo real
-- [ ] Workflow de aprovação para criação de grupos
-- [ ] Integração com sistemas externos de RH
-- [ ] Dashboard executivo com KPIsganizada na pasta [`docs/`](docs/README.md):
+## Fluxo recomendado para novo ambiente
+- Criar superusuário e fazer login no admin.
+- Executar os comandos de grupos (`criar_grupos` e `setup_groups`).
+- Cadastrar dados da empresa e SMTP em /configuracoes/.
+- Criar usuários operacionais e atribuir grupos.
+- Validar auditoria acessando /audit/ para confirmar registros.
 
-### 🏢 **Sistema de Configurações da Empresa (NOVO!)**
-- **[📋 Guia Completo](docs/COMPANY_SETTINGS_GUIDE.md)** - Manual do usuário e funcionalidades
-- **[⚙️ Setup Técnico](docs/SETUP_CONFIG.md)** - Instalação, configuração e troubleshooting
+## Manutenção rápida
+- Sincronizar modelo: `python manage.py makemigrations` e `python manage.py migrate` quando alterar modelos.
+- Coletar estáticos (se precisar servir fora do runserver): `python manage.py collectstatic`.
 
-### 🔍 **Sistema de Auditoria**
-- **[Visão Geral](docs/RESUMO_EXECUTIVO_AUDITORIA.md)** - Dashboard, funcionalidades e acesso
-- **[Custom Actions](docs/GUIA_CUSTOM_ACTIONS_AUDITORIA.md)** - Estender para novas funcionalidades
-
-### 👥 **Usuários e Administração**
-- **[Sistema de Permissões](docs/PERMISSIONS_DOCUMENTATION.md)** - 5 níveis hierárquicos
-- **[Guia de Grupos](docs/GUIA_GRUPOS.md)** - Gerenciar cargos e funções
-- **[Deploy Docker](docs/DOCKER_COMANDOS.md)** - Comandos seguros para produção
-
-## 🚀 Próximas Funcionalidades
-- [ ] API REST para integração com outros sistemas
-- [ ] Sistema de notificações internas em tempo real
-- [ ] Workflow de aprovação para criação de grupos
-- [ ] Alertas automáticos para ações suspeitas
-- [ ] Machine Learning para detecção de anomalias//djangoproject.com/)
-[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://python.org/)
-
-Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões hierárquicas.🏢 WebReceptivo
-
-Sistema web profissional para gestão receptiva desenvolvido em **Django 5.2.7**, com interface moderna, sistema completo de usuários e permissões ## 🚀 Próximas Funcionalidades
-
-### ✅ **Implementadas na v1.2.0**
-- [x] **Sistema de Tema Personalizado**: Preferência individual de tema por usuário
-- [x] **Melhorias nos Avatares**: Exibição consistente em todo o sistema
-- [x] **Segurança Aprimorada**: Remoção da exclusão permanente de usuários
-- [x] **Admin Integrado**: Unificação completa entre admin e site principal
-
-### ✅ **Implementadas na v1.3.0 (NOVO!)**
-- [x] **📊 Sistema de Auditoria Completo**: Rastreamento total de todas as ações do sistema
-- [x] **🔍 Dashboard de Monitoramento**: Estatísticas em tempo real com gráficos dinâmicos
-- [x] **📈 Relatórios Avançados**: Filtros, busca e exportação de dados de auditoria
-- [x] **👤 Histórico Individual**: Perfil completo de atividades por usuário
-- [x] **⚡ Performance Otimizada**: Comandos automáticos de manutenção e limpeza
-
-### ✅ **Implementadas na v1.4.0 (MAIS NOVO!)**
-- [x] **🏢 Sistema de Configurações da Empresa**: Módulo completo para gerenciar parâmetros empresariais
-- [x] **📧 SMTP Dinâmico**: Configuração de e-mail por cliente com aplicação automática ao Django
-- [x] **🌍 Fuso Horário Configurável**: Sistema de data/hora com preview em tempo real
-- [x] **🏠 Validação CEP Automática**: Preenchimento automático de endereço via API ViaCEP
-- [x] **🆔 Validação CNPJ/CPF**: Validação matemática completa com exceção para CNPJ da empresa
-- [x] **📱 Interface Responsiva**: Design moderno com templates rápidos para Gmail/Outlook/Yahoo
-
-### 📋 **Roadmap Futuro**
-- [ ] API REST para integração com outros sistemas
-- [ ] Sistema de notificações internas em tempo real
-- [ ] Workflow de aprovação para criação de grupos
-- [ ] Alertas automáticos para ações suspeitas
-- [ ] Integração com sistemas SIEM externos
-- [ ] Machine Learning para detecção de anomaliasquicas.
-
-## ✨ Principais Funcionalidades
-
-### 🏢 **Sistema de Configurações da Empresa (v1.4.0)**
-- **📋 Dados da Empresa**: CNPJ/CPF, endereço completo, logo, contatos
-- **⏰ Sistema Data/Hora**: Fuso horário configurável com preview em tempo real
-- **📧 SMTP Dinâmico**: Configuração por cliente, aplicação automática, teste em tempo real
-- **🌍 Integração APIs**: CEP automático (ViaCEP), validação CNPJ/CPF matemática
-- **🔐 Segurança Total**: Senhas criptografadas, acesso admin-only, auditoria completa
-
-### 👥 Sistema de Usuários e Permissões
-- **5 Níveis Hierárquicos**: Admin Principal, Administradores, Gerentes, Operadores, Usuários Básicos
-- **Gerenciamento Completo**: CRUD de usuários com regras de permissão robustas
-- **Gerenciamento de Grupos**: Criação e edição de cargos/funções dinâmicos
-- **Autenticação Segura**: Login/logout com validações server-side
-- **Perfis Completos**: Dados pessoais, endereço, avatar e preferências
-
-### 📊 **Sistema de Auditoria (v1.3.0)**
-- **🔍 Monitoramento Total**: Captura automática de todas as ações do sistema
-- **📈 Dashboard Interativo**: Estatísticas e gráficos em tempo real
-- **� Relatórios Avançados**: Filtros complexos, busca textual, exportação CSV
-- **👤 Histórico Individual**: Perfil completo de atividades por usuário
-- **⚡ Performance Otimizada**: Comandos de manutenção e limpeza automática
-
-### �🎨 Interface Moderna
-- **Design Responsivo**: Bootstrap 5.3.2 com tema claro/escuro por usuário
-- **Mobile-First**: Otimizado para todos os dispositivos
-- **Componentes Avançados**: Máscaras de input, upload de avatar, validação em tempo real
-- **UX Profissional**: Mensagens de feedback, animações suaves, navegação intuitiva
-
-## � Últimas Atualizações (v1.2.0)
-
-### 🎨 **Sistema de Tema Personalizado**
-- **Tema Automático por Usuário**: Cada usuário tem sua preferência salva (claro/escuro/auto)
-- **Aplicação Instantânea**: Tema aplicado automaticamente ao fazer login
-- **Sincronização Inteligente**: Mudanças salvas em tempo real no perfil do usuário
-- **Modo Auto**: Segue automaticamente a preferência do sistema operacional
-- **Limpeza Automática**: Reset para tema do sistema após logout
-
-### 👤 **Melhorias nos Avatares**
-- **Menu Principal**: Avatar do usuário exibido ao lado do nome na navbar
-- **Lista de Usuários**: Miniaturas dos avatares na listagem de usuários
-- **Avatar Padrão**: Fallback elegante para usuários sem foto
-- **Consistência Visual**: Mesmo estilo entre admin e site principal
-
-### 🔒 **Segurança Aprimorada**
-- **Exclusão Removida**: Funcionalidade de exclusão permanente de usuários desabilitada
-- **Apenas Inativação**: Preservação da integridade dos dados com inativação segura
-- **Política Documentada**: Avisos claros sobre política de não-exclusão
-- **Proteção de Dados**: Manutenção do histórico e relacionamentos
-
-### 🎯 **Organização de Código**
-- **CSS Modularizado**: Separação do CSS de grupos em arquivo dedicado (`static/css/groups.css`)
-- **Templates Limpos**: Remoção de CSS inline dos templates
-- **Manutenibilidade**: Estrutura mais organizada e fácil de manter
-- **Temas Unificados**: Suporte completo a temas claro/escuro em todos os componentes
-
-### 🔧 **Integração Admin-Site**
-- **Menu Unificado**: Admin Django usa exatamente o mesmo menu do site principal
-- **Tema Sincronizado**: Sistema de tema compartilhado entre admin e site
-- **Avatar Consistente**: Exibição de avatar idêntica em ambos os contextos
-- **Zero Duplicação**: Eliminação completa de código duplicado
-
-### 📊 **Sistema de Auditoria (v1.3.0)**
-- **🔍 Monitoramento Total**: Captura automática de usuários, grupos, login/logout
-- **📈 Dashboard Interativo**: `/audit/` - Estatísticas e gráficos em tempo real  
-- **🎯 Custom Actions**: Sistema extensível para auditar qualquer ação
-- **🔎 Busca Avançada**: Filtros completos com exportação CSV
-- **📚 Documentação Completa**: Guias técnicos em [`docs/`](docs/README.md)
-
-## �🏗️ Arquitetura
-
-### 🔧 Backend
-- **Django 5.2.7** com Python 3.12+
-- **Apps Modulares**: `accounts`, `core`, `user_management`, `audit_system`
-- **PostgreSQL** (produção) / **SQLite** (desenvolvimento)
-- **Sistema de Permissões**: Regras hierárquicas customizadas com proteção de usuários críticos
-- **Sistema de Auditoria**: Captura automática via signals, middleware de contexto, comandos de manutenção
-
-### 🎨 Frontend  
-- **Bootstrap 5.3.2** com **Bootstrap Icons**
-- **JavaScript Vanilla** com funcionalidades modernas
-- **CSS Customizado** com sistema de temas persistente
-
-### 🐳 Infraestrutura
-- **Docker** + **Docker Compose** para containerização
-- **Entrypoint Inteligente** com verificação automática do banco
-- **Configuração Otimizada** para desenvolvimento e produção
-
-## ⚡ Instalação Rápida
-
-### 🐳 Com Docker (Recomendado)
-```bash
-git clone <url-do-repositorio>
-cd WebReceptivo
-docker-compose up --build
-```
-**Acesse:** `http://localhost:8000`
-
-### 🐍 Local (Python)
-```bash
-git clone <url-do-repositorio>
-cd WebReceptivo
-python -m venv .venv
-.venv\Scripts\activate  # Windows | source .venv/bin/activate (Linux/Mac)
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
-```
-
-### 🛠️ Comandos Úteis
-```bash
-# Setup inicial com grupos e usuários de teste
-python manage.py setup_groups
-python manage.py create_test_users
-
-# Comandos Docker
-docker-compose up -d              # Executar em background
-docker-compose logs -f            # Ver logs
-docker-compose down -v            # Parar e limpar volumes
-```
-
-## 📁 Estrutura do Projeto
-
-```
-WebReceptivo/
-├── 📁 accounts/              # Autenticação e perfis
-├── 📁 core/                  # Dashboard e funcionalidades principais
-├── � user_management/       # Sistema completo de usuários e grupos
-│   ├── 📄 permission_helpers.py    # Regras de permissão hierárquicas
-│   ├── 📄 views.py                 # CRUD de usuários
-│   ├── 📄 group_views.py           # CRUD de grupos/cargos
-│   └── 📁 management/commands/     # Comandos de setup e teste
-├── 📁 templates/             # Templates HTML responsivos
-├── 📁 static/               # CSS, JS e assets
-├── 📄 requirements.txt      # Dependências Python
-├── 📄 docker-compose.yml    # Configuração Docker
-└── 📄 entrypoint.sh        # Script de inicialização inteligente
-```
-
-## � Sistema de Permissões
-
-### Hierarquia de Usuários
-| Nível | Pode Gerenciar | Observações |
-|-------|----------------|-------------|
-| **Admin Principal (ID=1)** | 🌟 Todos | Protegido, intocável |
-| **Administradores** | Gerentes, Operadores, Usuários | Não mexem entre si |
-| **Gerentes** | Operadores, Usuários | Podem criar grupos customizados |
-| **Operadores** | - | Acesso ao sistema operacional |
-| **Usuários Básicos** | - | Acesso apenas ao próprio perfil |
-
-### Grupos Protegidos vs Customizados
-- **� Protegidos**: Administradores, Gerentes, Operadores, Usuários Básicos (não podem ser deletados)
-- **✨ Customizados**: Criados dinamicamente pelos usuários com permissão (podem ser deletados)
-
-## 📚 Documentação Adicional
-- **[PERMISSIONS_DOCUMENTATION.md](./PERMISSIONS_DOCUMENTATION.md)** - Detalhes completos das permissões
-- **[GUIA_GRUPOS.md](./GUIA_GRUPOS.md)** - Como usar o sistema de grupos
-- **[ADMIN_INTEGRADO.md](./ADMIN_INTEGRADO.md)** - Admin Django integrado ao design
-- **[CORRECAO_FINAL_UNION_ERROR.md](./CORRECAO_FINAL_UNION_ERROR.md)** - Histórico de correções técnicas
-
-## ❓ FAQ & Troubleshooting
-
-### Problemas Comuns
-```bash
+## Documentação
+- Permissões do módulo de serviços: [docs/PERMISSOES.md](docs/PERMISSOES.md)
+- Hierarquia de usuários: [docs/PERMISSIONS_DOCUMENTATION.md](docs/PERMISSIONS_DOCUMENTATION.md)
+- Configurações da empresa: [docs/COMPANY_SETTINGS_GUIDE.md](docs/COMPANY_SETTINGS_GUIDE.md)
+- Setup técnico e SMTP: [docs/SETUP_CONFIG.md](docs/SETUP_CONFIG.md)
+- Auditoria (executivo): [docs/RESUMO_EXECUTIVO_AUDITORIA.md](docs/RESUMO_EXECUTIVO_AUDITORIA.md)
+- Auditoria (completo): [docs/SISTEMA_AUDITORIA_COMPLETO.md](docs/SISTEMA_AUDITORIA_COMPLETO.md)
 # Container não conecta ao PostgreSQL
 # ✅ O entrypoint já resolve automaticamente
 
@@ -290,4 +81,4 @@ python manage.py test_groups_queryset
 MIT License - Veja o arquivo LICENSE para mais detalhes.
 
 ---
-*Desenvolvido com ❤️ usando Django 5.2.7 e Bootstrap 5*
+*Desenvolvido utilizandp Django 5.2.7 e Bootstrap 5*

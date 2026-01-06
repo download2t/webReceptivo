@@ -1,40 +1,42 @@
 # ⚙️ Setup e Configuração - WebReceptivo
 
+Guia focado em ambiente local (SQLite), sem Docker ou serviços externos.
+
 ## 🚀 Instalação e Setup
 
-### 1️⃣ **Dependências**
+### 1️⃣ Dependências
 ```bash
-# Instalar dependências
 pip install -r requirements.txt
 
 # Principais pacotes:
-# - requests>=2.28.0 (para validação CEP)
-# - pytz (para fusos horários)
+# - requests>=2.28.0 (validação CEP)
+# - pytz
 # - django>=5.0.9
 ```
 
-### 2️⃣ **Migrações do Banco**
+### 2️⃣ Migrações do Banco
 ```bash
-# Criar migrações
+# Criar migrações quando alterar modelos
 python manage.py makemigrations company_settings
 
 # Aplicar migrações
 python manage.py migrate company_settings
+python manage.py migrate
 
 # Verificar status
 python manage.py showmigrations company_settings
 ```
 
-### 3️⃣ **Dados Iniciais**
+### 3️⃣ Dados Iniciais
 ```bash
-# Popular dados demo
+# Popular dados demo (opcional)
 python setup_demo.py
 
-# Criar superusuário (se necessário)
+# Criar superusuário
 python manage.py createsuperuser
 ```
 
-### 4️⃣ **Configuração no settings.py**
+### 4️⃣ Configuração no settings.py
 ```python
 # Adicionar ao INSTALLED_APPS
 INSTALLED_APPS = [
@@ -49,7 +51,7 @@ MIDDLEWARE = [
 ]
 ```
 
-### 5️⃣ **URLs do Projeto**
+### 5️⃣ URLs do Projeto
 ```python
 # webreceptivo/urls.py
 urlpatterns = [
@@ -58,36 +60,9 @@ urlpatterns = [
 ]
 ```
 
-## 🐳 Docker - Comandos Essenciais
-
-### 📦 **Container Management**
+### 6️⃣ Subir o servidor
 ```bash
-# Verificar containers ativos
-docker ps
-
-# Executar comando no container
-docker exec -it webreceptivo python manage.py migrate
-
-# Executar setup demo no Docker
-docker exec -it webreceptivo python setup_demo.py
-
-# Ver logs do container
-docker logs webreceptivo -f
-```
-
-### 🔄 **Atualizações no Docker**
-```bash
-# Parar container
-docker-compose down
-
-# Reconstruir com mudanças
-docker-compose up --build -d
-
-# Aplicar migrações
-docker exec -it webreceptivo python manage.py migrate
-
-# Coletar arquivos estáticos
-docker exec -it webreceptivo python manage.py collectstatic --noinput
+python manage.py runserver
 ```
 
 ## 📧 Configuração SMTP Avançada
