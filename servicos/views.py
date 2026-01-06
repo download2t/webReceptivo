@@ -961,10 +961,19 @@ def translate_text(request):
     """Endpoint para tradução usando Argos Translate com preservação de formatação"""
     import json
     import re
-    import argostranslate.package
-    import argostranslate.translate
     
     try:
+        # Verificar se Argos está instalado
+        try:
+            import argostranslate.package
+            import argostranslate.translate
+        except ImportError as e:
+            print(f"ERRO: Argos Translate não está instalado: {e}")
+            return JsonResponse({
+                'error': 'Serviço de tradução não está configurado no servidor'
+            }, status=500, json_dumps_params={'ensure_ascii': False})
+        
+        # Processar requisição
         data = json.loads(request.body)
         text = data.get('text', '')
         target_lang = data.get('target_lang', 'en')
@@ -1287,11 +1296,19 @@ def translate_text(request):
                     text_protected = text_protected.replace(pt_term, placeholder)
             
             # Traduzir texto com elementos protegidos
-            if target_code == 'fr':
-                intermediate_text = argostranslate.translate.translate(text_protected, "pt", "en")
-                translated_text = argostranslate.translate.translate(intermediate_text, "en", "fr")
-            else:
-                translated_text = argostranslate.translate.translate(text_protected, "pt", target_code)
+            try:
+                if target_code == 'fr':
+                    intermediate_text = argostranslate.translate.translate(text_protected, "pt", "en")
+                    translated_text = argostranslate.translate.translate(intermediate_text, "en", "fr")
+                else:
+                    translated_text = argostranslate.translate.translate(text_protected, "pt", target_code)
+            except Exception as translate_error:
+                print(f"ERRO AO TRADUZIR TEXTO: {str(translate_error)}")
+                import traceback
+                traceback.print_exc()
+                return JsonResponse({
+                    'error': f'Erro ao traduzir: {str(translate_error)}'
+                }, status=500, json_dumps_params={'ensure_ascii': False})
             
             # Restaurar elementos protegidos
             for placeholder, original in protected.items():
