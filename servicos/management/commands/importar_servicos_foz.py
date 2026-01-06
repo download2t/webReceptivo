@@ -32,8 +32,8 @@ class Command(BaseCommand):
         categoria, created = Categoria.objects.get_or_create(
             nome=categoria_nome,
             defaults={
-                'descricao': 'Serviços e atrativos turísticos de Foz do Iguaçu',
-                'ativo': True
+                'ativo': True,
+                'ordem': 1
             }
         )
         
