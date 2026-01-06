@@ -82,17 +82,52 @@ python manage.py createsuperuser --settings=webreceptivo.settings_production
 ### Passo 9: Criar grupos de permissões
 
 ```bash
-python manage.py criar_grupos --settings=webreceptivo.settings_production
-python manage.py setup_groups --settings=webreceptivo.settings_production
+python manage_production.py criar_grupos
+python manage_production.py setup_groups
 ```
 
-### Passo 10: Coletar arquivos estáticos
+### Passo 10: Criar tipos de meia entrada padrão
 
 ```bash
-python manage.py collectstatic --noinput --settings=webreceptivo.settings_production
+python manage_production.py criar_tipos_meia_entrada
 ```
 
-### Passo 11: Criar arquivo WSGI para LiteSpeed
+**Tipos criados:**
+- PCD (Pessoa com Deficiência)
+- DOADOR DE SANGUE
+- IDOSO
+- ESTUDANTE BR
+- ESTUDANTE BR COM CARTEIRINHA
+- PROFESSOR BR
+- POLICIAL BR
+- ACOMPANHANTE DE PCD
+- PESSOA COM CANCER
+- CRIANÇA
+- ADOLESCENTE
+- JOVEM
+
+### Passo 11: Importar serviços iniciais (Foz do Iguaçu)
+
+```bash
+python manage_production.py importar_servicos_foz
+```
+
+**Serviços importados (31 atrativos):**
+- Parque das Aves
+- Itaipu Panorâmica / Especial / Iluminada
+- Refúgio Biológico
+- Marco das Três Fronteiras
+- Dreamland (diversos combos)
+- Shows e atrações
+- E muito mais...
+
+### Passo 12: Coletar arquivos estáticos
+
+```bash
+python manage_production.py collectstatic --noinput
+```
+
+### Passo 13: Criar arquivo WSGI para LiteSpeed
 
 ```bash
 cat > litespeed_wsgi.py << 'EOF'
@@ -106,7 +141,7 @@ from webreceptivo.wsgi_production import application
 EOF
 ```
 
-### Passo 12: Configurar permissões do projeto
+### Passo 14: Configurar permissões do projeto
 
 ```bash
 # Dar permissões corretas para LiteSpeed servir os arquivos
@@ -125,7 +160,7 @@ chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
 chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
 ```
 
-### Passo 13: Configurar LiteSpeed vhost
+### Passo 15: Configurar LiteSpeed vhost
 
 ```bash
 # Editar arquivo de configuração
@@ -211,19 +246,19 @@ rewrite  {
 
 **Salvar:** `CTRL+X` → `Y` → `ENTER`
 
-### Passo 14: Remover arquivo HTML padrão
+### Passo 16: Remover arquivo HTML padrão
 
 ```bash
 mv /usr/local/lsws/Example/html/index.html /usr/local/lsws/Example/html/index.html.bak 2>/dev/null
 ```
 
-### Passo 15: Iniciar LiteSpeed
+### Passo 17: Iniciar LiteSpeed
 
 ```bash
 sudo /usr/local/lsws/bin/lswsctrl start
 ```
 
-### Passo 16: Verificar status
+### Passo 18: Verificar status
 
 ```bash
 sudo /usr/local/lsws/bin/lswsctrl status
@@ -232,7 +267,7 @@ sudo /usr/local/lsws/bin/lswsctrl status
 # [OK] LiteSpeed Web Server is running with PID XXXX
 ```
 
-### Passo 17: Testar acesso
+### Passo 19: Testar acesso
 
 ```bash
 # Testar via IP
@@ -244,13 +279,129 @@ curl -I http://mydevsystem.site/admin/
 # Resultado esperado: HTTP/1.1 200 OK (ou redirecionado para login)
 ```
 
-### Passo 18: Acessar no navegador
+### Passo 20: Acessar no navegador
 
 Abrir: `http://mydevsystem.site/admin/`
 
 **Login:**
 - Username: `admin`
 - Password: [a senha que criou no Passo 8]
+
+---
+
+## 📦 ATUALIZAR APLICAÇÃO (Deploy de Novas Alterações)
+
+Sempre que houver alterações no código, execute os comandos na sequência:
+
+```bash
+# 1. Conectar no servidor
+ssh root@31.97.254.220
+
+# 2. Navegar para o diretório do projeto
+cd /usr/local/lsws/Example/html/demo/webReceptivo
+
+# 3. Ativar ambiente virtual
+source venv/bin/activate
+
+# 4. Atualizar código do repositório
+git pull origin main
+
+# 5. Instalar novas dependências (se houver)
+pip install -r requirements.txt
+
+# 6. Aplicar migrações do banco
+python manage_production.py migrate
+
+# 7. Coletar arquivos estáticos
+python manage_production.py collectstatic --noinput
+
+# 8. Reiniciar LiteSpeed
+sudo /usr/local/lsws/bin/lswsctrl restart
+```
+
+**Comando único (copiar e colar):**
+```bash
+cd /usr/local/lsws/Example/html/demo/webReceptivo && source venv/bin/activate && git pull origin main && pip install -r requirements.txt && python manage_production.py migrate && python manage_production.py collectstatic --noinput && sudo /usr/local/lsws/bin/lswsctrl restart
+```
+
+---
+
+## 🔧 COMANDOS ÚTEIS DE GERENCIAMENTO
+
+### Criar dados iniciais em novo ambiente
+
+```bash
+# Tipos de meia entrada
+python manage_production.py criar_tipos_meia_entrada
+
+# Importar serviços de Foz do Iguaçu
+python manage_production.py importar_servicos_foz
+
+# Criar grupos de permissões
+python manage_production.py setup_groups
+```
+
+### Ver logs do sistema
+
+```bash
+# Logs do LiteSpeed
+tail -f /usr/local/lsws/logs/error.log
+
+# Logs de acesso
+tail -f /usr/local/lsws/Example/logs/access.log
+```
+
+### Gerenciar LiteSpeed
+
+```bash
+# Status
+sudo /usr/local/lsws/bin/lswsctrl status
+
+# Iniciar
+sudo /usr/local/lsws/bin/lswsctrl start
+
+# Parar
+sudo /usr/local/lsws/bin/lswsctrl stop
+
+# Reiniciar
+sudo /usr/local/lsws/bin/lswsctrl restart
+
+# Recarregar configuração (sem downtime)
+sudo /usr/local/lsws/bin/lswsctrl reload
+```
+
+### Backup do banco de dados
+
+```bash
+# Criar backup
+cp /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3 /root/backups/db_$(date +%Y%m%d_%H%M%S).sqlite3
+
+# Listar backups
+ls -lh /root/backups/
+
+# Restaurar backup
+cp /root/backups/db_YYYYMMDD_HHMMSS.sqlite3 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+sudo /usr/local/lsws/bin/lswsctrl restart
+```
+
+### Gerenciar ambiente virtual
+
+```bash
+# Ativar
+source /usr/local/lsws/Example/html/demo/webReceptivo/venv/bin/activate
+
+# Desativar
+deactivate
+
+# Ver pacotes instalados
+pip list
+
+# Atualizar pip
+pip install --upgrade pip
+```
+
+---
 
 ## 2. Configurar LiteSpeed Web Server
 
