@@ -958,8 +958,111 @@ def ajax_get_servico_info(request):
 @require_permission('servicos.view_ordemservico')
 @require_http_methods(["POST"])
 def translate_text(request):
-    """Endpoint para tradução - DESABILITADO TEMPORARIAMENTE"""
-    return JsonResponse({
-        'error': 'Serviço de tradução temporariamente desabilitado. Use a versão local em desenvolvimento.'
-    }, status=503, json_dumps_params={'ensure_ascii': False})
+    """Endpoint para tradução usando dicionário customizado"""
+    import json
+    import re
+    
+    try:
+        data = json.loads(request.body)
+        text = data.get('text', '')
+        target_lang = data.get('target_lang', 'en')
+        
+        if not text:
+            return JsonResponse({'error': 'Texto não fornecido'}, status=400, json_dumps_params={'ensure_ascii': False})
+        
+        # Dicionários de tradução por idioma
+        translations = {
+            'en': {
+                'CATARATAS': 'WATERFALLS', 'Cataratas': 'Waterfalls', 'cataratas': 'waterfalls',
+                'Inteira': 'Full', 'Inteira(s)': 'Full', 'Meia': 'Half', 'Meia(s)': 'Half',
+                'Infantil': 'Child', 'Ingresso': 'Ticket', 'Ingressos': 'Tickets',
+                'Roteiro': 'Itinerary', 'ROTEIRO': 'ITINERARY', 'Opção': 'Option', 'OPÇÃO': 'OPTION',
+                'Transfer': 'Transfer', 'Transfers': 'Transfers',
+                'PARQUE DAS AVES': 'BIRD PARK', 'Parque das Aves': 'Bird Park',
+                'ITAIPU PANORAMICA': 'ITAIPU PANORAMIC', 'Itaipu Panoramica': 'Itaipu Panoramic',
+                'MARCO DAS TRÊS FRONTEIRAS': 'THREE BORDERS LANDMARK', 'Marco das Três Fronteiras': 'Three Borders Landmark',
+                'RODA GIGANTE': 'FERRIS WHEEL', 'Roda Gigante': 'Ferris Wheel',
+                'MUSEU': 'MUSEUM', 'Museu': 'Museum',
+                'SHOW DAS ÁGUAS': 'WATER SHOW', 'Show das Águas': 'Water Show',
+                'leva e traz': 'round trip', 'leva e trás': 'round trip',
+                'horário livre': 'flexible schedule', 'Criado por': 'Created by',
+                'Data': 'Date', 'Total': 'Total', 'Valor': 'Value',
+                'RESUMO DOS VALORES': 'SUMMARY OF VALUES', 'Resumo dos Valores': 'Summary of Values',
+            },
+            'es': {
+                'CATARATAS': 'CATARATAS', 'Cataratas': 'Cataratas', 'cataratas': 'cataratas',
+                'Inteira': 'Entera', 'Inteira(s)': 'Entera(s)', 'Meia': 'Media', 'Meia(s)': 'Media(s)',
+                'Infantil': 'Infantil', 'Ingresso': 'Entrada', 'Ingressos': 'Entradas',
+                'Roteiro': 'Itinerario', 'ROTEIRO': 'ITINERARIO', 'Opção': 'Opción', 'OPÇÃO': 'OPCIÓN',
+                'Transfer': 'Transfer', 'Transfers': 'Transfers',
+                'PARQUE DAS AVES': 'PARQUE DE LAS AVES', 'Parque das Aves': 'Parque de las Aves',
+                'ITAIPU PANORAMICA': 'ITAIPU PANORÁMICA', 'Itaipu Panoramica': 'Itaipu Panorámica',
+                'MARCO DAS TRÊS FRONTEIRAS': 'HITO DE LAS TRES FRONTERAS', 'Marco das Três Fronteiras': 'Hito de las Tres Fronteras',
+                'RODA GIGANTE': 'RUEDA GIGANTE', 'Roda Gigante': 'Rueda Gigante',
+                'MUSEU': 'MUSEO', 'Museu': 'Museo',
+                'SHOW DAS ÁGUAS': 'SHOW DE LAS AGUAS', 'Show das Águas': 'Show de las Aguas',
+                'leva e traz': 'ida y vuelta', 'leva e trás': 'ida y vuelta',
+                'horário livre': 'horario libre', 'Criado por': 'Creado por',
+                'Data': 'Fecha', 'Total': 'Total', 'Valor': 'Valor',
+                'RESUMO DOS VALORES': 'RESUMEN DE VALORES', 'Resumo dos Valores': 'Resumen de Valores',
+            },
+            'fr': {
+                'CATARATAS': 'CHUTES D\'EAU', 'Cataratas': 'Chutes d\'eau', 'cataratas': 'chutes d\'eau',
+                'Inteira': 'Entier', 'Inteira(s)': 'Entier(s)', 'Meia': 'Demi', 'Meia(s)': 'Demi(s)',
+                'Infantil': 'Enfant', 'Ingresso': 'Billet', 'Ingressos': 'Billets',
+                'Roteiro': 'Itinéraire', 'ROTEIRO': 'ITINÉRAIRE', 'Opção': 'Option', 'OPÇÃO': 'OPTION',
+                'Transfer': 'Transfert', 'Transfers': 'Transferts',
+                'PARQUE DAS AVES': 'PARC DES OISEAUX', 'Parque das Aves': 'Parc des Oiseaux',
+                'ITAIPU PANORAMICA': 'ITAIPU PANORAMIQUE', 'Itaipu Panoramica': 'Itaipu Panoramique',
+                'MARCO DAS TRÊS FRONTEIRAS': 'BORNE DES TROIS FRONTIÈRES', 'Marco das Três Fronteiras': 'Borne des Trois Frontières',
+                'RODA GIGANTE': 'GRANDE ROUE', 'Roda Gigante': 'Grande Roue',
+                'MUSEU': 'MUSÉE', 'Museu': 'Musée',
+                'SHOW DAS ÁGUAS': 'SPECTACLE DES EAUX', 'Show das Águas': 'Spectacle des Eaux',
+                'leva e traz': 'aller-retour', 'leva e trás': 'aller-retour',
+                'horário livre': 'horaire flexible', 'Criado por': 'Créé par',
+                'Data': 'Date', 'Total': 'Total', 'Valor': 'Valeur',
+                'RESUMO DOS VALORES': 'RÉSUMÉ DES VALEURS', 'Resumo dos Valores': 'Résumé des Valeurs',
+            }
+        }
+        
+        # Proteger elementos que não devem ser traduzidos
+        protected = {}
+        counter = 0
+        
+        text_protected = text
+        # Proteger datas (dd/mm/yyyy)
+        def protect(match):
+            nonlocal counter
+            key = f"__PROTECT{counter}__"
+            protected[key] = match.group(0)
+            counter += 1
+            return key
+        
+        text_protected = re.sub(r'\d{2}/\d{2}(?:/\d{4})?', protect, text_protected)
+        # Proteger valores R$
+        text_protected = re.sub(r'R\$\s*[\d.,]+', protect, text_protected)
+        # Proteger números entre parênteses
+        text_protected = re.sub(r'\(\d+\s*(?:pax|anos?)\)', protect, text_protected)
+        
+        # Aplicar traduções
+        target_dict = translations.get(target_lang, translations['en'])
+        for pt, trad in target_dict.items():
+            text_protected = text_protected.replace(pt, trad)
+        
+        # Restaurar elementos protegidos
+        for key, value in protected.items():
+            text_protected = text_protected.replace(key, value)
+        
+        return JsonResponse({
+            'success': True,
+            'translated_text': text_protected,
+            'source_lang': 'pt',
+            'target_lang': target_lang
+        }, json_dumps_params={'ensure_ascii': False})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400, json_dumps_params={'ensure_ascii': False})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
 
