@@ -1,63 +1,256 @@
-# Guia de Deploy para Produção - WebReceptivo
-# IP: 31.97.254.220
-# Domínio: mydevsystem.site
+# 📘 Guia Completo de Deploy - WebReceptivo
 
-## 1. No servidor VPS (via SSH)
+**IP:** 31.97.254.220  
+**Domínio:** mydevsystem.site  
+**Web Server:** LiteSpeed 1.8.4  
+**Framework:** Django 5.2.7 + Python 3.12
 
-### 1.1 Atualizar código do repositório
+---
+
+## 🚀 SETUP INICIAL COMPLETO (PRIMEIRA VEZ)
+
+Execute **na sequência exata** para montar o servidor do zero:
+
+### Passo 1: Conectar via SSH
+
 ```bash
-cd /usr/local/lsws/Example/html/demo/webReceptivo
-git pull origin main
+ssh root@31.97.254.220
 ```
 
-### 1.2 Criar arquivo .env (IMPORTANTE - primeira vez)
+### Passo 2: Clonar repositório
+
 ```bash
-# Gerar SECRET_KEY segura
-python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
-
-# Criar arquivo .env
-nano .env
+cd /usr/local/lsws/Example/html/demo/
+git clone https://github.com/download2t/webReceptivo.git
+cd webReceptivo
 ```
 
-Conteúdo do .env:
-```
-SECRET_KEY=COLE-AQUI-A-CHAVE-GERADA-ACIMA
-DEBUG=False
-ALLOWED_HOSTS=31.97.254.220,mydevsystem.site,www.mydevsystem.site
-DATABASE_URL=
-```
+### Passo 3: Criar ambiente virtual
 
-### 1.3 Ativar ambiente virtual
 ```bash
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 1.4 Instalar dependências (se houver mudanças)
+### Passo 4: Instalar dependências
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 1.5 Coletar arquivos estáticos
+### Passo 5: Gerar SECRET_KEY
+
 ```bash
-export DJANGO_SETTINGS_MODULE=webreceptivo.settings_production
-python manage.py collectstatic --noinput
+python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+
+# Copie a saída (exemplo: abc123xyz...)
 ```
 
-### 1.6 Aplicar migrações
+### Passo 6: Criar arquivo .env
+
+```bash
+cat > .env << 'EOF'
+SECRET_KEY=COLE-AQUI-A-CHAVE-GERADA-NO-PASSO-5
+DEBUG=False
+ALLOWED_HOSTS=31.97.254.220,mydevsystem.site,www.mydevsystem.site
+DATABASE_URL=
+EOF
+```
+
+Verificar:
+```bash
+cat .env
+```
+
+### Passo 7: Aplicar migrações
+
 ```bash
 python manage.py migrate --settings=webreceptivo.settings_production
 ```
 
-### 1.7 Criar grupos de permissões (primeira vez)
+### Passo 8: Criar superusuário
+
+```bash
+python manage.py createsuperuser --settings=webreceptivo.settings_production
+
+# Responder:
+# Username: admin
+# Email: seu@email.com
+# Password: [sua senha segura]
+```
+
+### Passo 9: Criar grupos de permissões
+
 ```bash
 python manage.py criar_grupos --settings=webreceptivo.settings_production
 python manage.py setup_groups --settings=webreceptivo.settings_production
 ```
 
-### 1.8 Criar superusuário (primeira vez)
+### Passo 10: Coletar arquivos estáticos
+
 ```bash
-python manage.py createsuperuser --settings=webreceptivo.settings_production
+python manage.py collectstatic --noinput --settings=webreceptivo.settings_production
 ```
+
+### Passo 11: Criar arquivo WSGI para LiteSpeed
+
+```bash
+cat > litespeed_wsgi.py << 'EOF'
+import sys
+import os
+
+sys.path.insert(0, '/usr/local/lsws/Example/html/demo/webReceptivo')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'webreceptivo.settings_production'
+
+from webreceptivo.wsgi_production import application
+EOF
+```
+
+### Passo 12: Configurar permissões do projeto
+
+```bash
+# Dar permissões corretas para LiteSpeed servir os arquivos
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/
+
+# Permissões específicas para banco de dados
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+
+# Permissões para media (uploads)
+chmod -R 777 /usr/local/lsws/Example/html/demo/webReceptivo/media/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/media/
+
+# Permissões para staticfiles
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
+```
+
+### Passo 13: Configurar LiteSpeed vhost
+
+```bash
+# Editar arquivo de configuração
+nano /usr/local/lsws/conf/vhosts/Example/vhconf.conf
+```
+
+**Substituir todo o conteúdo por:**
+
+```
+docRoot                   $VH_ROOT/html/demo/webReceptivo/
+
+enableGzip                1
+
+errorlog $VH_ROOT/logs/error.log {
+  useServer               1
+  logLevel                DEBUG
+  rollingSize             10M
+}
+
+accesslog $VH_ROOT/logs/access.log {
+  useServer               0
+  rollingSize             10M
+  keepDays                7
+  compressArchive         0
+}
+
+index  {
+  useServer               0
+  indexFiles              index.html, index.php
+  autoIndex               0
+  autoIndexURI            /_autoindex/default.php
+}
+
+errorpage 404 {
+  url                     /error404.html
+}
+
+expires  {
+  enableExpires           1
+}
+
+accessControl  {
+  allow                   *
+}
+
+context /.well-known/ {
+  location                /usr/local/lsws/Example/html/.well-known/
+  allowBrowse             1
+  addDefaultCharset       off
+}
+
+context /static/ {
+  type                    null
+  location                /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
+  allowBrowse             1
+  addDefaultCharset       off
+}
+
+context /media/ {
+  type                    null
+  location                /usr/local/lsws/Example/html/demo/webReceptivo/media/
+  allowBrowse             1
+  addDefaultCharset       off
+}
+
+context / {
+  type                    appserver
+  location                /usr/local/lsws/Example/html/demo/webReceptivo/
+  binPath                 /usr/local/lsws/fcgi-bin/lswsgi
+  appType                 wsgi
+  startupFile             litespeed_wsgi.py
+  env                     PYTHONPATH=/usr/local/lsws/Example/html/demo/webReceptivo:/usr/local/lsws/Example/html/demo/webReceptivo/venv/lib/python3.12/site-packages
+  env                     LS_PYTHONBIN=/usr/local/lsws/Example/html/demo/venv/bin/python
+  addDefaultCharset       off
+}
+
+rewrite  {
+  enable                  1
+  autoLoadHtaccess        1
+  logLevel                0
+}
+```
+
+**Salvar:** `CTRL+X` → `Y` → `ENTER`
+
+### Passo 14: Remover arquivo HTML padrão
+
+```bash
+mv /usr/local/lsws/Example/html/index.html /usr/local/lsws/Example/html/index.html.bak 2>/dev/null
+```
+
+### Passo 15: Iniciar LiteSpeed
+
+```bash
+sudo /usr/local/lsws/bin/lswsctrl start
+```
+
+### Passo 16: Verificar status
+
+```bash
+sudo /usr/local/lsws/bin/lswsctrl status
+
+# Resultado esperado:
+# [OK] LiteSpeed Web Server is running with PID XXXX
+```
+
+### Passo 17: Testar acesso
+
+```bash
+# Testar via IP
+curl -I http://31.97.254.220/admin/
+
+# Testar via domínio
+curl -I http://mydevsystem.site/admin/
+
+# Resultado esperado: HTTP/1.1 200 OK (ou redirecionado para login)
+```
+
+### Passo 18: Acessar no navegador
+
+Abrir: `http://mydevsystem.site/admin/`
+
+**Login:**
+- Username: `admin`
+- Password: [a senha que criou no Passo 8]
 
 ## 2. Configurar LiteSpeed Web Server
 

@@ -263,14 +263,29 @@ cp /root/backups/db_20260106_120000.sqlite3 \
 sudo /usr/local/lsws/bin/lswsctrl start
 ```
 
-### Limpeza de logs antigos
+### Corrigir Permissões Completas (após qualquer problema)
+
+**Usar este comando quando:** uploads não funcionam, erro 500 ao fazer upload, imagens não aparecem
 
 ```bash
-# Ver tamanho dos logs
-du -sh /usr/local/lsws/logs/
+# 1. Permissões gerais do projeto
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/
 
-# Limpar logs antigos (mantém últimos 7 dias)
-find /usr/local/lsws/logs/ -name "*.log*" -mtime +7 -delete
+# 2. Banco de dados precisa ser gravável
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+
+# 3. Pasta media precisa de permissões totais (para uploads)
+chmod -R 777 /usr/local/lsws/Example/html/demo/webReceptivo/media/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/media/
+
+# 4. Staticfiles deve ser apenas leitura
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
+
+# 5. Testar depois
+sudo /usr/local/lsws/bin/lswsctrl restart
+curl -I http://mydevsystem.site/admin/
 ```
 
 ---
@@ -289,17 +304,25 @@ find /usr/local/lsws/logs/ -name "*.log*" -mtime +7 -delete
 
 ## 🔟 Troubleshooting
 
-### Erro 500 - Internal Server Error
+### Erro 500 - Internal Server Error (Uploads não funcionam)
 
 ```bash
-# Ver logs detalhados
-tail -50 /usr/local/lsws/logs/error.log
+# 1. Restaurar permissões corretas
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/
 
-# Verificar arquivo .env existe
-cat /usr/local/lsws/Example/html/demo/webReceptivo/.env
+# 2. Banco de dados deve ser gravável
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
 
-# Verificar permissões
-ls -la /usr/local/lsws/Example/html/demo/webReceptivo/
+# 3. Media deve ser totalmente acessível (uploads)
+chmod -R 777 /usr/local/lsws/Example/html/demo/webReceptivo/media/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/media/
+
+# 4. Reiniciar
+sudo /usr/local/lsws/bin/lswsctrl restart
+
+# 5. Testar
+curl -I http://mydevsystem.site/admin/
 ```
 
 ### Página 404 - Not Found
@@ -315,20 +338,51 @@ curl -I http://31.97.254.220/admin/
 grep -A 5 "ALLOWED_HOSTS" /usr/local/lsws/Example/html/demo/webReceptivo/webreceptivo/settings_production.py
 ```
 
+### Imagens não carregam (media não servido)
+
+```bash
+# Verificar se /media/ está configurado
+grep -A 5 "/media/" /usr/local/lsws/conf/vhosts/Example/vhconf.conf
+
+# Se não houver, adicionar:
+cat >> /usr/local/lsws/conf/vhosts/Example/vhconf.conf << 'EOF'
+
+context /media/ {
+  type                    null
+  location                /usr/local/lsws/Example/html/demo/webReceptivo/media/
+  allowBrowse             1
+  addDefaultCharset       off
+}
+EOF
+
+# Reiniciar
+sudo /usr/local/lsws/bin/lswsctrl restart
+
+# Testar acesso à imagem
+curl -I http://mydevsystem.site/media/avatars/user_1_avatar.png
+```
+
 ### Banco de dados corrompido
 
 ```bash
 # Fazer backup
 cp db.sqlite3 db.sqlite3.corrupted
 
-# Deletar migrations antigas
-rm -rf webreceptivo/migrations/
+# Deletar banco (cria novo vazio)
+rm db.sqlite3
 
 # Recriar migrações
-python manage.py makemigrations --settings=webreceptivo.settings_production
-
-# Aplicar novamente
 python manage.py migrate --settings=webreceptivo.settings_production
+
+# Criar novo superusuário
+python manage.py createsuperuser --settings=webreceptivo.settings_production
+
+# Criar grupos novamente
+python manage.py criar_grupos --settings=webreceptivo.settings_production
+python manage.py setup_groups --settings=webreceptivo.settings_production
+
+# Reiniciar
+sudo /usr/local/lsws/bin/lswsctrl restart
 ```
 
 ### Arquivos estáticos não carregam
@@ -339,6 +393,7 @@ python manage.py collectstatic --noinput --clear --settings=webreceptivo.setting
 
 # Verificar permissões
 chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
 
 # Reiniciar
 sudo /usr/local/lsws/bin/lswsctrl restart
@@ -367,31 +422,47 @@ df -h
 ps aux | grep python
 ```
 
-### Antes de fazer alterações
+### Antes de fazer alterações no código
 
 ```bash
 # 1. Fazer backup do banco
+cd /usr/local/lsws/Example/html/demo/webReceptivo
 cp db.sqlite3 db.sqlite3.$(date +%Y%m%d_%H%M%S)
 
 # 2. Atualizar código
-cd /usr/local/lsws/Example/html/demo/webReceptivo
 git pull origin main
 
-# 3. Aplicar migrações
+# 3. Ativar venv
+source venv/bin/activate
+
+# 4. Instalar dependências (se houver changes no requirements.txt)
+pip install -r requirements.txt
+
+# 5. Aplicar migrações
 python manage.py migrate --settings=webreceptivo.settings_production
 
-# 4. Coletar estáticos
+# 6. Coletar estáticos
 python manage.py collectstatic --noinput --settings=webreceptivo.settings_production
 
-# 5. Reiniciar
+# 7. Restaurar permissões (segurança)
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+chmod -R 777 /usr/local/lsws/Example/html/demo/webReceptivo/media/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/
+
+# 8. Reiniciar
 sudo /usr/local/lsws/bin/lswsctrl restart
+
+# 9. Verificar
+curl -I http://mydevsystem.site/admin/
 ```
 
 ### À noite (antes de sair)
 
 ```bash
 # 1. Fazer backup final
-cp db.sqlite3 /root/backups/db_$(date +%Y%m%d_%H%M%S).sqlite3
+cp /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3 \
+   /root/backups/db_$(date +%Y%m%d_%H%M%S).sqlite3
 
 # 2. Verificar logs
 tail -20 /usr/local/lsws/logs/error.log
@@ -412,18 +483,35 @@ sudo /usr/local/lsws/bin/lswsctrl start
 # ✅ Verificar status
 sudo /usr/local/lsws/bin/lswsctrl status
 
-# ✅ Reiniciar após mudanças
+# ✅ Reiniciar após mudanças (COMPLETO COM PERMISSÕES)
 cd /usr/local/lsws/Example/html/demo/webReceptivo
-git pull && python manage.py migrate --settings=webreceptivo.settings_production && python manage.py collectstatic --noinput --settings=webreceptivo.settings_production && sudo /usr/local/lsws/bin/lswsctrl restart
+git pull origin main
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate --settings=webreceptivo.settings_production
+python manage.py collectstatic --noinput --settings=webreceptivo.settings_production
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+chmod -R 777 /usr/local/lsws/Example/html/demo/webReceptivo/media/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/
+sudo /usr/local/lsws/bin/lswsctrl restart
 
 # ✅ Parar
 sudo /usr/local/lsws/bin/lswsctrl stop
 
-# ✅ Ver logs
+# ✅ Ver logs em tempo real
 tail -f /usr/local/lsws/logs/error.log
 
 # ✅ Sair da conexão SSH
 exit
+
+# ✅ Corrigir permissões rapidamente (erro 500 ao fazer upload)
+sudo /usr/local/lsws/bin/lswsctrl stop
+chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/
+chmod 666 /usr/local/lsws/Example/html/demo/webReceptivo/db.sqlite3
+chmod -R 777 /usr/local/lsws/Example/html/demo/webReceptivo/media/
+chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/
+sudo /usr/local/lsws/bin/lswsctrl start
 ```
 
 ---

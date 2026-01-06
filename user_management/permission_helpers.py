@@ -178,6 +178,20 @@ def can_change_user_groups(current_user, target_user, new_groups):
     """
     Verifica se o usuário atual pode alterar os grupos do usuário alvo.
     """
+    # Se target_user é None (criação de novo usuário), permitir se pode criar com esse nível
+    if target_user is None:
+        # Para novo usuário, determinar o nível mais alto dos novos grupos
+        highest_new_level = 'usuario_basico'
+        for group in new_groups:
+            if group.name == 'Administradores':
+                highest_new_level = 'administrador'
+                break
+            elif group.name == 'Gerentes' and highest_new_level not in ['administrador']:
+                highest_new_level = 'gerente'
+            elif group.name == 'Operadores' and highest_new_level not in ['administrador', 'gerente']:
+                highest_new_level = 'operador'
+        return can_create_user_with_level(current_user, highest_new_level)
+    
     current_level = get_user_level(current_user)
     target_level = get_user_level(target_user)
     
