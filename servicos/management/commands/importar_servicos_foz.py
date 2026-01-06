@@ -79,9 +79,9 @@ class Command(BaseCommand):
                 'valor_meia': Decimal(str(data['valor_meia'])),
                 'valor_infantil': Decimal(str(data['valor_infantil'])),
                 'aceita_meia_entrada': data['aceita_meia_entrada'],
-                'regras_meia': data['regras_meia'],
+                'regras_meia_entrada': data['regras_meia'],
                 'possui_isencao': data['possui_isencao'],
-                'regras_isencao': data['regras_isencao'],
+                'texto_isencao': data['regras_isencao'],
                 'permite_infantil': data['permite_infantil'],
                 'tem_idade_minima': data['tem_idade_minima'],
                 'ativo': True
@@ -93,9 +93,27 @@ class Command(BaseCommand):
             
             if data.get('idade_minima_infantil') is not None:
                 servico_data['idade_minima_infantil'] = data['idade_minima_infantil']
+            else:
+                servico_data['idade_minima_infantil'] = 0
             
             if data.get('idade_maxima_infantil') is not None:
                 servico_data['idade_maxima_infantil'] = data['idade_maxima_infantil']
+            else:
+                servico_data['idade_maxima_infantil'] = 17
+            
+            # Campos de isenção por idade
+            servico_data['idade_isencao_min'] = 0
+            servico_data['idade_isencao_max'] = 0
+            
+            # Se possui isenção, tentar extrair idades do texto
+            if data['possui_isencao'] and data['regras_isencao']:
+                texto = data['regras_isencao'].upper()
+                # Tentar extrair idades do texto (ex: "CRIANÇA DE 0 A 6 ANOS")
+                import re
+                match = re.search(r'(\d+)\s*A\s*(\d+)', texto)
+                if match:
+                    servico_data['idade_isencao_min'] = int(match.group(1))
+                    servico_data['idade_isencao_max'] = int(match.group(2))
             
             # Criar ou atualizar
             if existing:
