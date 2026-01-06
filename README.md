@@ -43,6 +43,7 @@ Aplicação Django focada em operação receptiva: cadastros de serviços e orde
 - Coletar estáticos (se precisar servir fora do runserver): `python manage.py collectstatic`.
 
 ## Documentação
+- **[Guia de Desenvolvimento](docs/GUIA_DESENVOLVIMENTO.md)** - Passo a passo para rodar o servidor Django, troubleshooting e dicas rápidas
 - Permissões do módulo de serviços: [docs/PERMISSOES.md](docs/PERMISSOES.md)
 - Hierarquia de usuários: [docs/PERMISSIONS_DOCUMENTATION.md](docs/PERMISSIONS_DOCUMENTATION.md)
 - Configurações da empresa: [docs/COMPANY_SETTINGS_GUIDE.md](docs/COMPANY_SETTINGS_GUIDE.md)
@@ -82,3 +83,14 @@ MIT License - Veja o arquivo LICENSE para mais detalhes.
 
 ---
 *Desenvolvido utilizandp Django 5.2.7 e Bootstrap 5*
+
+
+##Conectar o PC ao servidor SSH
+
+Criar chave SSH ( chave pública e privada).
+```
+ssh-keygen -t rsa -b 4096 -C "mtduarte.b@gmail.com"
+```
+
+exibir o conteudo da chave pública
+cat ~/.ssh/id_rsa.pub
