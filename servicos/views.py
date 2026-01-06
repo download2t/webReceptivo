@@ -958,25 +958,117 @@ def ajax_get_servico_info(request):
 @require_permission('servicos.view_ordemservico')
 @require_http_methods(["POST"])
 def translate_text(request):
-    """Endpoint para tradução usando Argos Translate com preservação de formatação"""
+    """Endpoint para tradução usando Argos Translate"""
     import json
     import re
     
     try:
-        # Verificar se Argos está instalado
-        try:
-            import argostranslate.package
-            import argostranslate.translate
-        except ImportError as e:
-            print(f"ERRO: Argos Translate não está instalado: {e}")
-            return JsonResponse({
-                'error': 'Serviço de tradução não está configurado no servidor'
-            }, status=500, json_dumps_params={'ensure_ascii': False})
-        
-        # Processar requisição
         data = json.loads(request.body)
         text = data.get('text', '')
         target_lang = data.get('target_lang', 'en')
+        
+        if not text:
+            return JsonResponse({'error': 'Texto não fornecido'}, status=400, json_dumps_params={'ensure_ascii': False})
+        
+        # Tentar importar Argos Translate
+        try:
+            import argostranslate.package
+            import argostranslate.translate
+        except ImportError:
+            return JsonResponse({
+                'error': 'Serviço de tradução não disponível. Instale argostranslate.'
+            }, status=503, json_dumps_params={'ensure_ascii': False})
+        
+        # Mapeamento de idiomas
+        lang_map = {'en': 'en', 'es': 'es', 'fr': 'fr'}
+        target_code = lang_map.get(target_lang, 'en')
+        
+        # Dicionário de termos customizados
+        custom_translations = {
+            'en': {
+                'CATARATAS': 'WATERFALLS', 'Cataratas': 'Waterfalls',
+                'Inteira': 'Full', 'Meia': 'Half', 'Infantil': 'Child',
+                'Ingresso': 'Ticket', 'Roteiro': 'Itinerary', 'Opção': 'Option',
+                'Transfer': 'Transfer', 'Transfers': 'Transfers',
+                'PARQUE DAS AVES': 'BIRD PARK', 'ITAIPU PANORAMICA': 'ITAIPU PANORAMIC',
+                'MARCO DAS TRÊS FRONTEIRAS': 'THREE BORDERS LANDMARK',
+            },
+            'es': {
+                'CATARATAS': 'CATARATAS', 'Cataratas': 'Cataratas',
+                'Inteira': 'Entera', 'Meia': 'Media', 'Infantil': 'Infantil',
+                'Ingresso': 'Entrada', 'Roteiro': 'Itinerario', 'Opção': 'Opción',
+                'Transfer': 'Transfer', 'Transfers': 'Transfers',
+                'PARQUE DAS AVES': 'PARQUE DE LAS AVES',
+                'MARCO DAS TRÊS FRONTEIRAS': 'HITO DE LAS TRES FRONTERAS',
+            },
+            'fr': {
+                'CATARATAS': 'CHUTES', 'Cataratas': 'Chutes',
+                'Inteira': 'Entier', 'Meia': 'Demi', 'Infantil': 'Enfant',
+                'Ingresso': 'Billet', 'Roteiro': 'Itinéraire', 'Opção': 'Option',
+                'Transfer': 'Transfert', 'Transfers': 'Transferts',
+                'PARQUE DAS AVES': 'PARC DES OISEAUX',
+                'MARCO DAS TRÊS FRONTEIRAS': 'BORNE DES TROIS FRONTIÈRES',
+            }
+        }
+        
+        # Proteger elementos especiais
+        protected = {}
+        placeholder_counter = 0
+        
+        def protect_element(match):
+            nonlocal placeholder_counter
+            placeholder = f"XPROT{placeholder_counter}X"
+            protected[placeholder] = match.group(0)
+            placeholder_counter += 1
+            return placeholder
+        
+        text_protected = text
+        # Proteger valores em R$
+        text_protected = re.sub(r'R\$\s*[\d.,]+', protect_element, text_protected)
+        # Proteger datas
+        text_protected = re.sub(r'\d{2}/\d{2}(?:/\d{4})?', protect_element, text_protected)
+        # Proteger símbolos de decoração
+        text_protected = re.sub(r'[─═•\-]{3,}', protect_element, text_protected)
+        
+        # Aplicar traduções customizadas
+        if target_code in custom_translations:
+            for pt_term, trad_term in custom_translations[target_code].items():
+                placeholder = f"XCUST{placeholder_counter}X"
+                protected[placeholder] = trad_term
+                placeholder_counter += 1
+                text_protected = text_protected.replace(pt_term, placeholder)
+        
+        # Traduzir com Argos
+        try:
+            if target_code == 'fr':
+                # Francês via inglês como intermediário
+                intermediate = argostranslate.translate.translate(text_protected, "pt", "en")
+                translated_text = argostranslate.translate.translate(intermediate, "en", "fr")
+            else:
+                translated_text = argostranslate.translate.translate(text_protected, "pt", target_code)
+        except Exception as e:
+            print(f"ERRO TRADUÇÃO: {str(e)}")
+            return JsonResponse({
+                'error': f'Erro na tradução: {str(e)}'
+            }, status=500, json_dumps_params={'ensure_ascii': False})
+        
+        # Restaurar elementos protegidos
+        for placeholder, original in protected.items():
+            translated_text = translated_text.replace(placeholder, original)
+        
+        return JsonResponse({
+            'success': True,
+            'translated_text': translated_text,
+            'source_lang': 'pt',
+            'target_lang': target_code
+        }, json_dumps_params={'ensure_ascii': False})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400, json_dumps_params={'ensure_ascii': False})
+    except Exception as e:
+        print(f"ERRO: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
         
         if not text:
             return JsonResponse({'error': 'Texto não fornecido'}, status=400)
