@@ -15,8 +15,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--categoria',
             type=str,
-            default='Atrativos Turísticos',
-            help='Nome da categoria para os serviços (padrão: Atrativos Turísticos)'
+            default='Atrativos',
+            help='Nome da categoria para os serviços (padrão: Atrativos)'
         )
         parser.add_argument(
             '--update',

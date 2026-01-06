@@ -86,7 +86,22 @@ python manage_production.py criar_grupos
 python manage_production.py setup_groups
 ```
 
-### Passo 10: Criar tipos de meia entrada padrão
+### Passo 10: Criar categorias padrão
+
+```bash
+python manage_production.py criar_categorias
+```
+
+**Categorias criadas:**
+- Atrativos
+- Hospedagem
+- Transporte
+- Alimentação
+- Passeios
+- Eventos
+- Outros
+
+### Passo 11: Criar tipos de meia entrada padrão
 
 ```bash
 python manage_production.py criar_tipos_meia_entrada
@@ -106,7 +121,7 @@ python manage_production.py criar_tipos_meia_entrada
 - ADOLESCENTE
 - JOVEM
 
-### Passo 11: Importar serviços iniciais (Foz do Iguaçu)
+### Passo 12: Importar serviços iniciais (Foz do Iguaçu)
 
 ```bash
 python manage_production.py importar_servicos_foz
@@ -121,13 +136,15 @@ python manage_production.py importar_servicos_foz
 - Shows e atrações
 - E muito mais...
 
-### Passo 12: Coletar arquivos estáticos
+**Nota:** Os serviços serão vinculados à categoria "Atrativos" criada no Passo 10.
+
+### Passo 13: Coletar arquivos estáticos
 
 ```bash
 python manage_production.py collectstatic --noinput
 ```
 
-### Passo 13: Criar arquivo WSGI para LiteSpeed
+### Passo 14: Criar arquivo WSGI para LiteSpeed
 
 ```bash
 cat > litespeed_wsgi.py << 'EOF'
@@ -141,7 +158,7 @@ from webreceptivo.wsgi_production import application
 EOF
 ```
 
-### Passo 14: Configurar permissões do projeto
+### Passo 15: Configurar permissões do projeto
 
 ```bash
 # Dar permissões corretas para LiteSpeed servir os arquivos
@@ -160,7 +177,7 @@ chmod -R 755 /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
 chown -R nobody:nogroup /usr/local/lsws/Example/html/demo/webReceptivo/staticfiles/
 ```
 
-### Passo 15: Configurar LiteSpeed vhost
+### Passo 16: Configurar LiteSpeed vhost
 
 ```bash
 # Editar arquivo de configuração
@@ -246,19 +263,19 @@ rewrite  {
 
 **Salvar:** `CTRL+X` → `Y` → `ENTER`
 
-### Passo 16: Remover arquivo HTML padrão
+### Passo 17: Remover arquivo HTML padrão
 
 ```bash
 mv /usr/local/lsws/Example/html/index.html /usr/local/lsws/Example/html/index.html.bak 2>/dev/null
 ```
 
-### Passo 17: Iniciar LiteSpeed
+### Passo 18: Iniciar LiteSpeed
 
 ```bash
 sudo /usr/local/lsws/bin/lswsctrl start
 ```
 
-### Passo 18: Verificar status
+### Passo 19: Verificar status
 
 ```bash
 sudo /usr/local/lsws/bin/lswsctrl status
@@ -267,7 +284,7 @@ sudo /usr/local/lsws/bin/lswsctrl status
 # [OK] LiteSpeed Web Server is running with PID XXXX
 ```
 
-### Passo 19: Testar acesso
+### Passo 20: Testar acesso
 
 ```bash
 # Testar via IP
@@ -279,7 +296,7 @@ curl -I http://mydevsystem.site/admin/
 # Resultado esperado: HTTP/1.1 200 OK (ou redirecionado para login)
 ```
 
-### Passo 20: Acessar no navegador
+### Passo 21: Acessar no navegador
 
 Abrir: `http://mydevsystem.site/admin/`
 
@@ -331,6 +348,9 @@ cd /usr/local/lsws/Example/html/demo/webReceptivo && source venv/bin/activate &&
 ### Criar dados iniciais em novo ambiente
 
 ```bash
+# Categorias padrão
+python manage_production.py criar_categorias
+
 # Tipos de meia entrada
 python manage_production.py criar_tipos_meia_entrada
 
@@ -340,6 +360,12 @@ python manage_production.py importar_servicos_foz
 # Criar grupos de permissões
 python manage_production.py setup_groups
 ```
+
+**Ordem recomendada para setup inicial completo:**
+1. `criar_categorias` - Cria categorias (Atrativos, Hospedagem, etc.)
+2. `criar_tipos_meia_entrada` - Cria tipos de meia entrada (PCD, Idoso, etc.)
+3. `importar_servicos_foz` - Importa 31 serviços de Foz vinculados à categoria "Atrativos"
+4. `setup_groups` - Configura permissões de grupos
 
 ### Ver logs do sistema
 
