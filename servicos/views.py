@@ -958,9 +958,10 @@ def ajax_get_servico_info(request):
 @require_permission('servicos.view_ordemservico')
 @require_http_methods(["POST"])
 def translate_text(request):
-    """Endpoint para tradução usando dicionário customizado"""
+    """Endpoint para tradução usando dicionário customizado completo"""
     import json
     import re
+    from .translations import TRANSLATIONS
     
     try:
         data = json.loads(request.body)
@@ -969,6 +970,56 @@ def translate_text(request):
         
         if not text:
             return JsonResponse({'error': 'Texto não fornecido'}, status=400, json_dumps_params={'ensure_ascii': False})
+        
+        # Proteger elementos que não devem ser traduzidos
+        protected = {}
+        counter = 0
+        
+        text_protected = text
+        
+        def protect(match):
+            nonlocal counter
+            key = f"__XPROTX{counter}X__"
+            protected[key] = match.group(0)
+            counter += 1
+            return key
+        
+        # Proteger datas (dd/mm/yyyy)
+        text_protected = re.sub(r'\d{2}/\d{2}(?:/\d{4})?', protect, text_protected)
+        # Proteger valores R$
+        text_protected = re.sub(r'R\$\s*[\d.,]+', protect, text_protected)
+        # Proteger números entre parênteses
+        text_protected = re.sub(r'\(\d+\s*(?:pax|anos?|idades)\)', protect, text_protected)
+        # Proteger horas
+        text_protected = re.sub(r'\d{1,2}h\d{2}', protect, text_protected)
+        
+        # Aplicar traduções
+        target_dict = TRANSLATIONS.get(target_lang, TRANSLATIONS.get('en', {}))
+        
+        # Ordenar por tamanho decrescente para traduzir frases inteiras primeiro
+        sorted_keys = sorted(target_dict.keys(), key=len, reverse=True)
+        
+        for pt_term in sorted_keys:
+            trad_term = target_dict[pt_term]
+            text_protected = text_protected.replace(pt_term, trad_term)
+        
+        # Restaurar elementos protegidos
+        for key, value in protected.items():
+            text_protected = text_protected.replace(key, value)
+        
+        return JsonResponse({
+            'success': True,
+            'translated_text': text_protected,
+            'source_lang': 'pt',
+            'target_lang': target_lang
+        }, json_dumps_params={'ensure_ascii': False})
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON inválido'}, status=400, json_dumps_params={'ensure_ascii': False})
+    except Exception as e:
+        print(f"ERRO TRADUÇÃO: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
         
         # Dicionários de tradução por idioma
         translations = {
