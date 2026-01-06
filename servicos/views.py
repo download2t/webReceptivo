@@ -367,8 +367,7 @@ def ordem_servico_create(request):
                     criado_por=request.user
                 )
                 
-                print(f"DEBUG: Criada OS #{ordem.numero_os} (ID: {ordem.id})")
-                print(f"DEBUG: Vou criar {len(servicos)} lançamentos vinculados a esta OS")
+                # OS criada com sucesso
                 
                 # Criar todos os lançamentos vinculados a esta OS
                 lancamentos_criados = []
@@ -407,8 +406,7 @@ def ordem_servico_create(request):
                         valor_unit_infantil=servico.valor_infantil,
                     )
                     
-                    print(f"DEBUG: Criado lançamento {lancamento.id} - {servico.nome} vinculado à OS #{ordem.numero_os}")
-                    print(f"DEBUG: ordem_servico_id do lançamento: {lancamento.ordem_servico_id}")
+                    # Lançamento criado com sucesso
                     
                     # Associar tipos de meia
                     if tipos_meia:
@@ -430,7 +428,7 @@ def ordem_servico_create(request):
                             quantidade=transfer_data.get('quantidade', 1),
                             valor=valor_transfer
                         )
-                        print(f"DEBUG: Transfer {transfer_os.transfer.nome} vinculado ao lançamento {lancamento.id}")
+                        # Transfer vinculado
                     
                     lancamentos_criados.append(lancamento)
                 
