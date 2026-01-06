@@ -1305,12 +1305,20 @@ def translate_text(request):
             })
             
         except Exception as e:
+            import traceback
+            error_msg = str(e)
+            traceback.print_exc()
+            print(f"ERRO AO TRADUZIR: {error_msg}")
             return JsonResponse({
-                'error': f'Erro na tradução: {str(e)}'
-            }, status=500)
+                'error': f'Erro na tradução: {error_msg}'
+            }, status=500, json_dumps_params={'ensure_ascii': False})
             
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'JSON inválido'}, status=400)
+    except json.JSONDecodeError as e:
+        error_msg = str(e)
+        print(f"ERRO JSON: {error_msg}")
+        return JsonResponse({'error': 'JSON inválido'}, status=400, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        error_msg = str(e)
+        print(f"ERRO GERAL: {error_msg}")
+        return JsonResponse({'error': error_msg}, status=500, json_dumps_params={'ensure_ascii': False})
 
