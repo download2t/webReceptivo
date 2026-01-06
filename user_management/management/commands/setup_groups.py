@@ -218,10 +218,10 @@ class Command(BaseCommand):
         self.stdout.write('   ✅ Transfers (CRUD completo)')
         self.stdout.write('   ✅ Meia Entrada (CRUD completo)')
         self.stdout.write('')
-        self.stdout.write(
-            self.style.SUCCESS('✅ 
+        
+        if created_groups:
             self.stdout.write(
-                self.style.SUCCESS(f'Grupos criados: {", ".join(created_groups)}')
+                self.style.SUCCESS(f'✅ Grupos criados: {", ".join(created_groups)}')
             )
         if updated_groups:
             self.stdout.write(
