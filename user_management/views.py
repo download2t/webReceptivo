@@ -641,6 +641,8 @@ def permissions_manage(request, pk):
         'all_groups': available_groups,
         'user_permissions': user.user_permissions.all(),
         'user_groups': user.groups.all(),
+        'user_permissions_ids': list(user.user_permissions.values_list('pk', flat=True)),
+        'user_groups_ids': list(user.groups.values_list('pk', flat=True)),
         'current_user_level': get_user_level_display(request.user),
     }
     

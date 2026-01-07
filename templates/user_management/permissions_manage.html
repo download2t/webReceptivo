@@ -56,7 +56,7 @@
                                                     <input class="form-check-input" type="checkbox" 
                                                            name="groups" value="{{ group.id }}" 
                                                            id="group_{{ group.id }}"
-                                                           {% if group in user_groups %}checked{% endif %}>
+                                                           {% if group.id in user_groups_ids %}checked{% endif %}>
                                                     <label class="form-check-label d-flex align-items-center" for="group_{{ group.id }}">
                                                         <strong>{{ group.name }}</strong>
                                                         <span class="badge bg-secondary ms-2">{{ group.permissions.count }}</span>
@@ -108,7 +108,7 @@
                                                                                name="user_permissions" 
                                                                                value="{{ permission.id }}" 
                                                                                id="perm_{{ permission.id }}"
-                                                                               {% if permission in user_permissions %}checked{% endif %}>
+                                                                               {% if permission.id in user_permissions_ids %}checked{% endif %}>
                                                                         <label class="form-check-label" for="perm_{{ permission.id }}">
                                                                             <strong>{{ permission.name }}</strong><br>
                                                                             <small class="text-muted">{{ permission.codename }}</small>
