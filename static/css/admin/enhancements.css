@@ -157,16 +157,19 @@
     content: "↕";
     opacity: 0.5;
     margin-left: 5px;
+    color: white !important;
 }
 
 #result_list thead th.sorted.ascending:after {
     content: "↑";
     opacity: 1;
+    color: white !important;
 }
 
 #result_list thead th.sorted.descending:after {
     content: "↓";
     opacity: 1;
+    color: white !important;
 }
 
 /* Better row selection */

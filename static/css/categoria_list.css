@@ -1,11 +1,44 @@
 /* Lista de Categorias - Layout Responsivo */
 
+/* Barra de filtro espaçada */
+.filter-bar {
+    background: #f8f9fb;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+}
+
+.filter-bar .input-group-text {
+    background: transparent;
+    border-right: 0;
+    color: #6c757d;
+}
+
+.filter-bar .form-control {
+    border-left: 0;
+}
+
+.filter-bar .btn {
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+}
+
+.w-lg-auto {
+    width: auto;
+}
+
+@media (max-width: 991.98px) {
+    .w-lg-auto {
+        width: 100%;
+    }
+}
+
 /* Desktop: Mostrar tabela, esconder cards */
 .desktop-table {
     display: block;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     padding: 1.5rem;
 }
 
@@ -33,8 +66,13 @@
 }
 
 .desktop-table tbody td {
-    padding: 1rem;
+    padding: 0.9rem 1rem;
     vertical-align: middle;
+}
+
+.table-actions .btn {
+    font-weight: 600;
+    min-width: 90px;
 }
 
 .mobile-cards {
@@ -50,6 +88,10 @@
     .mobile-cards {
         display: block !important;
     }
+
+    .filter-bar {
+        padding: 1rem;
+    }
     
     /* Estilo dos cards mobile */
     .categoria-card {
@@ -61,10 +103,12 @@
     .categoria-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 0.75rem 1rem;
+        padding: 1rem 1.25rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
     }
 
     [data-bs-theme="dark"] .categoria-header,

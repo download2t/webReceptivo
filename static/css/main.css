@@ -394,15 +394,17 @@ small,
 /* Page hero used on dashboard and standard pages */
 .page-hero {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-  color: #f8f9fa;
+  color: #f8f9fa !important;
   border-radius: 1rem;
   padding: 1.75rem;
   box-shadow: var(--box-shadow-lg);
 }
 
 .page-hero h1,
-.page-hero p {
-  color: #f8f9fa;
+.page-hero p,
+.page-hero span,
+.page-hero i {
+  color: #f8f9fa !important;
 }
 
 .page-hero .hero-meta {
@@ -413,7 +415,7 @@ small,
 .page-hero .hero-meta .badge {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #f8f9fa;
+  color: #f8f9fa !important;
 }
 
 /* Stat cards for quick metrics */
@@ -444,7 +446,11 @@ small,
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
-  color: var(--text-primary);
+  color: #2c3e50;
+}
+
+[data-bs-theme="dark"] .stat-card .value {
+  color: #f8f9fa;
 }
 
 .stat-card .hint {
@@ -476,12 +482,57 @@ small,
 [data-bs-theme="dark"] .panel-card .card-header h5,
 [data-bs-theme="dark"] .panel-card .card-header h6,
 [data-bs-theme="dark"] .panel-card .card-header .badge,
-[data-bs-theme="dark"] .panel-card .card-header .text-muted {
+[data-bs-theme="dark"] .panel-card .card-header .text-muted,
+[data-bs-theme="dark"] .panel-card .card-header span {
   color: #f8f9fa !important;
+}
+
+.panel-card .card-header h6,
+.panel-card .card-header .text-muted {
+  color: #495057;
 }
 
 [data-bs-theme="dark"] .panel-card .card-header .badge {
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Button contrast improvements */
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+  color: #4da3ff;
+  border-color: #4da3ff;
+}
+
+[data-bs-theme="dark"] .btn-outline-primary:hover {
+  color: #fff;
+  background-color: #4da3ff;
+  border-color: #4da3ff;
+}
+
+.btn-outline-secondary {
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+  color: #adb5bd;
+  border-color: #6c757d;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
 }
 
 .nav-link {

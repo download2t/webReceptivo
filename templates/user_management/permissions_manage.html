@@ -25,9 +25,9 @@
             <div class="card border-0 shadow">
                 <div class="card-header bg-primary text-white">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
+                        <h5 class="mb-0 text-white">
                             <i class="bi bi-shield-lock-fill me-2"></i>
-                            Gerenciar Permissões: {{ user_obj.username }}
+                            <span class="text-white">Gerenciar Permissões: {{ user_obj.username }}</span>
                         </h5>
                         <a href="{% url 'user_management:user_detail' user_obj.pk %}" class="btn btn-light btn-sm">
                             <i class="bi bi-arrow-left me-1"></i>Voltar
@@ -52,34 +52,77 @@
                                 <span class="badge bg-warning">Grupo</span>
                             </div>
                             
-                            <!-- Grupos de Usuário -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <h6 class="text-muted mb-3">
-                                        <i class="bi bi-people-fill me-2"></i>Grupos de Usuário
-                                        <small class="text-muted">(Ao selecionar um grupo, suas permissões serão mostradas abaixo)</small>
-                                    </h6>
-                                    <div class="row">
-                                        {% for group in all_groups %}
-                                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                                                <div class="form-check p-2 rounded border {% if group.id|stringformat:"s" in user_groups_ids %}border-success bg-success-subtle{% else %}border-secondary-subtle{% endif %}">
-                                                    <input class="form-check-input group-checkbox" 
-                                                           type="checkbox" 
-                                                           name="groups" 
-                                                           value="{{ group.id }}" 
-                                                           id="group_{{ group.id }}"
-                                                           data-group-id="{{ group.id }}"
-                                                           {% if group.id|stringformat:"s" in user_groups_ids %}checked{% endif %}>
-                                                    <label class="form-check-label d-block" for="group_{{ group.id }}">
-                                                        <strong>{{ group.name }}</strong>
-                                                        <span class="badge bg-secondary ms-2">{{ group.permissions.count }}</span>
-                                                        <small class="text-muted d-block mt-1">
-                                                            {{ group.permissions.count }} permissão{{ group.permissions.count|pluralize:"ões" }}
-                                                        </small>
-                                                    </label>
+                            <!-- Grupos de Usuário e Presets -->
+                            <div class="row mb-4 g-4">
+                                <div class="col-12 col-lg-8">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-header bg-white border-bottom py-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1 fw-bold"><i class="bi bi-people-fill me-2 text-primary"></i>Grupos de Usuário</h6>
+                                                    <small class="text-muted">Selecione grupos para herdar permissões automaticamente</small>
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary" onclick="selectAllGroups()" title="Marcar todos">
+                                                        <i class="bi bi-check-all me-1"></i>Todos
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="clearAllGroups()" title="Limpar">
+                                                        <i class="bi bi-x-circle me-1"></i>Limpar
+                                                    </button>
                                                 </div>
                                             </div>
-                                        {% endfor %}
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <div class="row g-3">
+                                                {% for group in all_groups %}
+                                                <div class="col-xl-4 col-md-6">
+                                                    <label for="group_{{ group.id }}" class="group-select-card {% if group.id|stringformat:"s" in user_groups_ids %}active{% endif %}">
+                                                        <input class="group-checkbox" 
+                                                               type="checkbox" 
+                                                               name="groups" 
+                                                               value="{{ group.id }}" 
+                                                               id="group_{{ group.id }}"
+                                                               data-group-id="{{ group.id }}"
+                                                               {% if group.id|stringformat:"s" in user_groups_ids %}checked{% endif %}>
+                                                        <div class="group-select-card__content">
+                                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                <div class="group-select-card__title">{{ group.name }}</div>
+                                                                <div class="group-select-card__check">
+                                                                    <i class="bi bi-check-circle-fill"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div class="group-select-card__meta">
+                                                                <i class="bi bi-key-fill me-1"></i>{{ group.permissions.count }} permissão{{ group.permissions.count|pluralize:"ões" }}
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-4">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-header bg-gradient-primary text-white py-3">
+                                            <h6 class="mb-1 fw-bold"><i class="bi bi-lightning-charge-fill me-2"></i>Presets Rápidos</h6>
+                                            <small class="opacity-75">Aplicar pacote de permissões</small>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <div class="d-grid gap-2">
+                                                {% for preset_name, perms in role_presets.items %}
+                                                <button type="button" class="preset-btn" onclick="applyPreset('{{ preset_name }}')">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="fw-600">{{ preset_name }}</span>
+                                                        <span class="badge bg-primary">{{ perms|length }}</span>
+                                                    </div>
+                                                </button>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="alert alert-info border-0 mt-3 mb-0 py-2 px-3">
+                                                <small><i class="bi bi-info-circle me-1"></i>As permissões dos presets sobrescrevem grupos</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -89,67 +132,66 @@
                             <!-- Permissões -->
                             <div class="row">
                                 <div class="col-12">
-                                    <h6 class="text-muted mb-3">
-                                        <i class="bi bi-key-fill me-2"></i>Permissões
-                                        <small class="text-muted">(Diretas ou herdadas de grupos)</small>
-                                    </h6>
-                                    
-                                    <div class="accordion" id="permissionsAccordion">
-                                        {% for app_label, permissions in permissions_by_app.items %}
-                                            <div class="accordion-item border-0 shadow-sm mb-2">
-                                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                                                    <button class="accordion-button collapsed" type="button" 
-                                                            data-bs-toggle="collapse" 
-                                                            data-bs-target="#collapse{{ forloop.counter }}" 
-                                                            aria-expanded="false" 
-                                                            aria-controls="collapse{{ forloop.counter }}">
-                                                        <strong>{{ app_label|title }}</strong>
-                                                        <span class="badge bg-primary ms-2">{{ permissions|length }}</span>
-                                                    </button>
-                                                </h2>
-                                                <div id="collapse{{ forloop.counter }}" 
-                                                     class="accordion-collapse collapse" 
-                                                     aria-labelledby="heading{{ forloop.counter }}" 
-                                                     data-bs-parent="#permissionsAccordion">
-                                                    <div class="accordion-body">
-                                                        <div class="row">
-                                                            {% for permission in permissions %}
-                                                                {% with source=permissions_with_source|get_item:permission.id %}
-                                                                <div class="col-lg-4 col-md-6 mb-3">
-                                                                    <div class="form-check p-2 rounded border {% if source.is_direct %}border-success bg-success-subtle{% elif source.is_from_group %}border-warning bg-warning-subtle{% else %}border-secondary-subtle{% endif %}" 
-                                                                         data-perm-id="{{ permission.id }}"
-                                                                         data-perm-origin="{{ source.origin }}">
-                                                                        <input class="form-check-input permission-checkbox" 
-                                                                               type="checkbox" 
-                                                                               name="user_permissions" 
-                                                                               value="{{ permission.id }}" 
-                                                                               id="perm_{{ permission.id }}"
-                                                                               data-origin="{{ source.origin }}"
-                                                                               {% if permission.id|stringformat:"s" in user_permissions_ids or permission.id|stringformat:"s" in user_group_permissions_ids %}checked{% endif %}>
-                                                                        <label class="form-check-label w-100" for="perm_{{ permission.id }}">
-                                                                            <div class="d-flex align-items-start justify-content-between gap-2">
-                                                                                <div>
-                                                                                    <strong>{{ permission.name }}</strong><br>
-                                                                                    <small class="text-muted">{{ permission.codename }}</small>
-                                                                                </div>
-                                                                                <div class="text-nowrap">
-                                                                                    {% if source.is_direct %}
-                                                                                    <span class="badge bg-success">Usuário</span>
-                                                                                    {% elif source.is_from_group %}
-                                                                                    <span class="badge bg-warning">Grupo</span>
-                                                                                    {% endif %}
-                                                                                </div>
-                                                                            </div>
-                                                                        </label>
-                                                                    </div>
-                                                                </div>
-                                                                {% endwith %}
-                                                            {% endfor %}
+                                    <div class="card border-0 shadow-sm">
+                                        <div class="card-header bg-white border-bottom py-3">
+                                            <h6 class="mb-0 fw-bold"><i class="bi bi-shield-lock-fill me-2 text-primary"></i>Permissões do Sistema</h6>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            {% for app_label, permissions in permissions_by_app.items %}
+                                            <div class="app-section">
+                                                <div class="app-section__header">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0 fw-bold text-dark">{{ app_label|title }}</h6>
+                                                            <small class="text-muted">{{ permissions|length }} permissão{{ permissions|length|pluralize:"ões" }} disponíve{{ permissions|length|pluralize:"l,is" }}</small>
+                                                        </div>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleApp('{{ app_label }}', true)">
+                                                                <i class="bi bi-check-all me-1"></i>Marcar
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleApp('{{ app_label }}', false)">
+                                                                <i class="bi bi-x-circle me-1"></i>Limpar
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="app-section__content">
+                                                    <div class="row g-3">
+                                                        {% for permission in permissions %}
+                                                        {% with source=permissions_with_source|get_item:permission.id %}
+                                                        <div class="col-xl-3 col-lg-4 col-md-6">
+                                                            <label for="perm_{{ permission.id }}" class="permission-card {% if permission.id|stringformat:"s" in user_permissions_ids or permission.id|stringformat:"s" in user_group_permissions_ids %}active{% endif %} {% if source.is_direct %}from-user{% elif source.is_from_group %}from-group{% endif %}" data-perm-id="{{ permission.id }}" data-perm-origin="{{ source.origin }}">
+                                                                <input class="permission-checkbox" 
+                                                                       type="checkbox" 
+                                                                       name="user_permissions" 
+                                                                       value="{{ permission.id }}" 
+                                                                       id="perm_{{ permission.id }}"
+                                                                       data-origin="{{ source.origin }}"
+                                                                       data-app="{{ app_label }}"
+                                                                       {% if permission.id|stringformat:"s" in user_permissions_ids or permission.id|stringformat:"s" in user_group_permissions_ids %}checked{% endif %}>
+                                                                <div class="permission-card__content">
+                                                                    <div class="permission-card__check">
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                    </div>
+                                                                    <div class="permission-card__title">{{ permission.name }}</div>
+                                                                    <div class="permission-card__code">{{ permission.codename }}</div>
+                                                                    <div class="permission-card__badge">
+                                                                        {% if source.is_direct %}
+                                                                        <span class="badge bg-success"><i class="bi bi-person-fill me-1"></i>Usuário</span>
+                                                                        {% elif source.is_from_group %}
+                                                                        <span class="badge bg-warning"><i class="bi bi-people-fill me-1"></i>Grupo</span>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                        {% endwith %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        {% endfor %}
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -181,16 +223,26 @@
 </div>
 
 <script>
-// Objeto para armazenar permissões de grupos
+// Objetos para armazenar permissões de grupos e presets
 const groupPermissions = {
     {% for group in all_groups %}
-    "{{ group.id }}": [{% for perm in group.permissions.all %}"{{ perm.id }}"{{ not forloop.last|yesno:",," }}{% endfor %}],
+    "{{ group.id }}": [{% for perm in group.permissions.all %}"{{ perm.id }}"{% if not forloop.last %},{% endif %}{% endfor %}],
     {% endfor %}
 };
 
-// Ao marcar/desmarcar grupos, atualizar permissões
+const rolePresets = {
+    {% for preset_name, perms in role_presets.items %}
+    "{{ preset_name }}": [{% for pid in perms %}"{{ pid }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+    {% endfor %}
+};
+
+// Ao marcar/desmarcar grupos, atualizar permissões e estilo das cards
 document.querySelectorAll('.group-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
+        const card = this.closest('.group-select-card');
+        if (card) {
+            card.classList.toggle('active', this.checked);
+        }
         updatePermissionsFromGroups();
         updateCheckboxVisualFeedback();
     });
@@ -199,6 +251,7 @@ document.querySelectorAll('.group-checkbox').forEach(checkbox => {
 // Ao marcar/desmarcar permissões individuais, atualizar feedback visual
 document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
+        this.dataset.groupAutocheck = '';
         updateCheckboxVisualFeedback();
     });
 });
@@ -220,31 +273,67 @@ function updatePermissionsFromGroups() {
     // Atualizar checkboxes com visual de "Grupo"
     document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
         const permId = checkbox.value;
-        if (groupPerms.has(permId) && !checkbox.checked) {
-            // Marcar automaticamente se vem de grupo selecionado
-            checkbox.checked = true;
-            checkbox.dataset.origin = 'Grupo';
+        if (groupPerms.has(permId)) {
+            if (!checkbox.checked) {
+                checkbox.checked = true;
+            }
+            checkbox.dataset.groupAutocheck = 'true';
+        } else {
+            if (checkbox.dataset.groupAutocheck === 'true') {
+                checkbox.checked = false;
+                checkbox.dataset.groupAutocheck = '';
+            }
         }
     });
 }
 
 function updateCheckboxVisualFeedback() {
     document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
-        const container = checkbox.closest('[data-perm-id]');
-        if (checkbox.checked) {
-            container.classList.add('border-success', 'bg-success-subtle');
-            container.classList.remove('border-secondary-subtle');
-        } else {
-            container.classList.remove('border-success', 'bg-success-subtle');
-            container.classList.add('border-secondary-subtle');
+        const card = checkbox.closest('.permission-card');
+        if (!card) return;
+        card.classList.toggle('active', checkbox.checked);
+    });
+}
+
+function toggleApp(appName, shouldCheck) {
+    document.querySelectorAll(`.permission-checkbox[data-app="${appName}"]`).forEach(cb => {
+        cb.checked = shouldCheck;
+    });
+    updateCheckboxVisualFeedback();
+}
+
+function applyPreset(presetName) {
+    const perms = rolePresets[presetName] || [];
+    if (!perms.length) return;
+    const permSet = new Set(perms);
+    document.querySelectorAll('.permission-checkbox').forEach(cb => {
+        if (permSet.has(cb.value)) {
+            cb.checked = true; // aplica como permissão do usuário
         }
     });
+    updateCheckboxVisualFeedback();
 }
 
 // Funções auxiliares
 function selectAllGroups() {
     document.querySelectorAll('.group-checkbox').forEach(checkbox => {
         checkbox.checked = true;
+        const card = checkbox.closest('.group-select-card');
+        if (card) {
+            card.classList.add('active');
+        }
+    });
+    updatePermissionsFromGroups();
+    updateCheckboxVisualFeedback();
+}
+
+function clearAllGroups() {
+    document.querySelectorAll('.group-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const card = checkbox.closest('.group-select-card');
+        if (card) {
+            card.classList.remove('active');
+        }
     });
     updatePermissionsFromGroups();
     updateCheckboxVisualFeedback();

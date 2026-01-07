@@ -45,15 +45,33 @@
 
 .admin-card .card-header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    color: white;
+    color: white !important;
     border: none;
     padding: 15px 20px;
     font-weight: 600;
 }
 
+.admin-card .card-header h5,
+.admin-card .card-header h6,
+.admin-card .card-header span,
+.admin-card .card-header i,
+.admin-card .card-header * {
+    color: white !important;
+}
+
 .admin-card .card-body {
     padding: 20px;
     color: var(--text-primary);
+    background: transparent;
+}
+
+/* List group items inside admin cards */
+.admin-card .list-group-item {
+    background: transparent !important;
+}
+
+[data-bs-theme="dark"] .admin-card .list-group-item {
+    background: transparent !important;
 }
 
 /* ================================
@@ -62,8 +80,8 @@
 
 /* Admin buttons */
 .btn-admin-primary {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-    border: none;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border: none !important;
     color: white !important;
     padding: 10px 20px;
     border-radius: var(--border-radius);
@@ -73,25 +91,52 @@
 }
 
 .btn-admin-primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, #1a252f 100%);
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
     transform: translateY(-1px);
     color: white !important;
 }
 
+.btn-admin-primary i {
+    color: white !important;
+}
+
+[data-bs-theme="dark"] .btn-admin-primary {
+    background: linear-gradient(135deg, #4da3ff 0%, #1a7fd4 100%) !important;
+}
+
+[data-bs-theme="dark"] .btn-admin-primary:hover {
+    background: linear-gradient(135deg, #66b3ff 0%, #4da3ff 100%) !important;
+}
+
 .btn-admin-secondary {
-    background: var(--secondary-color);
-    border: none;
+    background: #6c757d !important;
+    border: 1px solid #6c757d !important;
     color: white !important;
     padding: 8px 16px;
     border-radius: var(--border-radius);
-    font-weight: 500;
+    font-weight: 600;
     transition: var(--transition);
     text-decoration: none !important;
 }
 
 .btn-admin-secondary:hover {
-    background: #5a6268;
+    background: #5a6268 !important;
+    border-color: #545b62 !important;
     color: white !important;
+}
+
+.btn-admin-secondary i {
+    color: white !important;
+}
+
+[data-bs-theme="dark"] .btn-admin-secondary {
+    background: #868e96 !important;
+    border-color: #868e96 !important;
+}
+
+[data-bs-theme="dark"] .btn-admin-secondary:hover {
+    background: #adb5bd !important;
+    border-color: #adb5bd !important;
 }
 
 /* Django admin default buttons */
@@ -99,15 +144,24 @@
 input[type="submit"], button[type="submit"],
 .submit-row input[type="submit"],
 .button {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
     color: white !important;
     border: none !important;
     padding: 8px 16px !important;
     border-radius: var(--border-radius) !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     text-decoration: none !important;
     transition: var(--transition) !important;
     display: inline-block !important;
+}
+
+[data-bs-theme="dark"] .default,
+[data-bs-theme="dark"] .addlink,
+[data-bs-theme="dark"] .changelink,
+[data-bs-theme="dark"] input[type="submit"],
+[data-bs-theme="dark"] button[type="submit"],
+[data-bs-theme="dark"] .button {
+    background: linear-gradient(135deg, #4da3ff 0%, #1a7fd4 100%) !important;
 }
 
 .default:hover, .addlink:hover, .changelink:hover,
@@ -128,10 +182,83 @@ input[type="submit"]:hover, button[type="submit"]:hover,
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
 }
 
-/* Form elements */
-input[type="text"], input[type="password"], input[type="email"],
-input[type="number"], input[type="date"], input[type="datetime-local"],
-select, textarea {
+/* Outline buttons for admin */
+.btn-outline-primary {
+    color: #007bff !important;
+    border-color: #007bff !important;
+    background: transparent !important;
+}
+
+.btn-outline-primary:hover {
+    color: white !important;
+    background: #007bff !important;
+    border-color: #007bff !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+    color: #4da3ff !important;
+    border-color: #4da3ff !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-primary:hover {
+    color: white !important;
+    background: #4da3ff !important;
+    border-color: #4da3ff !important;
+}
+
+.btn-outline-secondary {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
+    background: transparent !important;
+}
+
+.btn-outline-secondary:hover {
+    color: white !important;
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+    color: #adb5bd !important;
+    border-color: #6c757d !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary:hover {
+    color: white !important;
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.btn-outline-success {
+    color: #28a745 !important;
+    border-color: #28a745 !important;
+    background: transparent !important;
+}
+
+.btn-outline-success:hover {
+    color: white !important;
+    background: #28a745 !important;
+    border-color: #28a745 !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-success {
+    color: #48c774 !important;
+    border-color: #48c774 !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-success:hover {
+    color: white !important;
+    background: #48c774 !important;
+    border-color: #48c774 !important;
+}
+
+/* Form elements - apenas dentro do admin */
+#main input[type="text"], #main input[type="password"], #main input[type="email"],
+#main input[type="number"], #main input[type="date"], #main input[type="datetime-local"],
+#main select, #main textarea,
+.admin-card input[type="text"], .admin-card input[type="password"], .admin-card input[type="email"],
+.admin-card input[type="number"], .admin-card input[type="date"], .admin-card input[type="datetime-local"],
+.admin-card select, .admin-card textarea {
     border: 1px solid var(--border-color) !important;
     border-radius: var(--border-radius) !important;
     padding: 8px 12px !important;
@@ -141,24 +268,30 @@ select, textarea {
     font-family: var(--font-family-base) !important;
 }
 
-input[type="text"]:focus, input[type="password"]:focus, 
-input[type="email"]:focus, input[type="number"]:focus,
-input[type="date"]:focus, input[type="datetime-local"]:focus,
-select:focus, textarea:focus {
+#main input[type="text"]:focus, #main input[type="password"]:focus, 
+#main input[type="email"]:focus, #main input[type="number"]:focus,
+#main input[type="date"]:focus, #main input[type="datetime-local"]:focus,
+#main select:focus, #main textarea:focus,
+.admin-card input[type="text"]:focus, .admin-card input[type="password"]:focus, 
+.admin-card input[type="email"]:focus, .admin-card input[type="number"]:focus,
+.admin-card input[type="date"]:focus, .admin-card input[type="datetime-local"]:focus,
+.admin-card select:focus, .admin-card textarea:focus {
     border-color: var(--primary-color) !important;
     outline: none !important;
     box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1) !important;
 }
 
-/* Labels */
-.form-row label, label {
+/* Labels - apenas dentro de forms admin */
+#main .form-row label, #main label,
+.admin-card label, .module label {
     color: var(--text-primary) !important;
     font-weight: 500 !important;
     margin-bottom: 5px !important;
 }
 
-/* Help text */
-.help, .helptext {
+/* Help text - apenas admin */
+#main .help, #main .helptext,
+.admin-card .help, .admin-card .helptext {
     color: var(--text-secondary) !important;
     font-size: 0.875rem !important;
 }
@@ -167,28 +300,32 @@ select:focus, textarea:focus {
    PAGE TITLES AND CONTENT
    ================================ */
 
-/* Page titles */
-#content h1 {
+/* Page titles - apenas dentro do admin */
+#main h1, #content h1 {
     color: var(--text-primary) !important;
     font-weight: 600 !important;
     margin-bottom: 20px !important;
     font-size: 28px !important;
 }
 
-#content h2 {
+#main h2, #content h2 {
     color: var(--text-primary) !important;
     font-weight: 500 !important;
     margin-bottom: 15px !important;
     font-size: 20px !important;
 }
 
-/* Links */
-a:link, a:visited {
+/* Links - apenas dentro do conteúdo admin */
+#main a:link, #main a:visited,
+.admin-card a:link, .admin-card a:visited,
+.module a:link, .module a:visited {
     color: var(--primary-color) !important;
     text-decoration: none !important;
 }
 
-a:hover {
+#main a:hover,
+.admin-card a:hover,
+.module a:hover {
     color: var(--primary-dark) !important;
 }
 
@@ -254,6 +391,10 @@ a:hover {
     margin: 0 !important;
     font-size: 16px !important;
     font-weight: 600 !important;
+}
+
+.module h2 * {
+    color: white !important;
 }
 
 .module table {
