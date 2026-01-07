@@ -21,9 +21,11 @@
                     <p class="text-muted mb-0 small">Gerenciar transportes e transfers</p>
                 </div>
             </div>
+            {% if perms.servicos.add_transfer %}
             <a href="{% url 'servicos:transfer_create' %}" class="btn btn-primary btn-lg">
                 <i class="bi bi-plus-circle me-2"></i>Novo Transfer
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -75,12 +77,16 @@
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm" role="group">
+                                        {% if perms.servicos.change_transfer %}
                                         <a href="{% url 'servicos:transfer_edit' transfer.id %}" class="btn btn-info btn-sm" title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        {% endif %}
+                                        {% if perms.servicos.delete_transfer %}
                                         <a href="{% url 'servicos:transfer_delete' transfer.id %}" class="btn btn-danger btn-sm" title="Excluir">
                                             <i class="bi bi-trash"></i>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -123,12 +129,16 @@
                                     <div class="fw-600 text-success">R$ {{ transfer.valor }}</div>
                                 </div>
                                 <div class="btn-group w-100" role="group">
+                                    {% if perms.servicos.change_transfer %}
                                     <a href="{% url 'servicos:transfer_edit' transfer.id %}" class="btn btn-info btn-sm">
                                         <i class="bi bi-pencil me-1"></i>Editar
                                     </a>
+                                    {% endif %}
+                                    {% if perms.servicos.delete_transfer %}
                                     <a href="{% url 'servicos:transfer_delete' transfer.id %}" class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash me-1"></i>Excluir
                                     </a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
