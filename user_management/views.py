@@ -575,6 +575,10 @@ def permissions_manage(request, pk):
     """
     Gerenciar permissões de um usuário específico.
     Apenas admin principal pode usar esta interface avançada.
+    
+    Implementa hierarquia:
+    - Permissões diretas do usuário (sobrescrevem grupos)
+    - Permissões herdadas dos grupos
     """
     
     user = get_object_or_404(User, pk=pk)
@@ -635,18 +639,45 @@ def permissions_manage(request, pk):
     # Grupos disponíveis para o usuário atual
     available_groups = get_allowed_groups_for_user(request.user)
     
+    # Calcular permissões do usuário:
+    # - Diretas: são aquelas atribuídas especificamente ao usuário
+    # - Herdadas: são aquelas que vêm de grupos
+    user_direct_permissions = user.user_permissions.all()
+    user_group_permissions = Permission.objects.filter(group__user=user).distinct()
+    user_all_permissions = user.get_all_permissions()  # Inclui grupo + diretas
+    
+    # Criar estrutura para mostrar origem das permissões
+    permissions_with_source = {}
+    for permission in Permission.objects.select_related('content_type'):
+        perm_id = permission.id
+        perm_string = f"{permission.content_type.app_label}.{permission.codename}"
+        
+        # Determinar origem da permissão
+        is_direct = permission in user_direct_permissions
+        is_from_group = permission in user_group_permissions
+        
+        permissions_with_source[perm_id] = {
+            'permission': permission,
+            'is_direct': is_direct,
+            'is_from_group': is_from_group,
+            'origin': 'Usuário' if is_direct else ('Grupo' if is_from_group else 'Nenhuma'),
+        }
+    
     # Converter IDs para strings para comparação em template
-    user_permissions_ids_str = [str(pid) for pid in user.user_permissions.values_list('pk', flat=True)]
+    user_direct_perms_ids_str = [str(pid) for pid in user_direct_permissions.values_list('pk', flat=True)]
+    user_group_perms_ids_str = [str(pid) for pid in user_group_permissions.values_list('pk', flat=True)]
     user_groups_ids_str = [str(gid) for gid in user.groups.values_list('pk', flat=True)]
     
     context = {
         'user_obj': user,
         'permissions_by_app': permissions_by_app,
         'all_groups': available_groups,
-        'user_permissions': user.user_permissions.all(),
+        'user_permissions': user_direct_permissions,
         'user_groups': user.groups.all(),
-        'user_permissions_ids': user_permissions_ids_str,
+        'user_permissions_ids': user_direct_perms_ids_str,
+        'user_group_permissions_ids': user_group_perms_ids_str,
         'user_groups_ids': user_groups_ids_str,
+        'permissions_with_source': permissions_with_source,
         'current_user_level': get_user_level_display(request.user),
     }
     

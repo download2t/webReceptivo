@@ -1,5 +1,6 @@
 {% extends 'base/base.html' %}
 {% load static %}
+{% load servicos_filters %}
 
 {% block title %}Gerenciar Permissões - {{ user_obj.username }} - {{ block.super }}{% endblock %}
 
@@ -43,27 +44,39 @@
                         <form method="post" class="permissions-form">
                             {% csrf_token %}
                             
+                            <!-- Hierarquia de Permissões -->
+                            <div class="alert alert-info border-0 mb-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Hierarquia de Permissões:</strong> 
+                                <span class="badge bg-success">Usuário</span> sobrescreve 
+                                <span class="badge bg-warning">Grupo</span>
+                            </div>
+                            
                             <!-- Grupos de Usuário -->
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <h6 class="text-muted mb-3">
                                         <i class="bi bi-people-fill me-2"></i>Grupos de Usuário
+                                        <small class="text-muted">(Ao selecionar um grupo, suas permissões serão mostradas abaixo)</small>
                                     </h6>
                                     <div class="row">
                                         {% for group in all_groups %}
                                             <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           name="groups" value="{{ group.id }}" 
+                                                <div class="form-check p-2 rounded border {% if group.id|stringformat:"s" in user_groups_ids %}border-success bg-success-subtle{% else %}border-secondary-subtle{% endif %}">
+                                                    <input class="form-check-input group-checkbox" 
+                                                           type="checkbox" 
+                                                           name="groups" 
+                                                           value="{{ group.id }}" 
                                                            id="group_{{ group.id }}"
+                                                           data-group-id="{{ group.id }}"
                                                            {% if group.id|stringformat:"s" in user_groups_ids %}checked{% endif %}>
-                                                    <label class="form-check-label d-flex align-items-center" for="group_{{ group.id }}">
+                                                    <label class="form-check-label d-block" for="group_{{ group.id }}">
                                                         <strong>{{ group.name }}</strong>
                                                         <span class="badge bg-secondary ms-2">{{ group.permissions.count }}</span>
+                                                        <small class="text-muted d-block mt-1">
+                                                            {{ group.permissions.count }} permissão{{ group.permissions.count|pluralize:"ões" }}
+                                                        </small>
                                                     </label>
-                                                    <small class="text-muted d-block">
-                                                        {{ group.permissions.count }} permissão{{ group.permissions.count|pluralize:"ões" }}
-                                                    </small>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -73,12 +86,12 @@
 
                             <hr>
 
-                            <!-- Permissões Diretas -->
+                            <!-- Permissões -->
                             <div class="row">
                                 <div class="col-12">
                                     <h6 class="text-muted mb-3">
-                                        <i class="bi bi-key-fill me-2"></i>Permissões Diretas
-                                        <small class="text-muted">(Concedidas especificamente para este usuário)</small>
+                                        <i class="bi bi-key-fill me-2"></i>Permissões
+                                        <small class="text-muted">(Diretas ou herdadas de grupos)</small>
                                     </h6>
                                     
                                     <div class="accordion" id="permissionsAccordion">
@@ -101,20 +114,36 @@
                                                     <div class="accordion-body">
                                                         <div class="row">
                                                             {% for permission in permissions %}
+                                                                {% with source=permissions_with_source|get_item:permission.id %}
                                                                 <div class="col-lg-4 col-md-6 mb-3">
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" 
+                                                                    <div class="form-check p-2 rounded border {% if source.is_direct %}border-success bg-success-subtle{% elif source.is_from_group %}border-warning bg-warning-subtle{% else %}border-secondary-subtle{% endif %}" 
+                                                                         data-perm-id="{{ permission.id }}"
+                                                                         data-perm-origin="{{ source.origin }}">
+                                                                        <input class="form-check-input permission-checkbox" 
                                                                                type="checkbox" 
                                                                                name="user_permissions" 
                                                                                value="{{ permission.id }}" 
                                                                                id="perm_{{ permission.id }}"
-                                                                               {% if permission.id|stringformat:"s" in user_permissions_ids %}checked{% endif %}>
-                                                                        <label class="form-check-label" for="perm_{{ permission.id }}">
-                                                                            <strong>{{ permission.name }}</strong><br>
-                                                                            <small class="text-muted">{{ permission.codename }}</small>
+                                                                               data-origin="{{ source.origin }}"
+                                                                               {% if permission.id|stringformat:"s" in user_permissions_ids or permission.id|stringformat:"s" in user_group_permissions_ids %}checked{% endif %}>
+                                                                        <label class="form-check-label w-100" for="perm_{{ permission.id }}">
+                                                                            <div class="d-flex align-items-start justify-content-between gap-2">
+                                                                                <div>
+                                                                                    <strong>{{ permission.name }}</strong><br>
+                                                                                    <small class="text-muted">{{ permission.codename }}</small>
+                                                                                </div>
+                                                                                <div class="text-nowrap">
+                                                                                    {% if source.is_direct %}
+                                                                                    <span class="badge bg-success">Usuário</span>
+                                                                                    {% elif source.is_from_group %}
+                                                                                    <span class="badge bg-warning">Grupo</span>
+                                                                                    {% endif %}
+                                                                                </div>
+                                                                            </div>
                                                                         </label>
                                                                     </div>
                                                                 </div>
+                                                                {% endwith %}
                                                             {% endfor %}
                                                         </div>
                                                     </div>
@@ -152,20 +181,81 @@
 </div>
 
 <script>
-// Funções auxiliares para gerenciar seleções
+// Objeto para armazenar permissões de grupos
+const groupPermissions = {
+    {% for group in all_groups %}
+    "{{ group.id }}": [{% for perm in group.permissions.all %}"{{ perm.id }}"{{ not forloop.last|yesno:",," }}{% endfor %}],
+    {% endfor %}
+};
+
+// Ao marcar/desmarcar grupos, atualizar permissões
+document.querySelectorAll('.group-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        updatePermissionsFromGroups();
+        updateCheckboxVisualFeedback();
+    });
+});
+
+// Ao marcar/desmarcar permissões individuais, atualizar feedback visual
+document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        updateCheckboxVisualFeedback();
+    });
+});
+
+function updatePermissionsFromGroups() {
+    // Coletar todas as permissões dos grupos selecionados
+    const selectedGroupIds = Array.from(document.querySelectorAll('.group-checkbox:checked'))
+        .map(cb => cb.getAttribute('data-group-id'));
+    
+    const groupPerms = new Set();
+    selectedGroupIds.forEach(groupId => {
+        if (groupPermissions[groupId]) {
+            groupPermissions[groupId].forEach(permId => {
+                groupPerms.add(permId);
+            });
+        }
+    });
+    
+    // Atualizar checkboxes com visual de "Grupo"
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        const permId = checkbox.value;
+        if (groupPerms.has(permId) && !checkbox.checked) {
+            // Marcar automaticamente se vem de grupo selecionado
+            checkbox.checked = true;
+            checkbox.dataset.origin = 'Grupo';
+        }
+    });
+}
+
+function updateCheckboxVisualFeedback() {
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        const container = checkbox.closest('[data-perm-id]');
+        if (checkbox.checked) {
+            container.classList.add('border-success', 'bg-success-subtle');
+            container.classList.remove('border-secondary-subtle');
+        } else {
+            container.classList.remove('border-success', 'bg-success-subtle');
+            container.classList.add('border-secondary-subtle');
+        }
+    });
+}
+
+// Funções auxiliares
 function selectAllGroups() {
-    const groupCheckboxes = document.querySelectorAll('input[name="groups"]');
-    groupCheckboxes.forEach(checkbox => {
+    document.querySelectorAll('.group-checkbox').forEach(checkbox => {
         checkbox.checked = true;
     });
+    updatePermissionsFromGroups();
+    updateCheckboxVisualFeedback();
 }
 
 function clearAllSelections() {
     if (confirm('Tem certeza que deseja limpar todas as seleções?')) {
-        const allCheckboxes = document.querySelectorAll('.permissions-form input[type="checkbox"]');
-        allCheckboxes.forEach(checkbox => {
+        document.querySelectorAll('.permissions-form input[type="checkbox"]').forEach(checkbox => {
             checkbox.checked = false;
         });
+        updateCheckboxVisualFeedback();
     }
 }
 
@@ -174,32 +264,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.permissions-form');
     if (form) {
         form.addEventListener('submit', function(e) {
-            const checkedGroups = document.querySelectorAll('input[name="groups"]:checked').length;
-            const checkedPermissions = document.querySelectorAll('input[name="user_permissions"]:checked').length;
+            const checkedGroups = document.querySelectorAll('.group-checkbox:checked').length;
+            const checkedPermissions = document.querySelectorAll('.permission-checkbox:checked').length;
             
             const message = `Confirmar alterações de permissões:\n\n` +
                           `• ${checkedGroups} grupo(s) selecionado(s)\n` +
-                          `• ${checkedPermissions} permissão(ões) direta(s)\n\n` +
+                          `• ${checkedPermissions} permissão(ões)\n\n` +
                           `Deseja continuar?`;
             
             if (!confirm(message)) {
                 e.preventDefault();
             }
         });
-    }
-});
-
-// Destacar mudanças
-document.addEventListener('change', function(e) {
-    if (e.target.type === 'checkbox') {
-        const parent = e.target.closest('.form-check');
-        if (parent) {
-            if (e.target.checked) {
-                parent.classList.add('bg-success-subtle');
-            } else {
-                parent.classList.remove('bg-success-subtle');
-            }
-        }
     }
 });
 </script>
