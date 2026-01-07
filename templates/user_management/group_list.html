@@ -186,10 +186,12 @@
             </div>
 
             <div class="group-card-footer">
+                {% if group.can_view %}
                 <a href="{% url 'user_management:group_detail' group.pk %}" 
                    class="btn btn-info btn-sm flex-grow-1">
                     <i class="bi bi-eye me-1"></i>Ver
                 </a>
+                {% endif %}
                 
                 {% if group.can_edit or group.can_delete %}
                 <div class="btn-group btn-group-sm" role="group">
@@ -324,20 +326,20 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="p-3 bg-info bg-opacity-10 rounded-3 border border-info border-opacity-25 h-100">
-                    <p class="small text-muted mb-2">
-                        <i class="bi bi-shield-check me-2 text-info"></i><strong>Grupos Protegidos</strong>
+                    <p class="small mb-2">
+                        <i class="bi bi-shield-check me-2 text-info"></i><strong class="text-body">Grupos Protegidos</strong>
                     </p>
-                    <p class="small text-dark mb-0">
+                    <p class="small mb-0 text-body">
                         São grupos básicos do sistema que não podem ser deletados. Geralmente incluem Administrador e Gerenciador.
                     </p>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="p-3 bg-warning bg-opacity-10 rounded-3 border border-warning border-opacity-25 h-100">
-                    <p class="small text-muted mb-2">
-                        <i class="bi bi-gear me-2 text-warning"></i><strong>Gerenciar Permissões</strong>
+                    <p class="small mb-2">
+                        <i class="bi bi-gear me-2 text-warning"></i><strong class="text-body">Gerenciar Permissões</strong>
                     </p>
-                    <p class="small text-dark mb-0">
+                    <p class="small mb-0 text-body">
                         As permissões definem quais ações (visualizar, criar, editar, deletar) cada grupo pode realizar no sistema.
                     </p>
                 </div>

@@ -1,7 +1,7 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Gerenciamento de Usuários - WebReceptivo{% endblock %}
+{% block title %}Gerenciamento de Usuários - WebRoteiros{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/users.css' %}">
@@ -347,10 +347,12 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
+                                    {% if perms.auth.view_user %}
                                     <a href="{% url 'user_management:user_detail' user.pk %}" 
                                        class="btn btn-info" title="Ver Detalhes">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    {% endif %}
                                     {% if perms.auth.change_user %}
                                     <a href="{% url 'user_management:user_edit' user.pk %}" 
                                        class="btn btn-warning" title="Editar">
@@ -442,10 +444,12 @@
 
                         <div class="user-card-footer">
                             <div class="btn-group w-100" role="group">
+                                {% if perms.auth.view_user %}
                                 <a href="{% url 'user_management:user_detail' user.pk %}" 
                                    class="btn btn-info btn-sm" title="Ver">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                {% endif %}
                                 {% if perms.auth.change_user %}
                                 <a href="{% url 'user_management:user_edit' user.pk %}" 
                                    class="btn btn-warning btn-sm" title="Editar">

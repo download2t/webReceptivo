@@ -132,6 +132,6 @@ admin.site.register(User, CustomUserAdmin)
 admin.site.register(Group, CustomGroupAdmin)
 
 # Personalizar títulos do admin
-admin.site.site_header = 'WebReceptivo - Administração'
-admin.site.site_title = 'WebReceptivo Admin'
+admin.site.site_header = 'WebRoteiros - Administração'
+admin.site.site_title = 'WebRoteiros Admin'
 admin.site.index_title = 'Painel de Administração'

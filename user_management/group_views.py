@@ -15,7 +15,7 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from .permission_helpers import (
     can_access_user_management, get_user_level, get_user_level_display,
-    can_manage_group, can_create_group, can_edit_group, can_delete_group,
+    can_manage_group, can_create_group, can_view_group, can_edit_group, can_delete_group,
     can_assign_permission_to_group, get_manageable_groups_queryset,
     validate_group_form_submission, is_protected_group
 )
@@ -179,6 +179,7 @@ def group_list(request):
     
     # Adicionar informações de permissão para cada grupo
     for group in groups_page:
+        group.can_view = can_view_group(request.user, group)
         group.can_edit = can_edit_group(request.user, group)
         group.can_delete = can_delete_group(request.user, group)
         group.is_protected = is_protected_group(group)

@@ -8,8 +8,8 @@ from django.contrib import admin
 class WebReceptivoAdminSite(admin.AdminSite):
     """Custom Admin Site with additional styling"""
     
-    site_header = "WebReceptivo Admin"
-    site_title = "WebReceptivo Admin"
+    site_header = "WebRoteiros Admin"
+    site_title = "WebRoteiros Admin"
     index_title = "Painel Administrativo"
     
     class Media:

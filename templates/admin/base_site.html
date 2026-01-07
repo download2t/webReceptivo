@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-{% block title %}{{ title }} | {{ site_title|default:_('WebReceptivo Admin') }}{% endblock %}
+{% block title %}{{ title }} | {{ site_title|default:_('WebRoteiros Admin') }}{% endblock %}
 
 {% block extrastyle %}
     {{ block.super }}
@@ -13,7 +13,7 @@
 {% block branding %}
 <h1 id="site-name">
     <a href="{% url 'admin:index' %}">
-        <i class="bi bi-building me-2"></i>WebReceptivo Admin
+        <i class="bi bi-building me-2"></i>WebRoteiros Admin
     </a>
 </h1>
 {% endblock %}

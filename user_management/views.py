@@ -638,6 +638,16 @@ def permissions_manage(request, pk):
     
     # Grupos disponíveis para o usuário atual
     available_groups = get_allowed_groups_for_user(request.user)
+
+    # Presets de permissões baseados nos grupos padrão
+    preset_group_names = ['Administradores', 'Gerentes', 'Operadores', 'Usuários Básicos']
+    role_presets = {}
+    for preset_name in preset_group_names:
+        preset_group = Group.objects.filter(name=preset_name).first()
+        if preset_group:
+            role_presets[preset_name] = [str(pid) for pid in preset_group.permissions.values_list('pk', flat=True)]
+        else:
+            role_presets[preset_name] = []
     
     # Calcular permissões do usuário:
     # - Diretas: são aquelas atribuídas especificamente ao usuário
@@ -678,6 +688,7 @@ def permissions_manage(request, pk):
         'user_group_permissions_ids': user_group_perms_ids_str,
         'user_groups_ids': user_groups_ids_str,
         'permissions_with_source': permissions_with_source,
+        'role_presets': role_presets,
         'current_user_level': get_user_level_display(request.user),
     }
     

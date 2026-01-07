@@ -488,6 +488,14 @@ def can_manage_group(current_user, group):
     return False
 
 
+def can_view_group(current_user, group):
+    """
+    Verifica se o usuário atual pode visualizar detalhes de um grupo específico.
+    """
+    # Mesma lógica de can_manage_group - se pode gerenciar, pode visualizar
+    return can_manage_group(current_user, group)
+
+
 def can_create_group(current_user):
     """
     Verifica se o usuário atual pode criar novos grupos.

@@ -1,4 +1,4 @@
-// WebReceptivo - Custom JavaScript
+// WebRoteiros - Custom JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTheme();
     initializeNavigation();
     
-    console.log('WebReceptivo initialized successfully');
+    console.log('WebRoteiros initialized successfully');
 });
 
 /**
@@ -363,7 +363,7 @@ function initializeNavigation() {
 }
 
 // Export functions for use in other scripts
-window.WebReceptivo = {
+window.WebRoteiros = {
     showNotification,
     scrollToElement,
     formatCurrency,

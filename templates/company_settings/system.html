@@ -135,7 +135,7 @@
                         <div class="preview-item">
                             <h6>Nome do Sistema</h6>
                             <p id="systemNamePreview" class="preview-value">
-                                {{ form.instance.system_name|default:"WebReceptivo" }}
+                                {{ form.instance.system_name|default:"WebRoteiros" }}
                             </p>
                         </div>
                         
@@ -319,7 +319,7 @@
         // System name preview
         systemNameField.addEventListener('input', function() {
             document.getElementById('systemNamePreview').textContent = 
-                this.value || 'WebReceptivo';
+                this.value || 'WebRoteiros';
         });
 
         // Language preview
@@ -438,7 +438,7 @@ Data/Hora Atual: ${data.datetime}
             document.getElementById('systemForm').reset();
             
             // Reset previews
-            document.getElementById('systemNamePreview').textContent = 'WebReceptivo';
+            document.getElementById('systemNamePreview').textContent = 'WebRoteiros';
             document.getElementById('languagePreview').textContent = 'Português (Brasil)';
             document.getElementById('timezonePreview').textContent = 'America/Sao_Paulo';
             updateFormatExamples();
