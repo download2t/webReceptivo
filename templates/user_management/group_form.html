@@ -137,12 +137,13 @@
                         {% for permission in app_group.list %}
                         <div class="permission-checkbox">
                             <label class="form-check-label d-flex align-items-start">
+                                <!-- Debug: permission.pk={{ permission.pk }}, form.permissions.value={{ form.permissions.value }} -->
                                 <input type="checkbox" 
                                        name="{{ form.permissions.name }}" 
                                        value="{{ permission.pk }}"
                                        class="form-check-input mt-1 me-2 permission-cb"
                                        data-app="{{ app_group.grouper }}"
-                                       {% if permission.pk|stringformat:"s" in form.permissions.value %}checked{% endif %}>
+                                       {% if permission.pk in form.permissions.value or permission.pk|stringformat:"s" in form.permissions.value %}checked{% endif %}>
                                 <div>
                                     <div class="fw-medium">{{ permission.name }}</div>
                                     <small class="text-muted">{{ permission.codename }}</small>

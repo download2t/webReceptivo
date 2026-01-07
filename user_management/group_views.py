@@ -71,6 +71,13 @@ class GroupManagementForm(forms.ModelForm):
         # Filtrar permissões disponíveis baseado no usuário atual
         if self.current_user:
             available_permissions = self.get_available_permissions()
+            
+            # Se estiver editando, incluir permissões atuais do grupo mesmo que não sejam "disponíveis"
+            # Isso garante que as permissões já atribuídas apareçam no formulário
+            if self.is_editing and self.instance and self.instance.pk:
+                current_perms = self.instance.permissions.all()
+                available_permissions = available_permissions | Permission.objects.filter(pk__in=current_perms.values_list('pk'))
+            
             self.fields['permissions'].queryset = available_permissions
             
         # Proteção para grupos especiais

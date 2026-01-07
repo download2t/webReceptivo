@@ -635,14 +635,18 @@ def permissions_manage(request, pk):
     # Grupos disponíveis para o usuário atual
     available_groups = get_allowed_groups_for_user(request.user)
     
+    # Converter IDs para strings para comparação em template
+    user_permissions_ids_str = [str(pid) for pid in user.user_permissions.values_list('pk', flat=True)]
+    user_groups_ids_str = [str(gid) for gid in user.groups.values_list('pk', flat=True)]
+    
     context = {
         'user_obj': user,
         'permissions_by_app': permissions_by_app,
         'all_groups': available_groups,
         'user_permissions': user.user_permissions.all(),
         'user_groups': user.groups.all(),
-        'user_permissions_ids': list(user.user_permissions.values_list('pk', flat=True)),
-        'user_groups_ids': list(user.groups.values_list('pk', flat=True)),
+        'user_permissions_ids': user_permissions_ids_str,
+        'user_groups_ids': user_groups_ids_str,
         'current_user_level': get_user_level_display(request.user),
     }
     
