@@ -325,6 +325,9 @@ def ordem_servico_list(request):
     
     categorias = Categoria.objects.filter(ativo=True)
     
+    # Debug: Verificar permissões do usuário
+    has_add_perm = request.user.has_perm('servicos.add_ordemservico')
+    
     context = {
         'ordens': ordens,
         'categorias': categorias,
@@ -333,7 +336,8 @@ def ordem_servico_list(request):
         'categoria_filter': categoria_id,
         'data_inicio': data_inicio,
         'data_fim': data_fim,
-        'title': 'Ordens de Serviço'
+        'title': 'Ordens de Serviço',
+        'debug_has_add_perm': has_add_perm,  # Debug
     }
     return render(request, 'servicos/os/ordem_servico_list.html', context)
 

@@ -21,6 +21,8 @@
                 <a href="{% url 'servicos:ordem_servico_create' %}" class="btn btn-primary btn-lg">
                     <i class="bi bi-plus-circle me-2"></i>Nova OS
                 </a>
+                {% else %}
+                <!-- Debug: perms.servicos.add_ordemservico={{ perms.servicos.add_ordemservico }}, debug_has_add_perm={{ debug_has_add_perm }} -->
                 {% endif %}
             </div>
 
