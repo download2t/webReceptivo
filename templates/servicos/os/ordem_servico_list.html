@@ -17,9 +17,11 @@
                     <h1 class="mb-1 fw-700">{{ title }}</h1>
                     <p class="text-muted mb-0 small">Gerencie todas as ordens de serviço</p>
                 </div>
+                {% if perms.servicos.add_ordemservico %}
                 <a href="{% url 'servicos:ordem_servico_create' %}" class="btn btn-primary btn-lg">
                     <i class="bi bi-plus-circle me-2"></i>Nova OS
                 </a>
+                {% endif %}
             </div>
 
             <div class="card shadow-sm border-0">
@@ -205,12 +207,16 @@
                                                 <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Detalhes">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
+                                                {% if perms.servicos.change_ordemservico %}
                                                 <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
+                                                {% endif %}
+                                                {% if perms.servicos.delete_ordemservico %}
                                                 <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </a>
+                                                {% endif %}
                                             </div>
                                             {% endif %}
                                             {% endwith %}
@@ -297,12 +303,16 @@
                                     <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm">
                                         <i class="bi bi-eye me-1"></i>Detalhes
                                     </a>
+                                    {% if perms.servicos.change_ordemservico %}
                                     <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm">
                                         <i class="bi bi-pencil me-1"></i>Editar
                                     </a>
+                                    {% endif %}
+                                    {% if perms.servicos.delete_ordemservico %}
                                     <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash me-1"></i>Excluir
                                     </a>
+                                    {% endif %}
                                 </div>
                                 {% endif %}
                             </div>

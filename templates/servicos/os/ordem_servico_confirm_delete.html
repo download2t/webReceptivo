@@ -130,9 +130,15 @@
                             <div class="col-md-6">
                                 <form method="post" class="m-0">
                                     {% csrf_token %}
+                                    {% if perms.servicos.delete_ordemservico %}
                                     <button type="submit" class="btn btn-danger w-100 btn-lg">
                                         <i class="bi bi-trash3 me-2"></i>Confirmar Exclusão
                                     </button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-danger w-100 btn-lg" disabled>
+                                        <i class="bi bi-ban me-2"></i>Sem permissão para excluir
+                                    </button>
+                                    {% endif %}
                                 </form>
                             </div>
                         </div>

@@ -220,9 +220,27 @@
                         <button type="button" class="btn btn-outline-success" id="btnCopiarRoteiro">
                             <i class="bi bi-clipboard me-2"></i>Copiar Roteiro
                         </button>
-                        <button type="button" class="btn btn-primary btn-lg" id="btnSalvarOS">
-                            <i class="bi bi-save me-2"></i>{% if editando %}Atualizar{% else %}Salvar{% endif %} Lançamento
-                        </button>
+                        {% if editando %}
+                            {% if perms.servicos.change_ordemservico %}
+                            <button type="button" class="btn btn-primary btn-lg" id="btnSalvarOS">
+                                <i class="bi bi-save me-2"></i>Atualizar Lançamento
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-primary btn-lg" id="btnSalvarOS" disabled>
+                                <i class="bi bi-ban me-2"></i>Sem permissão para atualizar
+                            </button>
+                            {% endif %}
+                        {% else %}
+                            {% if perms.servicos.add_ordemservico %}
+                            <button type="button" class="btn btn-primary btn-lg" id="btnSalvarOS">
+                                <i class="bi bi-save me-2"></i>Salvar Lançamento
+                            </button>
+                            {% else %}
+                            <button type="button" class="btn btn-primary btn-lg" id="btnSalvarOS" disabled>
+                                <i class="bi bi-ban me-2"></i>Sem permissão para salvar
+                            </button>
+                            {% endif %}
+                        {% endif %}
                         <a href="{% url 'servicos:ordem_servico_list' %}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle me-2"></i>Cancelar
                         </a>
