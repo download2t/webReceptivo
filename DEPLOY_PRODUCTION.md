@@ -306,6 +306,37 @@ Abrir: `http://mydevsystem.site/admin/`
 
 ---
 
+## 👥 SISTEMA DE PERMISSÕES E GRUPOS
+
+O sistema possui 4 níveis de acesso:
+
+### 🔷 Administradores (Controle Total)
+- ✅ Gerenciar usuários e grupos
+- ✅ CRUD completo de TUDO (categorias, serviços, transfers, tipos meia, ordens)
+
+### 🔶 Gerentes (Gestão Operacional)
+- ✅ Criar e editar usuários (não pode gerenciar grupos)
+- ✅ CRUD completo de categorias, serviços, transfers, tipos meia, ordens
+
+### 🔹 Operadores (Foco em Ordens de Serviço)
+- ✅ CRUD completo de Ordens de Serviço
+- 👁️ Apenas VISUALIZAR: categorias, serviços, transfers, tipos meia
+- ❌ NÃO pode editar ou excluir cadastros
+- ❌ NÃO pode acessar área de usuários (`/users/` retorna 403 Forbidden)
+
+### 🔘 Usuários Básicos (Apenas Consulta)
+- 👁️ Apenas VISUALIZAR: serviços e ordens de serviço
+- ❌ NÃO pode criar, editar ou excluir NADA
+
+**Ver detalhes completos:** [docs/GUIA_GRUPOS.md](docs/GUIA_GRUPOS.md)
+
+**Atualizar permissões:**
+```bash
+python manage_production.py setup_groups
+```
+
+---
+
 ## 📦 ATUALIZAR APLICAÇÃO (Deploy de Novas Alterações)
 
 Sempre que houver alterações no código, execute os comandos na sequência:
