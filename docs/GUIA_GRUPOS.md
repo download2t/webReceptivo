@@ -1,251 +1,256 @@
-# Guia de Utilização - Sistema de Grupos/Cargos
+# 📋 Guia de Grupos e Permissões - WebReceptivo
 
-## 🎯 **O que foi Implementado**
+## 🎯 Visão Geral
 
-### ✅ **Sistema Completo de Gerenciamento de Grupos**
+O sistema WebReceptivo possui 4 níveis de permissões, organizados em grupos:
 
-1. **CRUD Completo de Grupos via Interface Web**
-   - ✅ Criar novos grupos/cargos personalizados
-   - ✅ Editar grupos existentes (nome e permissões)
-   - ✅ Visualizar detalhes completos dos grupos
-   - ✅ Excluir grupos (com proteções de segurança)
+1. **Administradores** - Controle total do sistema
+2. **Gerentes** - Gestão operacional completa  
+3. **Operadores** - Foco em ordens de serviço
+4. **Usuários Básicos** - Apenas consulta
 
-2. **Interface Rica e Intuitiva**
-   - ✅ Lista visual com cards informativos
-   - ✅ Formulário avançado com seleção de permissões
-   - ✅ Navegação integrada entre Usuários ↔ Grupos
-   - ✅ Filtros e busca por nome de grupo
+---
 
-3. **Sistema de Permissões Hierárquico para Grupos**
-   - ✅ Admin Principal: Controle total
-   - ✅ Administradores: Gerenciam grupos não-administrativos
-   - ✅ Gerentes: Criam grupos personalizados com permissões limitadas
-   - ✅ Operadores/Usuários: Sem acesso ao gerenciamento
+## 📊 Tabela de Permissões
 
-4. **Proteções de Segurança Avançadas**
-   - ✅ Grupos protegidos não podem ser excluídos
-   - ✅ Validação de permissões antes de atribuir
-   - ✅ Confirmação dupla para exclusões
-   - ✅ Visualização de impacto nos usuários
+| Funcionalidade | Administradores | Gerentes | Operadores | Usuários Básicos |
+|---|:---:|:---:|:---:|:---:|
+| **Usuários** | | | | |
+| Visualizar usuários | ✅ | ✅ | ❌ | ❌ |
+| Criar usuários | ✅ | ✅ | ❌ | ❌ |
+| Editar usuários | ✅ | ✅ | ❌ | ❌ |
+| Gerenciar grupos | ✅ | 👁️ Ver | ❌ | ❌ |
+| **Categorias** | | | | |
+| Visualizar | ✅ | ✅ | 👁️ Ver | ❌ |
+| Criar | ✅ | ✅ | ❌ | ❌ |
+| Editar | ✅ | ✅ | ❌ | ❌ |
+| Excluir | ✅ | ✅ | ❌ | ❌ |
+| **Serviços** | | | | |
+| Visualizar | ✅ | ✅ | 👁️ Ver | 👁️ Ver |
+| Criar | ✅ | ✅ | ❌ | ❌ |
+| Editar | ✅ | ✅ | ❌ | ❌ |
+| Excluir | ✅ | ✅ | ❌ | ❌ |
+| **Transfers** | | | | |
+| Visualizar | ✅ | ✅ | 👁️ Ver | ❌ |
+| Criar | ✅ | ✅ | ❌ | ❌ |
+| Editar | ✅ | ✅ | ❌ | ❌ |
+| Excluir | ✅ | ✅ | ❌ | ❌ |
+| **Tipos de Meia Entrada** | | | | |
+| Visualizar | ✅ | ✅ | 👁️ Ver | ❌ |
+| Criar | ✅ | ✅ | ❌ | ❌ |
+| Editar | ✅ | ✅ | ❌ | ❌ |
+| Excluir | ✅ | ✅ | ❌ | ❌ |
+| **Ordens de Serviço** | | | | |
+| Visualizar | ✅ | ✅ | ✅ | 👁️ Ver |
+| Criar | ✅ | ✅ | ✅ | ❌ |
+| Editar | ✅ | ✅ | ✅ | ❌ |
+| Excluir | ✅ | ✅ | ✅ | ❌ |
 
-## 🚀 **Como Usar o Sistema**
+**Legenda:**
+- ✅ = Acesso completo (CRUD)
+- 👁️ Ver = Apenas visualização (read-only)
+- ❌ = Sem acesso
 
-### **1. Acessando o Gerenciamento de Grupos**
+---
 
+## 🔷 ADMINISTRADORES
+
+**Papel:** Controle total do sistema
+
+### ✅ Permissões Completas:
+- Gerenciar usuários (criar, editar, visualizar, atribuir grupos)
+- Gerenciar grupos de permissões
+- CRUD completo de todas as entidades:
+  - Categorias
+  - Serviços
+  - Transfers
+  - Tipos de Meia Entrada
+  - Ordens de Serviço
+
+### 🎯 Uso Recomendado:
+- Proprietário/Sócio da empresa
+- Responsável de TI
+- Gerente Geral
+
+---
+
+## 🔶 GERENTES
+
+**Papel:** Gestão operacional completa
+
+### ✅ Pode:
+- Criar e editar usuários
+- Visualizar grupos (não pode criar ou modificar grupos)
+- CRUD completo de:
+  - Categorias
+  - Serviços
+  - Transfers
+  - Tipos de Meia Entrada
+  - Ordens de Serviço
+
+### ❌ Não Pode:
+- Criar ou editar grupos de permissões
+
+### 🎯 Uso Recomendado:
+- Gerente de operações
+- Supervisor
+- Coordenador
+
+---
+
+## 🔹 OPERADORES
+
+**Papel:** Foco em criar e gerenciar ordens de serviço
+
+### ✅ Pode:
+- **Ordens de Serviço:** CRUD completo (criar, editar, excluir)
+- **Lançamentos de Serviço:** CRUD completo
+- **Transfers em OS:** CRUD completo
+
+### 👁️ Pode Visualizar (somente leitura):
+- Categorias
+- Serviços
+- Transfers
+- Tipos de Meia Entrada
+
+### ❌ Não Pode:
+- Ver, criar ou editar usuários (https://mydevsystem.site/users/ retorna 403 Forbidden)
+- Editar ou excluir cadastros (categorias, serviços, transfers, tipos de meia)
+
+### 🎯 Uso Recomendado:
+- Atendente
+- Vendedor
+- Operador de sistema
+
+---
+
+## 🔘 USUÁRIOS BÁSICOS
+
+**Papel:** Apenas consulta de informações
+
+### 👁️ Pode Visualizar:
+- Serviços
+- Ordens de Serviço
+- Lançamentos em Ordens de Serviço
+
+### ❌ Não Pode:
+- Criar, editar ou excluir NADA
+- Ver usuários
+- Ver categorias, transfers ou tipos de meia entrada
+
+### 🎯 Uso Recomendado:
+- Estagiário
+- Visualizador
+- Auditoria/Relatórios
+
+---
+
+## 🚀 Como Aplicar os Grupos
+
+### 1. Configurar grupos (primeira vez ou atualização)
+
+**Produção:**
+```bash
+cd /usr/local/lsws/Example/html/demo/webReceptivo
+source venv/bin/activate
+python manage_production.py setup_groups
 ```
-Menu Usuário → Administração → Gerenciar Grupos
-OU
-URL direta: /user-management/groups/
+
+**Local:**
+```bash
+python manage.py setup_groups
 ```
 
-### **2. Criando um Novo Grupo/Cargo**
+### 2. Atribuir grupo a um usuário
 
-1. **Acesse a lista de grupos**
-2. **Clique em "Novo Grupo/Cargo"**
-3. **Preencha o formulário:**
-   - Nome do grupo (ex: "Supervisores", "Coordenadores")
-   - Selecione as permissões desejadas
-4. **Clique em "Criar Grupo"**
+**Via Django Admin:**
+1. Acessar `/admin/auth/user/`
+2. Editar o usuário
+3. Selecionar o grupo em "Groups"
+4. Salvar
 
-**Exemplo Prático:**
-```
-Nome: "Supervisores de Vendas"
-Permissões:
-- ✅ auth.view_user (Ver usuários)
-- ✅ core.view_dashboard (Ver dashboard)  
-- ✅ reports.view_sales (Ver relatórios de vendas)
-```
+**Via Python Shell:**
+```python
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
-### **3. Editando um Grupo Existente**
-
-1. **Na lista, clique em "Editar" no grupo desejado**
-2. **Modifique nome e/ou permissões**
-3. **Salve as alterações**
-
-**Limitações por Nível:**
-- **Gerentes**: Só podem editar grupos que criaram ou de nível inferior
-- **Administradores**: Não podem editar grupo "Administradores"
-- **Admin Principal**: Pode editar qualquer grupo
-
-### **4. Atribuindo Usuários aos Grupos**
-
-Para colocar um usuário em um grupo:
-
-1. **Acesse "Gerenciar Usuários"**
-2. **Edite o usuário desejado**
-3. **Na seção "Grupos", marque o grupo criado**
-4. **Salve as alterações**
-
-### **5. Excluindo um Grupo**
-
-1. **Acesse os detalhes do grupo**
-2. **Clique em "Excluir"**
-3. **Revise o impacto nos usuários**
-4. **Confirme a exclusão**
-
-**⚠️ Atenção:**
-- Grupos protegidos não podem ser excluídos
-- Usuários não são deletados, apenas removidos do grupo
-- Ação irreversível
-
-## 📋 **Exemplos de Casos de Uso**
-
-### **Caso 1: Empresa de Turismo**
-
-```
-Hierarquia Proposta:
-├── Administradores (protegido)
-├── Gerentes de Área (protegido) 
-├── Coordenadores de Turismo (novo grupo)
-├── Guias Turísticos (novo grupo)
-├── Operadores de Reserva (protegido)
-└── Usuários Básicos (protegido)
+User = get_user_model()
+user = User.objects.get(username='nome_usuario')
+group = Group.objects.get(name='Operadores')
+user.groups.add(group)
 ```
 
-**Criação via Sistema:**
-
-1. **Coordenadores de Turismo**
-   - Permissões: Ver relatórios, gerenciar reservas, ver clientes
-   - Criado por: Gerente ou superior
-
-2. **Guias Turísticos**
-   - Permissões: Ver reservas do dia, atualizar status de tours
-   - Criado por: Coordenador ou superior
-
-### **Caso 2: Sistema Escolar**
-
-```
-Grupos Customizados:
-├── Diretores (admin nível)
-├── Coordenadores Pedagógicos (gerente nível)  
-├── Professores Titulares (novo)
-├── Professores Auxiliares (novo)
-├── Secretários Acadêmicos (novo)
-└── Monitores (novo)
-```
-
-### **Caso 3: E-commerce**
-
-```
-Departamentos:
-├── Administradores (protegido)
-├── Gerentes de Loja (protegido)
-├── Supervisores de Vendas (novo)
-├── Vendedores Senior (novo)
-├── Vendedores Junior (novo)
-├── Estoquistas (novo)
-└── Atendimento ao Cliente (novo)
-```
-
-## 🔧 **Funcionalidades Avançadas**
-
-### **Seleção Inteligente de Permissões**
-
-- **Agrupamento por Aplicação**: Permissões organizadas por módulo
-- **Seleção em Massa**: "Selecionar Todas" / "Desmarcar Todas"
-- **Filtro por Nível**: Apenas permissões que você pode atribuir
-- **Validação em Tempo Real**: Erros mostrados imediatamente
-
-### **Navegação Integrada**
-
-- **Tabs Usuários ↔ Grupos**: Navegação rápida entre seções
-- **Links Contextuais**: Do usuário para o grupo e vice-versa
-- **Breadcrumbs**: Sempre sabe onde está
-- **Filtros Inteligentes**: Filtrar usuários por grupo
-
-### **Informações Detalhadas**
-
-- **Estatísticas em Tempo Real**: Usuários, permissões, áreas
-- **Visualização de Impacto**: Quem será afetado por mudanças
-- **Histórico Visual**: Quais grupos um usuário pertence
-- **Indicadores de Status**: Grupos protegidos, usuários inativos
-
-## ⚙️ **Configurações Avançadas**
-
-### **Para Desenvolvedores**
+### 3. Remover usuário de um grupo
 
 ```python
-# Adicionar novas permissões programaticamente
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
-
-# Criar permissão customizada
-content_type = ContentType.objects.get_for_model(MyModel)
-permission = Permission.objects.create(
-    codename='custom_action',
-    name='Pode executar ação customizada',
-    content_type=content_type
-)
-
-# Atualizar comando setup_groups
-# Editar: user_management/management/commands/setup_groups.py
+user.groups.remove(group)
 ```
 
-### **Para Administradores**
+---
+
+## 🔐 Bloqueios no Sistema
+
+### Operadores NÃO podem:
+- ❌ Acessar `/users/` (lista de usuários) → Retorna 403 Forbidden
+- ❌ Editar categorias → Botões de editar/excluir não aparecem
+- ❌ Editar serviços → Botões de editar/excluir não aparecem
+- ❌ Editar transfers → Botões de editar/excluir não aparecem
+- ❌ Editar tipos de meia → Botões de editar/excluir não aparecem
+- ✅ Ver listas e detalhes de todos os cadastros acima
+
+### Usuários Básicos NÃO podem:
+- ❌ Criar, editar ou excluir qualquer registro
+- ❌ Acessar área de usuários
+- ❌ Ver categorias, transfers ou tipos de meia entrada
+- ✅ Ver serviços e ordens de serviço (apenas leitura)
+
+---
+
+## 🔄 Atualizar Permissões
+
+Se as regras de permissões mudarem, execute:
 
 ```bash
-# Comandos úteis de gerenciamento
-
-# Recriar grupos básicos
-python manage.py setup_groups
-
-# Verificar sistema
-python manage.py check
-
-# Migrar alterações
-python manage.py migrate
+python manage_production.py setup_groups
 ```
 
-## 🛡️ **Segurança e Boas Práticas**
+Isso irá:
+- ✅ Atualizar permissões dos grupos existentes
+- ✅ Criar grupos que não existem
+- ✅ Remover permissões antigas
+- ✅ Adicionar novas permissões
+- ✅ Mostrar relatório detalhado das mudanças
 
-### **Princípios Aplicados**
+---
 
-1. **Princípio do Menor Privilégio**: Cada grupo tem apenas as permissões necessárias
-2. **Separação de Responsabilidades**: Grupos específicos para cada função
-3. **Auditoria Transparente**: Todas as ações são rastreáveis
-4. **Proteção em Camadas**: Múltiplas validações de segurança
+## ❓ FAQ
 
-### **Recomendações**
+**P: O que acontece se um usuário estiver em múltiplos grupos?**  
+R: Django combina as permissões de todos os grupos. O usuário terá TODAS as permissões de TODOS os grupos.
 
-- ✅ **Crie grupos específicos** para cada função real da empresa
-- ✅ **Revise permissões regularmente** - remova o que não é usado
-- ✅ **Use nomes descritivos** para os grupos (ex: "Gerente de Vendas Norte")
-- ✅ **Teste sempre** depois de criar ou modificar um grupo
-- ❌ **Não dê mais permissões do que necessário**
-- ❌ **Não reutilize grupos** para funções muito diferentes
+**P: Como dar acesso temporário de admin?**  
+R: Marque o campo `is_staff` e `is_superuser` no usuário. Superusuários ignoram grupos.
 
-### **Troubleshooting**
+**P: Operador pode ver a lista de serviços no admin?**  
+R: Sim, pode ver a lista e detalhes, mas NÃO pode editar ou excluir.
 
-**Problema**: Não consigo ver o menu de grupos
-- **Solução**: Verifique se seu usuário tem permissão de gerenciar usuários
+**P: Usuário Básico pode criar ordem de serviço?**  
+R: Não. Apenas visualizar ordens existentes.
 
-**Problema**: Não posso criar certos tipos de grupo  
-- **Solução**: Grupos têm hierarquia - você só pode criar níveis iguais ou inferiores ao seu
+**P: Como bloquear acesso a uma view específica?**  
+R: Use decorators `@permission_required` nas views ou `has_permission` no Django Admin.
 
-**Problema**: Grupo não aparece na lista de usuários
-- **Solução**: Verifique se você tem permissão para visualizar esse grupo específico
+**P: O sistema já bloqueia operadores de acessar /users/?**  
+R: Sim! Operadores não têm permissão `auth.view_user`, então o acesso retorna 403 Forbidden.
 
-**Problema**: Erro ao excluir grupo
-- **Solução**: Grupos protegidos não podem ser excluídos - são essenciais ao sistema
+---
 
-## 🎉 **Benefícios do Sistema**
+## 📞 Suporte
 
-### **Para Administradores**
-- 🎯 **Controle Granular**: Permissões específicas para cada função
-- 🔄 **Flexibilidade Total**: Criar/modificar grupos conforme necessário
-- 📊 **Visibilidade Completa**: Saber exatamente quem pode fazer o quê
-- 🛡️ **Segurança Robusta**: Proteções automáticas contra erros
+Para dúvidas sobre permissões, consulte este guia ou execute:
 
-### **Para Gerentes**
-- 🚀 **Autonomia**: Criar grupos para sua equipe sem depender de TI
-- 📋 **Organização**: Estruturar equipes com clareza
-- ⚡ **Agilidade**: Mudanças imediatas conforme necessidade do negócio
-- 🎓 **Facilidade**: Interface intuitiva, não precisa ser técnico
+```bash
+python manage_production.py setup_groups
+```
 
-### **Para Usuários**
-- 🎯 **Clareza de Função**: Saber exatamente seu papel no sistema
-- 🔐 **Acesso Adequado**: Ter as permissões necessárias sem excessos  
-- 🏃 **Produtividade**: Interface limpa com apenas o que precisa
-- 🛡️ **Segurança**: Sistema protege contra acessos indevidos
-
-O sistema está **completo, testado e pronto para uso em produção**! 🚀
+O comando mostra todas as permissões configuradas por grupo com relatório detalhado.
