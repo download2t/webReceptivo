@@ -140,14 +140,27 @@ def can_edit_user(current_user, target_user):
     return False
 
 
-# FUNCIONALIDADE DE EXCLUSÃO DESATIVADA POR SEGURANÇA
-# Apenas inativação de usuários é permitida para manter integridade dos dados
-#
-# def can_delete_user(current_user, target_user):
-#     """
-#     Verifica se o usuário atual pode deletar outro usuário.
-#     DESATIVADA - Use inativação em vez de exclusão.
-#     """
+def can_delete_user(current_user, target_user):
+    """
+    Verifica se o usuário atual pode deletar outro usuário.
+    Regras:
+    - Ninguém deleta a si mesmo
+    - Admin Principal (ID=1) não pode ser deletado
+    - Cada nível só pode deletar níveis inferiores
+    """
+    current_level = get_user_level(current_user)
+    target_level = get_user_level(target_user)
+    if current_user.id == target_user.id:
+        return False
+    if target_user.id == 1:
+        return False
+    if current_level == 'admin_principal':
+        return True
+    if current_level == 'administrador':
+        return target_level in ['gerente', 'operador', 'usuario_basico']
+    if current_level == 'gerente':
+        return target_level in ['operador', 'usuario_basico']
+    return False
 #     # Funcionalidade removida por segurança
 #     return False
 
