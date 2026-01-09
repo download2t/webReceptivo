@@ -161,30 +161,7 @@ h1 {
     color: #f7fafc;
 }
 
-/* ===== Tema escuro adaptativo =====
-
-[data-bs-theme="dark"] .roteiro-preview {
-    background: var(--bs-dark);
-    border: 1px solid var(--bs-border-color);
-    color: var(--bs-body-color);
-}
-
-[data-bs-theme="light"] .roteiro-preview {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-}
-
-.roteiro-preview {
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    font-family: 'Courier New', monospace;
-    white-space: pre-wrap;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    min-height: 400px;
-    max-height: 600px;
-    overflow-y: auto;
-}
+/* ===== SERVIÇOS ADICIONADOS (LISTA) ===== */
 
 [data-bs-theme="dark"] .servico-adicionado {
     background: var(--bs-body-bg);
@@ -355,4 +332,100 @@ h1 {
         transform: scale(1.02);
         box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.25);
     }
+}
+
+/* =========================================
+   SIMULAÇÃO WHATSAPP (PREVIEW MOBILE)
+   ========================================= */
+
+/* A tela do celular - Container Externo */
+.whatsapp-screen {
+    width: 375px; /* Largura padrão iPhone/Android médio */
+    height: 550px; /* Altura fixa para scroll */
+    background-color: #efe7dd; /* Bege padrão do WhatsApp */
+    /* background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Opcional: Doodle fundo */
+    margin: 0 auto; /* Centralizar */
+    border: 8px solid #333; /* Borda imitando celular */
+    border-radius: 30px;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+/* Scrollbar fina para o celular */
+.whatsapp-screen::-webkit-scrollbar {
+    width: 6px;
+}
+.whatsapp-screen::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}
+
+/* O Balão da Mensagem (Verde - Enviada) */
+#roteiroPreview {
+    position: relative;
+    background-color: #d9fdd3 !important; /* Verde claro do WhatsApp - Forçado !important */
+    color: #111b21 !important; /* Texto PRETO sempre, mesmo em dark mode */
+    padding: 8px 10px;
+    border-radius: 7.5px;
+    box-shadow: 0 1px 0.5px rgba(11,20,38,0.13);
+    
+    /* Tipografia exata */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14.2px;
+    line-height: 19px;
+    
+    /* Comportamento do texto */
+    white-space: pre-wrap; /* Mantém as quebras de linha */
+    word-wrap: break-word; /* Quebra palavras longas */
+    
+    /* Posicionamento à direita (mensagem enviada) */
+    align-self: flex-end;
+    max-width: 90%; 
+    margin-bottom: 10px;
+    margin-top: auto; 
+    text-align: left;
+}
+
+/* O "rabinho" do balão (Triângulo) */
+#roteiroPreview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -8px;
+    width: 0;
+    height: 0;
+    border-top: 8px solid #d9fdd3; /* Mesma cor do balão */
+    border-right: 8px solid transparent;
+    border-left: 8px solid transparent;
+}
+
+/* Estado Vazio (Placeholder dentro do celular) */
+#roteiroPreview:empty,
+#roteiroPreview:has(.text-muted) {
+    background-color: transparent !important; /* Fundo transparente quando vazio */
+    box-shadow: none;
+    align-self: center;
+    text-align: center;
+    color: #54656f !important; /* Cinza escuro do WhatsApp */
+    margin-top: 50%; 
+    transform: translateY(-50%);
+}
+
+#roteiroPreview:has(.text-muted)::after {
+    display: none; /* Esconde o rabinho se estiver vazio */
+}
+
+/* Ajustes para Tema Escuro Global (Garante que a moldura do card mude, mas o celular mantenha as cores reais do app) */
+[data-bs-theme="dark"] .card-body.bg-light {
+    background-color: var(--bs-tertiary-bg) !important;
+}
+
+/* A borda do celular em modo escuro fica mais sutil */
+[data-bs-theme="dark"] .whatsapp-screen {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
