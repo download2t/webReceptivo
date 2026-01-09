@@ -1,4 +1,4 @@
-/* Ordem de Serviço - Detalhes (Refatorado Completo) */
+/* Ordem de Serviço - Detalhes (Correção Dark Mode) */
 
 /* ===== LAYOUT GERAL ===== */
 .list-card {
@@ -24,7 +24,6 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* Destaque para o serviço que está sendo editado ou focado (se aplicável) */
 .ticket-card.current-item {
     border-left-color: #198754; /* Verde */
     background-color: #f8fff9;
@@ -36,7 +35,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: rgba(0,0,0,0.01);
+    background-color: rgba(0,0,0,0.02);
 }
 
 .ticket-body {
@@ -50,10 +49,20 @@
     font-size: 0.85rem;
 }
 
+/* Caixas de Quantidade (INT/MEIA/INF) */
+.qty-box {
+    text-align: center;
+    padding: 0.25rem;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa; /* Light grey padrão */
+    min-width: 50px;
+}
+
 /* ===== SIMULAÇÃO WHATSAPP (LADO DIREITO) ===== */
 .whatsapp-sticky-container {
     position: sticky;
-    top: 1.5rem; /* Mantém o celular visível ao rolar a página */
+    top: 1.5rem;
     z-index: 100;
 }
 
@@ -66,7 +75,7 @@
     color: white;
 }
 
-/* Container dos controles de idioma (Select + Botão) */
+/* Container dos controles de idioma */
 .language-controls {
     display: flex;
     gap: 6px;
@@ -76,7 +85,6 @@
     border-radius: 6px;
 }
 
-/* Forçar fonte de emoji para garantir bandeiras no Windows */
 #languageSelector option, 
 #languageSelector {
     font-family: "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI", sans-serif;
@@ -93,18 +101,11 @@
     width: auto;
 }
 
-#languageSelector:focus {
-    box-shadow: none;
-    background-color: rgba(0,0,0,0.1);
-}
-
-/* Cor das opções do select (sempre escuras pois o fundo do dropdown é branco) */
 #languageSelector option {
     color: #333;
     background-color: #fff;
 }
 
-/* Botão de Traduzir Pequeno */
 .btn-translate-icon {
     background: transparent;
     border: none;
@@ -123,12 +124,13 @@
 /* A MOLDURA DO CELULAR */
 .whatsapp-screen {
     width: 100%;
-    max-width: 380px; /* Largura padrão de celular */
+    max-width: 380px;
     height: 600px;
-    background-color: #efe7dd; /* Bege padrão WhatsApp */
-    /* background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Doodle opcional */
+    /* FORÇA CORES CLARAS DENTRO DO CELULAR SEMPRE */
+    background-color: #efe7dd !important; 
+    color: #333 !important;
     margin: 0 auto;
-    border: 10px solid #2c2c2c; /* Borda imitando carcaça do celular */
+    border: 10px solid #2c2c2c;
     border-radius: 35px;
     padding: 15px 12px;
     overflow-y: auto;
@@ -138,13 +140,12 @@
     position: relative;
 }
 
-/* Barra superior simulada do celular (Hora/Bateria) */
 .phone-status-bar {
     height: 20px;
     display: flex;
     justify-content: space-between;
     font-size: 10px;
-    color: #555;
+    color: #555 !important; /* Sempre escuro pois o fundo é bege */
     margin-bottom: 10px;
     padding: 0 10px;
     font-weight: 600;
@@ -153,27 +154,23 @@
 /* O Balão da Mensagem */
 .whatsapp-bubble {
     position: relative;
-    background-color: #d9fdd3 !important; /* Verde claro WhatsApp */
-    color: #111b21 !important; /* Texto preto sempre */
+    background-color: #d9fdd3 !important; /* Verde claro */
+    color: #111b21 !important; /* Preto sempre */
     padding: 8px 10px;
     border-radius: 7.5px;
     box-shadow: 0 1px 0.5px rgba(11,20,38,0.13);
-    
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 14.2px;
     line-height: 19px;
-    
     white-space: pre-wrap;
     word-wrap: break-word;
-    
-    align-self: flex-end; /* Alinhado à direita (Enviada) */
+    align-self: flex-end;
     max-width: 95%;
     margin-bottom: 5px;
     margin-top: auto; 
     text-align: left;
 }
 
-/* Triângulo do balão */
 .whatsapp-bubble::after {
     content: '';
     position: absolute;
@@ -186,20 +183,18 @@
     border-left: 8px solid transparent;
 }
 
-/* Metadados da mensagem (Hora + Check) */
 .msg-meta {
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 3px;
     font-size: 10px;
-    color: #667781;
+    color: #667781 !important;
     margin-top: 2px;
     margin-right: 5px;
     align-self: flex-end;
 }
 
-/* Scrollbar fina para o celular */
 .whatsapp-screen::-webkit-scrollbar {
     width: 4px;
 }
@@ -208,17 +203,24 @@
     border-radius: 3px;
 }
 
-/* ===== DARK MODE ADAPTATION (BOOTSTRAP 5.3) ===== */
-/* Adaptamos os cards externos, mas mantemos o celular com cores reais */
+/* ============================================== */
+/* ===== DARK MODE FIXES (BOOTSTRAP 5.3) ======== */
+/* ============================================== */
 
-[data-bs-theme="dark"] .ticket-card {
+[data-bs-theme="dark"] .card {
     background-color: #212529;
     border-color: #373b3e;
+}
+
+[data-bs-theme="dark"] .ticket-card {
+    background-color: #2b3035; /* Um pouco mais claro que o fundo */
+    border-color: #373b3e;
     border-left-color: #0d6efd;
+    color: #e9ecef;
 }
 
 [data-bs-theme="dark"] .ticket-card.current-item {
-    background-color: rgba(25, 135, 84, 0.1);
+    background-color: rgba(25, 135, 84, 0.15); /* Verde muito transparente */
     border-left-color: #198754;
 }
 
@@ -232,15 +234,45 @@
     background-color: rgba(255,255,255,0.03);
 }
 
+/* Corrigir caixas de quantidade no escuro */
+[data-bs-theme="dark"] .qty-box {
+    background-color: #343a40; /* Cinza escuro */
+    border-color: #495057;
+    color: #f8f9fa;
+}
+
+[data-bs-theme="dark"] .qty-box strong {
+    color: #fff !important; /* Forçar número branco */
+}
+
+[data-bs-theme="dark"] .qty-box small {
+    color: #adb5bd !important; /* Texto pequeno cinza claro */
+}
+
+/* Corrigir textos de ajuda */
+[data-bs-theme="dark"] .text-muted {
+    color: #adb5bd !important;
+}
+
+/* Whatsapp Screen no Dark Mode */
+/* MANTÉM INTERIOR CLARO (BEGE) PARA REALISMO, MAS BORDA ESCURA */
 [data-bs-theme="dark"] .whatsapp-screen {
-    border-color: #000; /* Borda preta no modo escuro */
+    border-color: #000;
     box-shadow: 0 15px 35px rgba(0,0,0,0.6);
 }
 
-/* IMPORTANTE: Forçar cores claras DENTRO do celular mesmo em Dark Mode */
-[data-bs-theme="dark"] .whatsapp-screen {
-    background-color: #efe7dd !important; 
+/* Forçar cores do badge de data dentro do celular */
+[data-bs-theme="dark"] .whatsapp-screen .badge.bg-secondary {
+    background-color: #e9edef !important; /* Fundo claro */
+    color: #54656f !important; /* Texto escuro */
+    border: 1px solid rgba(0,0,0,0.05);
 }
-[data-bs-theme="dark"] .phone-status-bar {
-    color: #555 !important;
+
+/* Card 'Observações Gerais' no dark mode */
+[data-bs-theme="dark"] .card.bg-light {
+    background-color: #2b3035 !important;
+    border: 1px solid #373b3e;
+}
+[data-bs-theme="dark"] .card.bg-light p {
+    color: #e9ecef !important;
 }

@@ -77,22 +77,22 @@
                             
                             <div class="d-flex gap-3 align-items-center mb-2">
                                 {% if lanc.qtd_inteira > 0 %}
-                                <div class="text-center p-1 rounded bg-light border" style="min-width: 50px;">
-                                    <strong class="d-block text-dark h6 mb-0">{{ lanc.qtd_inteira }}</strong>
+                                <div class="qty-box">
+                                    <strong class="d-block h6 mb-0">{{ lanc.qtd_inteira }}</strong>
                                     <small style="font-size: 10px;">INT</small>
                                 </div>
                                 {% endif %}
                                 
                                 {% if lanc.qtd_meia > 0 %}
-                                <div class="text-center p-1 rounded bg-light border" style="min-width: 50px;">
-                                    <strong class="d-block text-dark h6 mb-0">{{ lanc.qtd_meia }}</strong>
+                                <div class="qty-box">
+                                    <strong class="d-block h6 mb-0">{{ lanc.qtd_meia }}</strong>
                                     <small style="font-size: 10px;">MEIA</small>
                                 </div>
                                 {% endif %}
                                 
                                 {% if lanc.qtd_infantil > 0 %}
-                                <div class="text-center p-1 rounded bg-light border" style="min-width: 50px;">
-                                    <strong class="d-block text-dark h6 mb-0">{{ lanc.qtd_infantil }}</strong>
+                                <div class="qty-box">
+                                    <strong class="d-block h6 mb-0">{{ lanc.qtd_infantil }}</strong>
                                     <small style="font-size: 10px;">INF</small>
                                 </div>
                                 {% endif %}
@@ -153,7 +153,7 @@
             <div class="card bg-light border-0 shadow-sm mt-4">
                 <div class="card-body">
                     <h6 class="small fw-bold text-muted mb-2">OBSERVAÇÕES GERAIS DA OS</h6>
-                    <p class="mb-0 text-dark">{{ ordem.observacoes|linebreaks }}</p>
+                    <p class="mb-0">{{ ordem.observacoes|linebreaks }}</p>
                 </div>
             </div>
             {% endif %}
@@ -202,7 +202,7 @@
                             </div>
                             
                             <div class="text-center my-2">
-                                <span class="badge bg-secondary bg-opacity-25 text-secondary fw-normal shadow-sm">HOJE</span>
+                                <span class="badge bg-secondary bg-opacity-25 fw-normal shadow-sm">HOJE</span>
                             </div>
 
                             <div class="whatsapp-bubble" id="roteiroText">
