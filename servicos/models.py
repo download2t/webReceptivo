@@ -349,13 +349,13 @@ class OrdemServico(models.Model):
         if self.data_inicio and self.data_fim:
             texto += f"*Período:* {self.data_inicio.strftime('%d/%m/%Y')} a {self.data_fim.strftime('%d/%m/%Y')}\n"
         
-        texto += "\n" + "="*40 + "\n\n"
+        texto += "\n" + "="*15 + "\n\n"
         
         # Usar roteiro editado ou gerar novo
         roteiro = self.roteiro if self.roteiro else self.gerar_roteiro()
         texto += roteiro
         
-        texto += "\n" + "="*40 + "\n"
+        texto += "\n" + "="*15 + "\n"
         texto += f"\n*VALOR TOTAL: R$ {self.valor_total:,.2f}*".replace(',', 'X').replace('.', ',').replace('X', '.')
         
         return texto

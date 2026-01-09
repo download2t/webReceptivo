@@ -929,7 +929,7 @@
         
         datasOrdenadas.forEach(function(data) {
             roteiro += '📅 ' + formatarData(data) + '\n';
-            roteiro += '─'.repeat(50) + '\n';
+            roteiro += '─'.repeat(15) + '\n';
             
             porData[data].forEach(function(servico, idx) {
                 roteiro += '\n' + servico.descricao + '\n';
@@ -983,9 +983,9 @@
         
         // Adicionar resumo de valores no final
         if (resumoServicos.length > 0) {
-            roteiro += '─'.repeat(50) + '\n';
+            roteiro += '─'.repeat(15) + '\n';
             roteiro += '💰 RESUMO DE VALORES\n';
-            roteiro += '─'.repeat(50) + '\n';
+            roteiro += '─'.repeat(15) + '\n';
             
             resumoServicos.forEach(function(item) {
                 if (item.valorIngressos > 0) {
@@ -993,7 +993,7 @@
                 }
             });
             
-            roteiro += '\n' + '─'.repeat(50) + '\n';
+            roteiro += '\n' + '─'.repeat(15) + '\n';
         }
         
         preview.textContent = roteiro;
