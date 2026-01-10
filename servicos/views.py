@@ -964,10 +964,11 @@ def ajax_get_servico_info(request):
 @require_permission('servicos.view_ordemservico')
 @require_http_methods(["POST"])
 def translate_text(request):
-    """Endpoint para tradução usando argostranslate + dicionário customizado"""
+    """Endpoint para tradução usando Argos Translate com preservação de formatação"""
     import json
     import re
-    from .translations import CUSTOM_TRANSLATIONS  # Seu dicionário customizado
+    import argostranslate.package
+    import argostranslate.translate
     
     try:
         data = json.loads(request.body)
@@ -975,118 +976,346 @@ def translate_text(request):
         target_lang = data.get('target_lang', 'en')
         
         if not text:
-            return JsonResponse({'error': 'Texto não fornecido'}, status=400, json_dumps_params={'ensure_ascii': False})
+            return JsonResponse({'error': 'Texto não fornecido'}, status=400)
         
-        # Mapear códigos de idioma do frontend para argostranslate
+        # Mapeamento de códigos de idioma
         lang_map = {
-            'pt': 'pt',  # Português
-            'en': 'en',  # Inglês
-            'es': 'es',  # Espanhol
-            'fr': 'fr',  # Francês
-            'de': 'de',  # Alemão
-            'it': 'it',  # Italiano
+            'en': 'en',
+            'es': 'es',
+            'fr': 'fr'
         }
         
-        source_code = 'pt'
         target_code = lang_map.get(target_lang, 'en')
         
-        if source_code == target_code:
+        # Dicionário de traduções customizadas para termos turísticos
+        custom_translations = {
+            'en': {
+                # Termos gerais
+                'CATARATAS': 'WATERFALLS',
+                'Cataratas': 'Waterfalls',
+                'cataratas': 'waterfalls',
+                'Inteira': 'Full',
+                'Inteira(s)': 'Full',
+                'Meia': 'Half',
+                'Meia(s)': 'Half',
+                'Infantil': 'Child',
+                'Transfer': 'Transfer',
+                'Transfers': 'Transfers',
+                'Ingresso': 'Ticket',
+                'Ingressos': 'Tickets',
+                'Roteiro': 'Itinerary',
+                'ROTEIRO': 'ITINERARY',
+                'Opção': 'Option',
+                'OPÇÃO': 'OPTION',
+                'RESUMO DOS VALORES': 'SUMMARY OF VALUES',
+                'Resumo dos Valores': 'Summary of Values',
+                'leva e trás': 'round trip',
+                'leva e traz': 'round trip',
+                'horário livre': 'flexible schedule',
+                
+                # Atrativos específicos
+                'CATARATAS BR': 'WATERFALLS BR',
+                'Cataratas BR': 'Waterfalls BR',
+                'PARQUE DAS AVES': 'BIRD PARK',
+                'Parque das Aves': 'Bird Park',
+                'ITAIPU PANORAMICA': 'ITAIPU PANORAMIC',
+                'Itaipu Panoramica': 'Itaipu Panoramic',
+                'ITAIPU ESPECIAL': 'ITAIPU SPECIAL',
+                'Itaipu Especial': 'Itaipu Special',
+                'REFUGIO BIOLÓGICO': 'BIOLOGICAL REFUGE',
+                'Refugio Biológico': 'Biological Refuge',
+                'ILUMINADA ESPECIAL': 'ILLUMINATED SPECIAL',
+                'Iluminada Especial': 'Illuminated Special',
+                'ILUMINADA': 'ILLUMINATED',
+                'Iluminada': 'Illuminated',
+                'MARCO DAS TRÊS FRONTEIRAS': 'THREE BORDERS LANDMARK',
+                'Marco das Três Fronteiras': 'Three Borders Landmark',
+                'RODA GIGANTE': 'FERRIS WHEEL',
+                'Roda Gigante': 'Ferris Wheel',
+                'DREAMLAND COMBO 6': 'DREAMLAND COMBO 6',
+                'DREAMLAND COMBO 5': 'DREAMLAND COMBO 5',
+                'DREAMLAND QUARTETO': 'DREAMLAND QUARTET',
+                'Dreamland Quarteto': 'Dreamland Quartet',
+                'DREAMLAND TRIO NATUREZA': 'DREAMLAND NATURE TRIO',
+                'Dreamland Trio Natureza': 'Dreamland Nature Trio',
+                'TRIO BY NIGHT': 'TRIO BY NIGHT',
+                'TRIO AVENTURA': 'ADVENTURE TRIO',
+                'Trio Aventura': 'Adventure Trio',
+                'MUSEU': 'MUSEUM',
+                'Museu': 'Museum',
+                'DREAM ECO PARK': 'DREAM ECO PARK',
+                'TIROLEZA': 'ZIPLINE',
+                'Tiroleza': 'Zipline',
+                'MOVIE CARS': 'MOVIE CARS',
+                'SHOW DAS ÁGUAS': 'WATER SHOW',
+                'Show das Águas': 'Water Show',
+                'COMBO MOVIE E SHOW': 'MOVIE AND SHOW COMBO',
+                'Combo Movie e Show': 'Movie and Show Combo',
+                'RAFAIN CHURRASCARIA SHOW': 'RAFAIN STEAKHOUSE SHOW',
+                'Rafain Churrascaria Show': 'Rafain Steakhouse Show',
+                'KATTAMARAM': 'CATAMARAN',
+                'Kattamaram': 'Catamaran',
+                'MACUCO SAFARI': 'MACUCO SAFARI',
+                'IGUASSU SECRET FALLS ALL DAY': 'IGUASSU SECRET FALLS ALL DAY',
+                'Iguassu Secret Falls All Day': 'Iguassu Secret Falls All Day',
+                'IGUASSU SECRET MEIO PERIODO': 'IGUASSU SECRET HALF DAY',
+                'Iguassu Secret Meio Periodo': 'Iguassu Secret Half Day',
+                'IGUASSU SECRET TRILHA ÚNICA': 'IGUASSU SECRET SINGLE TRAIL',
+                'Iguassu Secret Trilha Única': 'Iguassu Secret Single Trail',
+                'LA ARIPUCA': 'LA ARIPUCA',
+                'RUINAS SAN IGNACIO': 'SAN IGNACIO RUINS',
+                'Ruinas San Ignacio': 'San Ignacio Ruins',
+                'MINAS DE WANDA': 'WANDA MINES',
+                'Minas de Wanda': 'Wanda Mines',
+                'MESQUITA MULÇUMANA': 'MUSLIM MOSQUE',
+                'Mesquita Mulçumana': 'Muslim Mosque',
+            },
+            'es': {
+                # Termos gerais
+                'CATARATAS': 'CATARATAS',
+                'Cataratas': 'Cataratas',
+                'cataratas': 'cataratas',
+                'Inteira': 'Entera',
+                'Inteira(s)': 'Entera(s)',
+                'Meia': 'Media',
+                'Meia(s)': 'Media(s)',
+                'Infantil': 'Infantil',
+                'Transfer': 'Transfer',
+                'Transfers': 'Transfers',
+                'Ingresso': 'Entrada',
+                'Ingressos': 'Entradas',
+                'Roteiro': 'Itinerario',
+                'ROTEIRO': 'ITINERARIO',
+                'Opção': 'Opción',
+                'OPÇÃO': 'OPCIÓN',
+                'RESUMO DOS VALORES': 'RESUMEN DE VALORES',
+                'Resumo dos Valores': 'Resumen de Valores',
+                'leva e trás': 'ida y vuelta',
+                'leva e traz': 'ida y vuelta',
+                'horário livre': 'horario libre',
+                
+                # Atrativos específicos
+                'CATARATAS BR': 'CATARATAS BR',
+                'Cataratas BR': 'Cataratas BR',
+                'PARQUE DAS AVES': 'PARQUE DE LAS AVES',
+                'Parque das Aves': 'Parque de las Aves',
+                'ITAIPU PANORAMICA': 'ITAIPU PANORÁMICA',
+                'Itaipu Panoramica': 'Itaipu Panorámica',
+                'ITAIPU ESPECIAL': 'ITAIPU ESPECIAL',
+                'Itaipu Especial': 'Itaipu Especial',
+                'REFUGIO BIOLÓGICO': 'REFUGIO BIOLÓGICO',
+                'Refugio Biológico': 'Refugio Biológico',
+                'ILUMINADA ESPECIAL': 'ILUMINADA ESPECIAL',
+                'Iluminada Especial': 'Iluminada Especial',
+                'ILUMINADA': 'ILUMINADA',
+                'Iluminada': 'Iluminada',
+                'MARCO DAS TRÊS FRONTEIRAS': 'HITO DE LAS TRES FRONTERAS',
+                'Marco das Três Fronteiras': 'Hito de las Tres Fronteras',
+                'RODA GIGANTE': 'RUEDA GIGANTE',
+                'Roda Gigante': 'Rueda Gigante',
+                'DREAMLAND COMBO 6': 'DREAMLAND COMBO 6',
+                'DREAMLAND COMBO 5': 'DREAMLAND COMBO 5',
+                'DREAMLAND QUARTETO': 'DREAMLAND CUARTETO',
+                'Dreamland Quarteto': 'Dreamland Cuarteto',
+                'DREAMLAND TRIO NATUREZA': 'DREAMLAND TRÍO NATURALEZA',
+                'Dreamland Trio Natureza': 'Dreamland Trío Naturaleza',
+                'TRIO BY NIGHT': 'TRÍO BY NIGHT',
+                'TRIO AVENTURA': 'TRÍO AVENTURA',
+                'Trio Aventura': 'Trío Aventura',
+                'MUSEU': 'MUSEO',
+                'Museu': 'Museo',
+                'DREAM ECO PARK': 'DREAM ECO PARK',
+                'TIROLEZA': 'TIROLESA',
+                'Tiroleza': 'Tirolesa',
+                'MOVIE CARS': 'MOVIE CARS',
+                'SHOW DAS ÁGUAS': 'SHOW DE LAS AGUAS',
+                'Show das Águas': 'Show de las Aguas',
+                'COMBO MOVIE E SHOW': 'COMBO MOVIE Y SHOW',
+                'Combo Movie e Show': 'Combo Movie y Show',
+                'RAFAIN CHURRASCARIA SHOW': 'RAFAIN PARRILLA SHOW',
+                'Rafain Churrascaria Show': 'Rafain Parrilla Show',
+                'KATTAMARAM': 'CATAMARÁN',
+                'Kattamaram': 'Catamarán',
+                'MACUCO SAFARI': 'MACUCO SAFARI',
+                'IGUASSU SECRET FALLS ALL DAY': 'IGUASSU SECRET FALLS TODO EL DÍA',
+                'Iguassu Secret Falls All Day': 'Iguassu Secret Falls Todo el Día',
+                'IGUASSU SECRET MEIO PERIODO': 'IGUASSU SECRET MEDIO DÍA',
+                'Iguassu Secret Meio Periodo': 'Iguassu Secret Medio Día',
+                'IGUASSU SECRET TRILHA ÚNICA': 'IGUASSU SECRET SENDERO ÚNICO',
+                'Iguassu Secret Trilha Única': 'Iguassu Secret Sendero Único',
+                'LA ARIPUCA': 'LA ARIPUCA',
+                'RUINAS SAN IGNACIO': 'RUINAS SAN IGNACIO',
+                'Ruinas San Ignacio': 'Ruinas San Ignacio',
+                'MINAS DE WANDA': 'MINAS DE WANDA',
+                'Minas de Wanda': 'Minas de Wanda',
+                'MESQUITA MULÇUMANA': 'MEZQUITA MUSULMANA',
+                'Inteira(s)': 'Plein(s)',
+                'Meia': 'Demi',
+                'Meia(s)': 'Demi(s)',
+                'Infantil': 'Enfant',
+                'Transfer': 'Transfert',
+                'Transfers': 'Transferts',
+                'Ingresso': 'Billet',
+                'Ingressos': 'Billets',
+                'Roteiro': 'Itinéraire',
+                'ROTEIRO': 'ITINÉRAIRE',
+                'Opção': 'Option',
+                'OPÇÃO': 'OPTION',
+                'RESUMO DOS VALORES': 'RÉSUMÉ DES VALEURS',
+                'Resumo dos Valores': 'Résumé des Valeurs',
+                'leva e trás': 'aller-retour',
+                'leva e traz': 'aller-retour',
+                'horário livre': 'horaire libre',
+                'Inteira': 'Plein',
+                'Inteira(s)': 'Plein(s)',
+                'Meia': 'Demi',
+                'Meia(s)': 'Demi(s)',
+                'Infantil': 'Enfant',
+                'Transfer': 'Transfert',
+                'Transfers': 'Transferts',
+                'Ingresso': 'Billet',
+                'Ingressos': 'Billets',
+                
+                # Atrativos específicos
+                'CATARATAS BR': 'CHUTES D\'EAU BR',
+                'Cataratas BR': 'Chutes d\'eau BR',
+                'PARQUE DAS AVES': 'PARC DES OISEAUX',
+                'Parque das Aves': 'Parc des Oiseaux',
+                'ITAIPU PANORAMICA': 'ITAIPU PANORAMIQUE',
+                'Itaipu Panoramica': 'Itaipu Panoramique',
+                'ITAIPU ESPECIAL': 'ITAIPU SPÉCIAL',
+                'Itaipu Especial': 'Itaipu Spécial',
+                'REFUGIO BIOLÓGICO': 'REFUGE BIOLOGIQUE',
+                'Refugio Biológico': 'Refuge Biologique',
+                'ILUMINADA ESPECIAL': 'ILLUMINÉE SPÉCIALE',
+                'Iluminada Especial': 'Illuminée Spéciale',
+                'ILUMINADA': 'ILLUMINÉE',
+                'Iluminada': 'Illuminée',
+                'MARCO DAS TRÊS FRONTEIRAS': 'BORNE DES TROIS FRONTIÈRES',
+                'Marco das Três Fronteiras': 'Borne des Trois Frontières',
+                'RODA GIGANTE': 'GRANDE ROUE',
+                'Roda Gigante': 'Grande Roue',
+                'DREAMLAND COMBO 6': 'DREAMLAND COMBO 6',
+                'DREAMLAND COMBO 5': 'DREAMLAND COMBO 5',
+                'DREAMLAND QUARTETO': 'DREAMLAND QUATUOR',
+                'Dreamland Quarteto': 'Dreamland Quatuor',
+                'DREAMLAND TRIO NATUREZA': 'DREAMLAND TRIO NATURE',
+                'Dreamland Trio Natureza': 'Dreamland Trio Nature',
+                'TRIO BY NIGHT': 'TRIO BY NIGHT',
+                'TRIO AVENTURA': 'TRIO AVENTURE',
+                'Trio Aventura': 'Trio Aventure',
+                'MUSEU': 'MUSÉE',
+                'Museu': 'Musée',
+                'DREAM ECO PARK': 'DREAM ECO PARK',
+                'TIROLEZA': 'TYROLIENNE',
+                'Tiroleza': 'Tyrolienne',
+                'MOVIE CARS': 'MOVIE CARS',
+                'SHOW DAS ÁGUAS': 'SPECTACLE DES EAUX',
+                'Show das Águas': 'Spectacle des Eaux',
+                'COMBO MOVIE E SHOW': 'COMBO MOVIE ET SHOW',
+                'Combo Movie e Show': 'Combo Movie et Show',
+                'RAFAIN CHURRASCARIA SHOW': 'RAFAIN RESTAURANT SHOW',
+                'Rafain Churrascaria Show': 'Rafain Restaurant Show',
+                'KATTAMARAM': 'CATAMARAN',
+                'Kattamaram': 'Catamaran',
+                'MACUCO SAFARI': 'MACUCO SAFARI',
+                'IGUASSU SECRET FALLS ALL DAY': 'IGUASSU SECRET FALLS JOURNÉE COMPLÈTE',
+                'Iguassu Secret Falls All Day': 'Iguassu Secret Falls Journée Complète',
+                'IGUASSU SECRET MEIO PERIODO': 'IGUASSU SECRET DEMI-JOURNÉE',
+                'Iguassu Secret Meio Periodo': 'Iguassu Secret Demi-Journée',
+                'IGUASSU SECRET TRILHA ÚNICA': 'IGUASSU SECRET SENTIER UNIQUE',
+                'Iguassu Secret Trilha Única': 'Iguassu Secret Sentier Unique',
+                'LA ARIPUCA': 'LA ARIPUCA',
+                'RUINAS SAN IGNACIO': 'RUINES SAN IGNACIO',
+                'Ruinas San Ignacio': 'Ruines San Ignacio',
+                'MINAS DE WANDA': 'MINES DE WANDA',
+                'Minas de Wanda': 'Mines de Wanda',
+                'MESQUITA MULÇUMANA': 'MOSQUÉE MUSULMANE',
+                'Mesquita Mulçumana': 'Mosquée Musulmane',
+            }
+        }
+        
+        try:
+            # Dicionário de proteção para elementos que não devem ser traduzidos
+            protected = {}
+            placeholder_counter = 0
+            
+            def protect_element(match):
+                nonlocal placeholder_counter
+                placeholder = f"PROTECT{placeholder_counter}PROTECT"
+                protected[placeholder] = match.group(0)
+                placeholder_counter += 1
+                return placeholder
+            
+            # Proteger elementos antes da tradução
+            text_protected = text
+            
+            # 1. Proteger linhas decorativas (═══, ───, etc)
+            text_protected = re.sub(r'[─═]{3,}', protect_element, text_protected)
+            
+            # 2. Proteger emojis e símbolos especiais
+            emoji_pattern = r'[📅🚌💰🎫📍⏰✈️🏨🍽️🎭🎨🏛️🌊🌲🦋🐦🌅🌄🎢🎡🎪🚁🚢⛵🏖️🗿🏰🎭📸🎬🎵🎸🎹🎺🎻🎤🎧🎮🎯🎲🎰🎳🏀⚽🏈🏉🎾🏐🏓🏸🥊🥋⛳🏹🎣🥅🥌🛷🎿⛷️🏂🏋️🤸🤼🤽🤾🤺🏇🏌️🧘🏃🚴🏊🤹]'
+            text_protected = re.sub(emoji_pattern, protect_element, text_protected)
+            
+            # 3. Proteger bullets e caracteres especiais de lista
+            text_protected = re.sub(r'[•◦▪▫]', protect_element, text_protected)
+            
+            # 4. Proteger valores monetários (R$ 000,00)
+            text_protected = re.sub(r'R\$\s*[\d.,]+', protect_element, text_protected)
+            
+            # 5. Proteger datas (dd/mm/aaaa ou dd/mm)
+            text_protected = re.sub(r'\d{2}/\d{2}(?:/\d{4})?', protect_element, text_protected)
+            
+            # 6. Proteger números entre parênteses (1 pax)
+            text_protected = re.sub(r'\(\d+\s*pax\)', protect_element, text_protected)
+            
+            # 7. Proteger linhas que são apenas símbolos/espaços
+            lines = text_protected.split('\n')
+            protected_lines = []
+            for line in lines:
+                if re.match(r'^[\s─═•\-]+$', line) or not line.strip():
+                    placeholder = f"PROTECTLINE{placeholder_counter}PROTECT"
+                    protected[placeholder] = line
+                    placeholder_counter += 1
+                    protected_lines.append(placeholder)
+                else:
+                    protected_lines.append(line)
+            text_protected = '\n'.join(protected_lines)
+            
+            # Aplicar traduções customizadas ANTES da tradução automática
+            if target_code in custom_translations:
+                for pt_term, translated_term in custom_translations[target_code].items():
+                    # Usar placeholder numérico único que não será traduzido
+                    placeholder = f"XYZTERM{placeholder_counter}XYZ"
+                    protected[placeholder] = translated_term
+                    placeholder_counter += 1
+                    # Substituir termo português pelo placeholder
+                    text_protected = text_protected.replace(pt_term, placeholder)
+            
+            # Traduzir texto com elementos protegidos
+            if target_code == 'fr':
+                intermediate_text = argostranslate.translate.translate(text_protected, "pt", "en")
+                translated_text = argostranslate.translate.translate(intermediate_text, "en", "fr")
+            else:
+                translated_text = argostranslate.translate.translate(text_protected, "pt", target_code)
+            
+            # Restaurar elementos protegidos
+            for placeholder, original in protected.items():
+                translated_text = translated_text.replace(placeholder, original)
+            
             return JsonResponse({
                 'success': True,
-                'translated_text': text,
-                'source_lang': source_code,
-                'target_lang': target_code,
-                'method': 'no_translation_needed'
-            }, json_dumps_params={'ensure_ascii': False})
-        
-        # Proteger elementos que NÃO devem ser traduzidos
-        protected = {}
-        counter = 0
-        
-        def protect(match):
-            nonlocal counter
-            key = f"__PROTECT_{counter:04d}__"
-            protected[key] = match.group(0)
-            counter += 1
-            return key
-        
-        text_protected = text
-        
-        # 1. Proteger datas completas (dd/mm/yyyy)
-        text_protected = re.sub(r'\b\d{1,2}/\d{1,2}/\d{4}\b', protect, text_protected)
-        
-        # 2. Proteger valores monetários (R$ 1.234,56)
-        text_protected = re.sub(r'R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?', protect, text_protected)
-        
-        # 3. Proteger códigos específicos (OS-2024-001, CAT-123)
-        text_protected = re.sub(r'\b(?:OS|CAT|TRF|CLI)-\d{4}-\d{3,}\b', protect, text_protected, flags=re.IGNORECASE)
-        
-        # 4. Proteger nomes próprios de atrações (em maiúsculas seguidas)
-        text_protected = re.sub(r'\b([A-Z]{2,}(?:\s+[A-Z]{2,}){1,3})\b(?![a-z])', protect, text_protected)
-        
-        # 5. Proteger horários (09h30, 14:00)
-        text_protected = re.sub(r'\b\d{1,2}(?:h|:)\d{2}\b', protect, text_protected)
-        
-        # 6. Proteger números entre parênteses
-        text_protected = re.sub(r'\(\s*\d+(?:\s*(?:pax|anos?|idades?|hora?s?|pessoas?))\s*\)', protect, text_protected, flags=re.IGNORECASE)
-        
-        # APLICAR DICIONÁRIO CUSTOMIZADO PRIMEIRO
-        # (para termos específicos do seu domínio)
-        custom_dict = CUSTOM_TRANSLATIONS.get(target_lang, CUSTOM_TRANSLATIONS.get('en', {}))
-        
-        # Ordenar por comprimento (mais longo primeiro) para evitar sobreposições
-        sorted_custom = sorted(custom_dict.items(), key=lambda x: -len(x[0]))
-        
-        for pt_term, custom_translation in sorted_custom:
-            # Usar substituição com word boundaries para palavras completas
-            if pt_term.isalpha():
-                pattern = r'\b' + re.escape(pt_term) + r'\b'
-                text_protected = re.sub(pattern, custom_translation, text_protected, flags=re.IGNORECASE)
-            else:
-                # Para frases ou termos com espaços
-                text_protected = text_protected.replace(pt_term, custom_translation)
-        
-        # AGORA USAR ARGOSTRANSLATE PARA O RESTO
-        try:
-            import argostranslate.translate
-            import argostranslate.package
-            import argostranslate.models
+                'translated_text': translated_text,
+                'source_lang': 'pt',
+                'target_lang': target_code
+            })
             
-            # Verificar se o pacote de tradução está instalado
-            installed_languages = argostranslate.translate.get_installed_languages()
-            from_lang = next((lang for lang in installed_languages if lang.code == source_code), None)
-            to_lang = next((lang for lang in installed_languages if lang.code == target_code), None)
-            
-            if from_lang and to_lang:
-                # Traduzir com argostranslate
-                translation = from_lang.get_translation(to_lang)
-                text_translated = translation.translate(text_protected)
-            else:
-                # Fallback para tradução simples se não houver pacote
-                text_translated = text_protected
-                print(f"Aviso: Pacote de tradução {source_code}->{target_code} não encontrado")
         except Exception as e:
-            print(f"Erro argostranslate: {e}")
-            text_translated = text_protected  # Fallback
+            return JsonResponse({
+                'error': f'Erro na tradução: {str(e)}'
+            }, status=500)
             
-        # RESTAURAR ELEMENTOS PROTEGIDOS
-        # Ordem inversa para evitar conflitos
-        for i in range(counter-1, -1, -1):
-            key = f"__PROTECT_{i:04d}__"
-            if key in protected:
-                text_translated = text_translated.replace(key, protected[key])
-        
-        return JsonResponse({
-            'success': True,
-            'translated_text': text_translated,
-            'source_lang': source_code,
-            'target_lang': target_code,
-            'method': 'argostranslate_with_custom_dict',
-            'custom_terms_applied': len(custom_dict)
-        }, json_dumps_params={'ensure_ascii': False})
-        
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'JSON inválido'}, status=400, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({'error': 'JSON inválido'}, status=400)
     except Exception as e:
-        print(f"ERRO TRADUÇÃO: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({'error': str(e)}, status=500)

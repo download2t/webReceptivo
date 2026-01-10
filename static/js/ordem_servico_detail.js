@@ -1,13 +1,11 @@
 /**
  * ordem_servico_detail.js
  * JavaScript para a página de detalhes da ordem de serviço
- * Funcionalidades: Copiar roteiro e Tradução via Argos Translate
  */
 
-// Cache de traduções para evitar chamadas repetidas ao servidor
 const translationCache = {};
 
-// Função auxiliar para pegar o CSRF Token (Padrão Django)
+// Função auxiliar para pegar CSRF Token
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
@@ -27,56 +25,47 @@ function copiarRoteiro() {
   const roteiroElement = document.getElementById("roteiroText");
   if (!roteiroElement) return;
 
-  const text = roteiroElement.textContent;
+  // innerText é crucial para manter a quebra de linha visual correta
+  const text = roteiroElement.innerText;
   const btn = document.getElementById("copyRoteiroBtn");
 
-  // Usar a API moderna do Clipboard
+  // API Clipboard Moderna
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        // Feedback visual
         const originalHTML = btn.innerHTML;
         btn.classList.remove("btn-success");
-        btn.classList.add("btn-secondary"); // Muda cor temporariamente
+        btn.classList.add("btn-dark");
         btn.innerHTML = '<i class="bi bi-check-lg"></i> Copiado!';
-        btn.disabled = true;
 
-        // Resetar após 2 segundos
         setTimeout(() => {
-          btn.classList.remove("btn-secondary");
+          btn.classList.remove("btn-dark");
           btn.classList.add("btn-success");
-          btn.classList.remove("disabled");
-          btn.disabled = false;
           btn.innerHTML = originalHTML;
         }, 2000);
       })
       .catch((err) => {
         console.error("Erro ao copiar:", err);
-        alert(
-          "Erro ao copiar para a área de transferência. Por favor, selecione o texto e copie manualmente."
-        );
+        fallbackCopia(text);
       });
   } else {
-    // Fallback para navegadores antigos
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed"; // Evita scroll
-    textArea.style.opacity = "0";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-      document.execCommand("copy");
-      alert("Copiado para a área de transferência!");
-    } catch (err) {
-      console.error("Erro ao copiar (fallback):", err);
-      alert("Erro ao copiar. Por favor, copie manualmente.");
-    }
-
-    document.body.removeChild(textArea);
+    fallbackCopia(text);
   }
+}
+
+function fallbackCopia(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand("copy");
+    alert("Copiado para a área de transferência!");
+  } catch (err) {
+    alert("Erro ao copiar. Selecione manualmente.");
+  }
+  document.body.removeChild(textArea);
 }
 
 async function traduzirRoteiro() {
@@ -84,9 +73,13 @@ async function traduzirRoteiro() {
   const targetLang = languageSelector.value;
   const roteiroText = document.getElementById("roteiroText");
   const loadingDiv = document.getElementById("loadingTranslation");
+  const avisoErro = document.getElementById("avisoErro");
   const translateBtn = document.getElementById("translateBtn");
 
-  // Se for português, restaurar original
+  // 1. Limpar aviso de erro
+  if (avisoErro) avisoErro.style.display = "none";
+
+  // 2. Se PT, restaura original imediatamente
   if (targetLang === "pt") {
     if (typeof roteiroOriginal !== "undefined") {
       roteiroText.textContent = roteiroOriginal;
@@ -94,27 +87,31 @@ async function traduzirRoteiro() {
     return;
   }
 
-  // Verificar cache (evita requisição se já traduziu para esse idioma)
-  const cacheKey = `${targetLang}_${roteiroOriginal.length}`; // Chave simples baseada no tamanho
+  // 3. Verificar Cache
+  const cacheKey = `${targetLang}_${roteiroOriginal.length}`;
   if (translationCache[cacheKey]) {
     roteiroText.textContent = translationCache[cacheKey];
     return;
   }
 
-  // Mostrar loading
+  // 4. Ativar Loading
   if (loadingDiv) loadingDiv.style.display = "block";
   if (translateBtn) translateBtn.disabled = true;
+  if (languageSelector) languageSelector.disabled = true;
 
   try {
-    // Tentar obter CSRF token de várias fontes
-    let csrfToken = getCookie("csrftoken");
+    // 5. Buscar Token CSRF
+    let csrfToken = document.getElementById("csrf_token_safe")?.value;
     if (!csrfToken) {
       csrfToken = document.querySelector("[name=csrfmiddlewaretoken]")?.value;
     }
     if (!csrfToken) {
-      csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      csrfToken = getCookie("csrftoken");
     }
 
+    if (!csrfToken) throw new Error("Token de segurança não encontrado.");
+
+    // 6. Requisição
     const response = await fetch("/servicos/ajax/translate/", {
       method: "POST",
       headers: {
@@ -130,36 +127,31 @@ async function traduzirRoteiro() {
       }),
     });
 
-    // Verificar se a resposta é JSON antes de parsear
+    // 7. Validar Resposta JSON
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
-      // Se não for JSON, provavelmente é um erro 500 do Django (HTML de erro)
-      const errorText = await response.text();
-      console.error("Erro no Servidor (Não-JSON):", errorText);
-      throw new Error(
-        "O servidor retornou um erro interno (500). Verifique os logs do Django."
-      );
+      throw new Error("Erro servidor (500/403).");
     }
 
     const data = await response.json();
 
     if (response.ok && data.success) {
       const translatedText = data.translated_text;
-
-      // Salvar no cache
       translationCache[cacheKey] = translatedText;
-
-      // Atualizar display
       roteiroText.textContent = translatedText;
     } else {
-      const errorMsg = data.error || "Erro desconhecido na tradução";
-      console.error("Erro da API:", errorMsg);
-      alert("Falha na tradução: " + errorMsg);
+      throw new Error(data.error || "Erro desconhecido");
     }
   } catch (error) {
-    console.error("Erro na requisição:", error);
-    alert("Erro de comunicação: " + error.message);
-    // Restaura texto original em caso de erro grave
+    console.error("Erro tradução:", error);
+
+    // Exibir aviso vermelho discreto
+    if (avisoErro) {
+      avisoErro.style.display = "inline-block";
+      // Se quiser o texto do erro: avisoErro.innerText = "Erro: " + error.message;
+    }
+
+    // Restaura para PT para não deixar texto quebrado
     if (typeof roteiroOriginal !== "undefined") {
       roteiroText.textContent = roteiroOriginal;
       languageSelector.value = "pt";
@@ -167,17 +159,13 @@ async function traduzirRoteiro() {
   } finally {
     if (loadingDiv) loadingDiv.style.display = "none";
     if (translateBtn) translateBtn.disabled = false;
+    if (languageSelector) languageSelector.disabled = false;
   }
 }
 
-// Inicialização
 document.addEventListener("DOMContentLoaded", function () {
-  // Adicionar listener para traduzir automaticamente ao mudar o select
   const languageSelector = document.getElementById("languageSelector");
   if (languageSelector) {
-    languageSelector.addEventListener("change", function () {
-      // Pequeno delay para UX
-      setTimeout(traduzirRoteiro, 100);
-    });
+    languageSelector.addEventListener("change", () => traduzirRoteiro());
   }
 });

@@ -31,7 +31,6 @@
     <div class="row g-4">
         
         <div class="col-lg-7">
-            
             <div class="card shadow-sm mb-4 border-0">
                 <div class="card-body py-3">
                     <div class="row text-center">
@@ -77,24 +76,13 @@
                             
                             <div class="d-flex gap-3 align-items-center mb-2">
                                 {% if lanc.qtd_inteira > 0 %}
-                                <div class="qty-box">
-                                    <strong class="d-block h6 mb-0">{{ lanc.qtd_inteira }}</strong>
-                                    <small style="font-size: 10px;">INT</small>
-                                </div>
+                                <div class="qty-box"><strong>{{ lanc.qtd_inteira }}</strong><small>INT</small></div>
                                 {% endif %}
-                                
                                 {% if lanc.qtd_meia > 0 %}
-                                <div class="qty-box">
-                                    <strong class="d-block h6 mb-0">{{ lanc.qtd_meia }}</strong>
-                                    <small style="font-size: 10px;">MEIA</small>
-                                </div>
+                                <div class="qty-box"><strong>{{ lanc.qtd_meia }}</strong><small>MEIA</small></div>
                                 {% endif %}
-                                
                                 {% if lanc.qtd_infantil > 0 %}
-                                <div class="qty-box">
-                                    <strong class="d-block h6 mb-0">{{ lanc.qtd_infantil }}</strong>
-                                    <small style="font-size: 10px;">INF</small>
-                                </div>
+                                <div class="qty-box"><strong>{{ lanc.qtd_infantil }}</strong><small>INF</small></div>
                                 {% endif %}
                             </div>
 
@@ -117,14 +105,12 @@
                                 <span>Ingressos:</span>
                                 <span>R$ {{ lanc.valor_total|floatformat:2 }}</span>
                             </div>
-                            
                             {% if lanc.valor_transfer_ida > 0 or lanc.valor_transfer_volta > 0 %}
                             <div class="d-flex justify-content-between justify-content-md-end gap-2 mb-1 small text-warning">
                                 <span><i class="bi bi-bus-front"></i> Transfers:</span>
                                 <span>+ R$ {{ lanc.valor_transfer_ida|add:lanc.valor_transfer_volta|floatformat:2 }}</span>
                             </div>
                             {% endif %}
-                            
                             <h5 class="text-success mt-2 mb-0 fw-bold">R$ {{ lanc.valor_total|floatformat:2 }}</h5>
                         </div>
                     </div>
@@ -134,14 +120,12 @@
                 <div class="ticket-footer">
                     {% if lanc.obs_publica %}
                     <div class="text-muted d-flex gap-2">
-                        <i class="bi bi-chat-left-text mt-1"></i> 
-                        <span class="fst-italic">"{{ lanc.obs_publica }}"</span>
+                        <i class="bi bi-chat-left-text mt-1"></i> <span class="fst-italic">"{{ lanc.obs_publica }}"</span>
                     </div>
                     {% endif %}
                     {% if lanc.obs_privada %}
                     <div class="text-danger small mt-1 d-flex gap-2">
-                        <i class="bi bi-eye-slash mt-1"></i> 
-                        <span>Interno: {{ lanc.obs_privada }}</span>
+                        <i class="bi bi-eye-slash mt-1"></i> <span>Interno: {{ lanc.obs_privada }}</span>
                     </div>
                     {% endif %}
                 </div>
@@ -152,43 +136,40 @@
             {% if ordem.observacoes %}
             <div class="card bg-light border-0 shadow-sm mt-4">
                 <div class="card-body">
-                    <h6 class="small fw-bold text-muted mb-2">OBSERVAÇÕES GERAIS DA OS</h6>
+                    <h6 class="small fw-bold text-muted mb-2">OBSERVAÇÕES GERAIS</h6>
                     <p class="mb-0">{{ ordem.observacoes|linebreaks }}</p>
                 </div>
             </div>
             {% endif %}
-
         </div>
 
         <div class="col-lg-5">
             <div class="whatsapp-sticky-container">
                 <div class="card shadow-sm border-0 bg-transparent">
                     
-                 <div class="card-header whatsapp-preview-header py-2 rounded-top">
-                    <div class="d-flex align-items-center flex-grow-1">
-                        <i class="bi bi-whatsapp me-2"></i>
-                        <span class="fw-bold">Preview</span>
+                    <div class="card-header whatsapp-preview-header py-2 rounded-top">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <i class="bi bi-whatsapp me-2"></i>
+                            <span class="fw-bold">Preview</span>
+                            
+                            <span id="avisoErro" class="ms-2 badge bg-white text-danger border border-danger shadow-sm" style="display:none; font-size: 0.6rem; letter-spacing: 0.5px;">
+                                TRADUÇÃO INDISPONÍVEL
+                            </span>
+                        </div>
                         
-                        <span class="ms-2 badge bg-white text-danger border border-danger shadow-sm" 
-                            style="font-size: 0.6rem; letter-spacing: 0.5px;">
-                            TRADUÇÃO DESABILITADA TEMPORARIAMENTE
-                        </span>
+                        <div class="language-controls">
+                            <select class="form-select form-select-sm" id="languageSelector">
+                                <option value="pt" selected>🇧🇷 PT</option>
+                                <option value="en">🇺🇸 EN</option>
+                                <option value="es">🇪🇸 ES</option>
+                                <option value="fr">🇫🇷 FR</option>
+                            </select>
+                            
+                            <button type="button" class="btn-translate-icon" id="translateBtn" onclick="traduzirRoteiro()" title="Traduzir">
+                                <i class="bi bi-translate"></i>
+                            </button>
+                        </div>
                     </div>
-                    
-                    <div class="language-controls opacity-50">
-                        <select class="form-select form-select-sm" id="languageSelector" disabled style="cursor: not-allowed;">
-                            <option value="pt" selected>🇧🇷 PT</option>
-                            <option value="en">🇺🇸 EN</option>
-                            <option value="es">🇪🇸 ES</option>
-                            <option value="fr">🇫🇷 FR</option>
-                            <option value="de">🇩🇪 DE</option>
-                        </select>
-                        
-                        <button type="button" class="btn-translate-icon" id="translateBtn" disabled style="cursor: not-allowed;">
-                            <i class="bi bi-translate"></i>
-                        </button>
-                    </div>
-                </div>
                     
                     <div class="card-body text-center p-0 pt-3">
                         
@@ -202,14 +183,6 @@
                                 <span><i class="bi bi-wifi"></i> <i class="bi bi-battery-full"></i></span>
                             </div>
 
-                            <div class="text-center text-muted small py-3 mb-2" style="font-size: 11px; background-color: rgba(255,220,0,0.15); border-radius: 8px; margin: 0 10px;">
-                                <i class="bi bi-lock-fill" style="font-size: 9px;"></i> As mensagens são protegidas com criptografia de ponta a ponta.
-                            </div>
-                            
-                            <div class="text-center my-2">
-                                <span class="badge bg-secondary bg-opacity-25 fw-normal shadow-sm">HOJE</span>
-                            </div>
-
                             <div class="whatsapp-bubble" id="roteiroText">
                                 {{ ordem.roteiro|default:"Nenhum roteiro gerado." }}
                             </div>
@@ -218,6 +191,7 @@
                                 {{ ordem.atualizado_em|date:"H:i" }} <i class="bi bi-check2-all text-primary"></i>
                             </div>
                         </div>
+                        
                         <div class="d-grid gap-2 mt-4 px-3">
                             <button type="button" class="btn btn-success btn-lg shadow-sm" id="copyRoteiroBtn" onclick="copiarRoteiro()">
                                 <i class="bi bi-whatsapp me-2"></i>Copiar para WhatsApp
@@ -231,9 +205,12 @@
     </div>
 </div>
 
+<div style="display:none;">
+    <input type="hidden" id="csrf_token_safe" value="{{ csrf_token }}">
+</div>
+
 <script>
     const roteiroOriginal = `{{ ordem.roteiro|escapejs }}`;
-    let roteiroAtual = roteiroOriginal;
 </script>
 {% endblock %}
 
