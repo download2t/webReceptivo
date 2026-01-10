@@ -959,13 +959,15 @@ def ajax_get_servico_info(request):
 
 # ==================== TRADUÇÃO COM ARGOS ====================
 
+
+
 @require_permission('servicos.view_ordemservico')
 @require_http_methods(["POST"])
 def translate_text(request):
-    """Endpoint para tradução usando dicionário customizado completo"""
+    """Endpoint para tradução usando argostranslate + dicionário customizado"""
     import json
     import re
-    from .translations import TRANSLATIONS
+    from .translations import CUSTOM_TRANSLATIONS  # Seu dicionário customizado
     
     try:
         data = json.loads(request.body)
@@ -975,47 +977,112 @@ def translate_text(request):
         if not text:
             return JsonResponse({'error': 'Texto não fornecido'}, status=400, json_dumps_params={'ensure_ascii': False})
         
-        # Proteger elementos que não devem ser traduzidos
+        # Mapear códigos de idioma do frontend para argostranslate
+        lang_map = {
+            'pt': 'pt',  # Português
+            'en': 'en',  # Inglês
+            'es': 'es',  # Espanhol
+            'fr': 'fr',  # Francês
+            'de': 'de',  # Alemão
+            'it': 'it',  # Italiano
+        }
+        
+        source_code = 'pt'
+        target_code = lang_map.get(target_lang, 'en')
+        
+        if source_code == target_code:
+            return JsonResponse({
+                'success': True,
+                'translated_text': text,
+                'source_lang': source_code,
+                'target_lang': target_code,
+                'method': 'no_translation_needed'
+            }, json_dumps_params={'ensure_ascii': False})
+        
+        # Proteger elementos que NÃO devem ser traduzidos
         protected = {}
         counter = 0
         
-        text_protected = text
-        
         def protect(match):
             nonlocal counter
-            key = f"__XPROTX{counter}X__"
+            key = f"__PROTECT_{counter:04d}__"
             protected[key] = match.group(0)
             counter += 1
             return key
         
-        # Proteger datas (dd/mm/yyyy)
-        text_protected = re.sub(r'\d{2}/\d{2}(?:/\d{4})?', protect, text_protected)
-        # Proteger valores R$
-        text_protected = re.sub(r'R\$\s*[\d.,]+', protect, text_protected)
-        # Proteger números entre parênteses
-        text_protected = re.sub(r'\(\d+\s*(?:pax|anos?|idades)\)', protect, text_protected)
-        # Proteger horas
-        text_protected = re.sub(r'\d{1,2}h\d{2}', protect, text_protected)
+        text_protected = text
         
-        # Aplicar traduções
-        target_dict = TRANSLATIONS.get(target_lang, TRANSLATIONS.get('en', {}))
+        # 1. Proteger datas completas (dd/mm/yyyy)
+        text_protected = re.sub(r'\b\d{1,2}/\d{1,2}/\d{4}\b', protect, text_protected)
         
-        # Ordenar por tamanho decrescente para traduzir frases inteiras primeiro
-        sorted_keys = sorted(target_dict.keys(), key=len, reverse=True)
+        # 2. Proteger valores monetários (R$ 1.234,56)
+        text_protected = re.sub(r'R\$\s*\d{1,3}(?:\.\d{3})*(?:,\d{2})?', protect, text_protected)
         
-        for pt_term in sorted_keys:
-            trad_term = target_dict[pt_term]
-            text_protected = text_protected.replace(pt_term, trad_term)
+        # 3. Proteger códigos específicos (OS-2024-001, CAT-123)
+        text_protected = re.sub(r'\b(?:OS|CAT|TRF|CLI)-\d{4}-\d{3,}\b', protect, text_protected, flags=re.IGNORECASE)
         
-        # Restaurar elementos protegidos
-        for key, value in protected.items():
-            text_protected = text_protected.replace(key, value)
+        # 4. Proteger nomes próprios de atrações (em maiúsculas seguidas)
+        text_protected = re.sub(r'\b([A-Z]{2,}(?:\s+[A-Z]{2,}){1,3})\b(?![a-z])', protect, text_protected)
+        
+        # 5. Proteger horários (09h30, 14:00)
+        text_protected = re.sub(r'\b\d{1,2}(?:h|:)\d{2}\b', protect, text_protected)
+        
+        # 6. Proteger números entre parênteses
+        text_protected = re.sub(r'\(\s*\d+(?:\s*(?:pax|anos?|idades?|hora?s?|pessoas?))\s*\)', protect, text_protected, flags=re.IGNORECASE)
+        
+        # APLICAR DICIONÁRIO CUSTOMIZADO PRIMEIRO
+        # (para termos específicos do seu domínio)
+        custom_dict = CUSTOM_TRANSLATIONS.get(target_lang, CUSTOM_TRANSLATIONS.get('en', {}))
+        
+        # Ordenar por comprimento (mais longo primeiro) para evitar sobreposições
+        sorted_custom = sorted(custom_dict.items(), key=lambda x: -len(x[0]))
+        
+        for pt_term, custom_translation in sorted_custom:
+            # Usar substituição com word boundaries para palavras completas
+            if pt_term.isalpha():
+                pattern = r'\b' + re.escape(pt_term) + r'\b'
+                text_protected = re.sub(pattern, custom_translation, text_protected, flags=re.IGNORECASE)
+            else:
+                # Para frases ou termos com espaços
+                text_protected = text_protected.replace(pt_term, custom_translation)
+        
+        # AGORA USAR ARGOSTRANSLATE PARA O RESTO
+        try:
+            import argostranslate.translate
+            import argostranslate.package
+            import argostranslate.models
+            
+            # Verificar se o pacote de tradução está instalado
+            installed_languages = argostranslate.translate.get_installed_languages()
+            from_lang = next((lang for lang in installed_languages if lang.code == source_code), None)
+            to_lang = next((lang for lang in installed_languages if lang.code == target_code), None)
+            
+            if from_lang and to_lang:
+                # Traduzir com argostranslate
+                translation = from_lang.get_translation(to_lang)
+                text_translated = translation.translate(text_protected)
+            else:
+                # Fallback para tradução simples se não houver pacote
+                text_translated = text_protected
+                print(f"Aviso: Pacote de tradução {source_code}->{target_code} não encontrado")
+        except Exception as e:
+            print(f"Erro argostranslate: {e}")
+            text_translated = text_protected  # Fallback
+            
+        # RESTAURAR ELEMENTOS PROTEGIDOS
+        # Ordem inversa para evitar conflitos
+        for i in range(counter-1, -1, -1):
+            key = f"__PROTECT_{i:04d}__"
+            if key in protected:
+                text_translated = text_translated.replace(key, protected[key])
         
         return JsonResponse({
             'success': True,
-            'translated_text': text_protected,
-            'source_lang': 'pt',
-            'target_lang': target_lang
+            'translated_text': text_translated,
+            'source_lang': source_code,
+            'target_lang': target_code,
+            'method': 'argostranslate_with_custom_dict',
+            'custom_terms_applied': len(custom_dict)
         }, json_dumps_params={'ensure_ascii': False})
         
     except json.JSONDecodeError:
@@ -1023,101 +1090,3 @@ def translate_text(request):
     except Exception as e:
         print(f"ERRO TRADUÇÃO: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
-
-        
-        # Dicionários de tradução por idioma
-        translations = {
-            'en': {
-                'CATARATAS': 'WATERFALLS', 'Cataratas': 'Waterfalls', 'cataratas': 'waterfalls',
-                'Inteira': 'Full', 'Inteira(s)': 'Full', 'Meia': 'Half', 'Meia(s)': 'Half',
-                'Infantil': 'Child', 'Ingresso': 'Ticket', 'Ingressos': 'Tickets',
-                'Roteiro': 'Itinerary', 'ROTEIRO': 'ITINERARY', 'Opção': 'Option', 'OPÇÃO': 'OPTION',
-                'Transfer': 'Transfer', 'Transfers': 'Transfers',
-                'PARQUE DAS AVES': 'BIRD PARK', 'Parque das Aves': 'Bird Park',
-                'ITAIPU PANORAMICA': 'ITAIPU PANORAMIC', 'Itaipu Panoramica': 'Itaipu Panoramic',
-                'MARCO DAS TRÊS FRONTEIRAS': 'THREE BORDERS LANDMARK', 'Marco das Três Fronteiras': 'Three Borders Landmark',
-                'RODA GIGANTE': 'FERRIS WHEEL', 'Roda Gigante': 'Ferris Wheel',
-                'MUSEU': 'MUSEUM', 'Museu': 'Museum',
-                'SHOW DAS ÁGUAS': 'WATER SHOW', 'Show das Águas': 'Water Show',
-                'leva e traz': 'round trip', 'leva e trás': 'round trip',
-                'horário livre': 'flexible schedule', 'Criado por': 'Created by',
-                'Data': 'Date', 'Total': 'Total', 'Valor': 'Value',
-                'RESUMO DOS VALORES': 'SUMMARY OF VALUES', 'Resumo dos Valores': 'Summary of Values',
-            },
-            'es': {
-                'CATARATAS': 'CATARATAS', 'Cataratas': 'Cataratas', 'cataratas': 'cataratas',
-                'Inteira': 'Entera', 'Inteira(s)': 'Entera(s)', 'Meia': 'Media', 'Meia(s)': 'Media(s)',
-                'Infantil': 'Infantil', 'Ingresso': 'Entrada', 'Ingressos': 'Entradas',
-                'Roteiro': 'Itinerario', 'ROTEIRO': 'ITINERARIO', 'Opção': 'Opción', 'OPÇÃO': 'OPCIÓN',
-                'Transfer': 'Transfer', 'Transfers': 'Transfers',
-                'PARQUE DAS AVES': 'PARQUE DE LAS AVES', 'Parque das Aves': 'Parque de las Aves',
-                'ITAIPU PANORAMICA': 'ITAIPU PANORÁMICA', 'Itaipu Panoramica': 'Itaipu Panorámica',
-                'MARCO DAS TRÊS FRONTEIRAS': 'HITO DE LAS TRES FRONTERAS', 'Marco das Três Fronteiras': 'Hito de las Tres Fronteras',
-                'RODA GIGANTE': 'RUEDA GIGANTE', 'Roda Gigante': 'Rueda Gigante',
-                'MUSEU': 'MUSEO', 'Museu': 'Museo',
-                'SHOW DAS ÁGUAS': 'SHOW DE LAS AGUAS', 'Show das Águas': 'Show de las Aguas',
-                'leva e traz': 'ida y vuelta', 'leva e trás': 'ida y vuelta',
-                'horário livre': 'horario libre', 'Criado por': 'Creado por',
-                'Data': 'Fecha', 'Total': 'Total', 'Valor': 'Valor',
-                'RESUMO DOS VALORES': 'RESUMEN DE VALORES', 'Resumo dos Valores': 'Resumen de Valores',
-            },
-            'fr': {
-                'CATARATAS': 'CHUTES D\'EAU', 'Cataratas': 'Chutes d\'eau', 'cataratas': 'chutes d\'eau',
-                'Inteira': 'Entier', 'Inteira(s)': 'Entier(s)', 'Meia': 'Demi', 'Meia(s)': 'Demi(s)',
-                'Infantil': 'Enfant', 'Ingresso': 'Billet', 'Ingressos': 'Billets',
-                'Roteiro': 'Itinéraire', 'ROTEIRO': 'ITINÉRAIRE', 'Opção': 'Option', 'OPÇÃO': 'OPTION',
-                'Transfer': 'Transfert', 'Transfers': 'Transferts',
-                'PARQUE DAS AVES': 'PARC DES OISEAUX', 'Parque das Aves': 'Parc des Oiseaux',
-                'ITAIPU PANORAMICA': 'ITAIPU PANORAMIQUE', 'Itaipu Panoramica': 'Itaipu Panoramique',
-                'MARCO DAS TRÊS FRONTEIRAS': 'BORNE DES TROIS FRONTIÈRES', 'Marco das Três Fronteiras': 'Borne des Trois Frontières',
-                'RODA GIGANTE': 'GRANDE ROUE', 'Roda Gigante': 'Grande Roue',
-                'MUSEU': 'MUSÉE', 'Museu': 'Musée',
-                'SHOW DAS ÁGUAS': 'SPECTACLE DES EAUX', 'Show das Águas': 'Spectacle des Eaux',
-                'leva e traz': 'aller-retour', 'leva e trás': 'aller-retour',
-                'horário livre': 'horaire flexible', 'Criado por': 'Créé par',
-                'Data': 'Date', 'Total': 'Total', 'Valor': 'Valeur',
-                'RESUMO DOS VALORES': 'RÉSUMÉ DES VALEURS', 'Resumo dos Valores': 'Résumé des Valeurs',
-            }
-        }
-        
-        # Proteger elementos que não devem ser traduzidos
-        protected = {}
-        counter = 0
-        
-        text_protected = text
-        # Proteger datas (dd/mm/yyyy)
-        def protect(match):
-            nonlocal counter
-            key = f"__PROTECT{counter}__"
-            protected[key] = match.group(0)
-            counter += 1
-            return key
-        
-        text_protected = re.sub(r'\d{2}/\d{2}(?:/\d{4})?', protect, text_protected)
-        # Proteger valores R$
-        text_protected = re.sub(r'R\$\s*[\d.,]+', protect, text_protected)
-        # Proteger números entre parênteses
-        text_protected = re.sub(r'\(\d+\s*(?:pax|anos?)\)', protect, text_protected)
-        
-        # Aplicar traduções
-        target_dict = translations.get(target_lang, translations['en'])
-        for pt, trad in target_dict.items():
-            text_protected = text_protected.replace(pt, trad)
-        
-        # Restaurar elementos protegidos
-        for key, value in protected.items():
-            text_protected = text_protected.replace(key, value)
-        
-        return JsonResponse({
-            'success': True,
-            'translated_text': text_protected,
-            'source_lang': 'pt',
-            'target_lang': target_lang
-        }, json_dumps_params={'ensure_ascii': False})
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'JSON inválido'}, status=400, json_dumps_params={'ensure_ascii': False})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
-
-

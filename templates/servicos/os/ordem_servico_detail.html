@@ -164,26 +164,31 @@
             <div class="whatsapp-sticky-container">
                 <div class="card shadow-sm border-0 bg-transparent">
                     
-                    <div class="card-header whatsapp-preview-header py-2 rounded-top">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-whatsapp me-2"></i>
-                            <span class="fw-bold">Preview</span>
-                        </div>
+                 <div class="card-header whatsapp-preview-header py-2 rounded-top">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <i class="bi bi-whatsapp me-2"></i>
+                        <span class="fw-bold">Preview</span>
                         
-                        <div class="language-controls">
-                            <select class="form-select form-select-sm" id="languageSelector">
-                                <option value="pt" selected>🇧🇷 PT</option>
-                                <option value="en">🇺🇸 EN</option>
-                                <option value="es">🇪🇸 ES</option>
-                                <option value="fr">🇫🇷 FR</option>
-                                <option value="de">🇩🇪 DE</option>
-                            </select>
-                            
-                            <button type="button" class="btn-translate-icon" id="translateBtn" onclick="traduzirRoteiro()" title="Traduzir Texto">
-                                <i class="bi bi-translate"></i>
-                            </button>
-                        </div>
+                        <span class="ms-2 badge bg-white text-danger border border-danger shadow-sm" 
+                            style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                            TRADUÇÃO DESABILITADA TEMPORARIAMENTE
+                        </span>
                     </div>
+                    
+                    <div class="language-controls opacity-50">
+                        <select class="form-select form-select-sm" id="languageSelector" disabled style="cursor: not-allowed;">
+                            <option value="pt" selected>🇧🇷 PT</option>
+                            <option value="en">🇺🇸 EN</option>
+                            <option value="es">🇪🇸 ES</option>
+                            <option value="fr">🇫🇷 FR</option>
+                            <option value="de">🇩🇪 DE</option>
+                        </select>
+                        
+                        <button type="button" class="btn-translate-icon" id="translateBtn" disabled style="cursor: not-allowed;">
+                            <i class="bi bi-translate"></i>
+                        </button>
+                    </div>
+                </div>
                     
                     <div class="card-body text-center p-0 pt-3">
                         
