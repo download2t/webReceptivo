@@ -3,9 +3,10 @@ Formulários para gerenciamento de serviços
 """
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory
 from .models import (
     Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico,
-    Transfer, Cliente, OrdemServico, TransferOS
+    Transfer, Cliente, OrdemServico, TransferOrdemServico
 )
 
 
@@ -456,3 +457,5 @@ class OrdemServicoForm(forms.ModelForm):
                 'placeholder': 'Observações internas sobre a OS'
             }),
         }
+
+

@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count
 from django.views.decorators.http import require_http_methods
-from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico, TransferOS
+from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico, TransferOrdemServico
 from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm, OrdemServicoForm
 from .permissions import require_permission
 
@@ -346,137 +346,112 @@ lancamento_list = ordem_servico_list
 
 
 @require_permission('servicos.add_ordemservico')
+@require_permission('servicos.add_ordemservico')
 def ordem_servico_create(request):
     """Cria novo lançamento / ordem de serviço com múltiplos serviços"""
     import json
     from decimal import Decimal
     from django.utils import timezone
-    
+    # Inicializa variáveis para GET
+    form = OrdemServicoForm()
+    categorias = Categoria.objects.filter(ativo=True)
+    transfers = Transfer.objects.filter(ativo=True) if hasattr(Transfer, 'ativo') else Transfer.objects.all()
+                        # DEBUG: Logar transfers recebidos
+
     if request.method == 'POST':
-        # Verificar se é JSON (múltiplos serviços)
         if request.content_type == 'application/json':
+            import traceback
             try:
-                dados = json.loads(request.body)
-                servicos = dados.get('servicos', [])
-                roteiro = dados.get('roteiro', '')
-                clientes = dados.get('clientes', '')
-                hospedagem = dados.get('hospedagem', '')
-                
-                if not servicos:
-                    return JsonResponse({'error': 'Nenhum serviço informado'}, status=400)
-                
-                # CRIAR UMA ORDEM DE SERVIÇO PRIMEIRO
-                ordem = OrdemServico.objects.create(
-                    cliente=None,  # Sem cliente por enquanto
-                    roteiro=roteiro,
-                    clientes=clientes,
-                    hospedagem=hospedagem,
-                    status='confirmado',
-                    criado_por=request.user
-                )
-                
-                # OS criada com sucesso
-                
-                # Criar todos os lançamentos vinculados a esta OS
-                lancamentos_criados = []
-                
-                for servico_data in servicos:
-                    # Extrair dados
-                    data_servico = servico_data['data']
-                    servico_id = servico_data['servico_id']
-                    qtd_inteira = int(servico_data.get('qtd_inteira') or 0)
-                    qtd_meia = int(servico_data.get('qtd_meia') or 0)
-                    qtd_infantil = int(servico_data.get('qtd_infantil') or 0)
-                    # Converter idades para int, ignorando valores vazios
-                    idades_raw = servico_data.get('idades', [])
-                    idades = [int(i) for i in idades_raw if i and str(i).strip()]
-                    tipos_meia = servico_data.get('tipos_meia', [])
-                    descricao = servico_data.get('descricao', '')
-                    
-                    # Buscar serviço
-                    servico = SubCategoria.objects.get(pk=servico_id)
-                    
-                    # Criar lançamento vinculado à OS
-                    lancamento = LancamentoServico.objects.create(
-                        ordem_servico=ordem,  # VINCULAR À OS
-                        data_servico=data_servico,
-                        categoria=servico.categoria,
-                        subcategoria=servico,
-                        qtd_inteira=qtd_inteira,
-                        qtd_meia=qtd_meia,
-                        qtd_infantil=qtd_infantil,
-                        idades_criancas=','.join(map(str, idades)) if idades else '',
-                        obs_publica=descricao,
-                        criado_por=request.user,
-                        # Snapshot dos valores
-                        valor_unit_inteira=servico.valor_inteira,
-                        valor_unit_meia=servico.valor_meia,
-                        valor_unit_infantil=servico.valor_infantil,
-                    )
-                    
-                    # Lançamento criado com sucesso
-                    
-                    # Associar tipos de meia
-                    if tipos_meia:
-                        tipos_texto = '\n'.join([t.get('tipo', t.get('nome', '')) for t in tipos_meia])
-                        lancamento.tipos_meia_entrada = tipos_texto
-                        lancamento.save()
-                    
-                    # Criar transfers deste serviço específico
-                    transfers_servico = servico_data.get('transfers', [])
-                    for transfer_data in transfers_servico:
-                        transfer_obj = Transfer.objects.get(pk=transfer_data['transfer_id'])
-                        valor_transfer = Decimal(str(transfer_data.get('valor', 0)))
-                        
-                        transfer_os = TransferOS.objects.create(
-                            ordem_servico=ordem,
-                            lancamento_servico=lancamento,  # VINCULAR AO LANÇAMENTO
-                            transfer=transfer_obj,
-                            data_transfer=transfer_data['data'],
-                            quantidade=transfer_data.get('quantidade', 1),
-                            valor=valor_transfer
-                        )
-                        # Transfer vinculado
-                    
-                    lancamentos_criados.append(lancamento)
-                
-                # Atualizar totais da OS
-                ordem.calcular_total()
-                
-                messages.success(request, f'Ordem de Serviço #{ordem.numero_os} criada com {len(lancamentos_criados)} serviço(s)!')
-                return JsonResponse({
-                    'success': True, 
-                    'message': f'Ordem de Serviço #{ordem.numero_os} criada com sucesso',
-                    'ordem_id': ordem.id,
-                    'numero_os': ordem.numero_os
-                })
-                
+                data = json.loads(request.body)
+                # DEBUG: Logar transfers recebidos
+                import logging
+                logger = logging.getLogger('django')
+                logger.warning('DEBUG transfers/transfers_json recebidos: transfers=%s transfers_json=%s', data.get('transfers'), data.get('transfers_json'))
+                # Criação da OS
+                form_data = {
+                    'clientes': data.get('clientes', ''),
+                    'hospedagem': data.get('hospedagem', ''),
+                    'roteiro': data.get('roteiro', ''),
+                    'status': data.get('status', 'orcamento'),
+                }
+                form = OrdemServicoForm(form_data)
+                if form.is_valid():
+                    ordem = form.save(commit=False)
+                    ordem.criado_por = request.user
+                    cliente_id = data.get('cliente')
+                    if cliente_id:
+                        try:
+                            from .models import Cliente
+                            ordem.cliente = Cliente.objects.get(pk=cliente_id)
+                        except Exception:
+                            pass
+                    ordem.save()
+
+                    servicos = data.get('servicos', [])
+                    from .models import LancamentoServico
+                    # Antes de adicionar novos transfers, remover todos os transfers antigos da OS (garante remoção ao editar)
+                    ordem.transfers.all().delete()
+                    for s in servicos:
+                        if s.get('__transfer_avulso'):
+                            # Para cada transfer avulso, criar TransferOrdemServico
+                            for transfer_data in s.get('transfers', []):
+                                transfer_id = transfer_data.get('transfer_id')
+                                transfer_valor = transfer_data.get('valor', 0)
+                                try:
+                                    transfer_id = int(transfer_id)
+                                except Exception:
+                                    continue
+                                try:
+                                    transfer_obj = Transfer.objects.get(pk=transfer_id)
+                                except Transfer.DoesNotExist:
+                                    return JsonResponse({
+                                        'error': 'Transfer não encontrado',
+                                        'transfer_id': transfer_id
+                                    }, status=400)
+                                TransferOrdemServico.objects.create(
+                                    ordem_servico=ordem,
+                                    transfer=transfer_obj,
+                                    valor=transfer_valor
+                                )
+                        else:
+                            # Só cria lançamento se houver serviço válido
+                            if s.get('servico_id') and s.get('categoria_id') and s.get('data'):
+                                lancamento = LancamentoServico(
+                                    ordem_servico=ordem,
+                                    categoria_id=s.get('categoria_id'),
+                                    subcategoria_id=s.get('servico_id'),
+                                    data_servico=s.get('data'),
+                                    obs_publica=s.get('descricao', ''),
+                                    qtd_inteira=s.get('qtd_inteira', 0),
+                                    qtd_meia=s.get('qtd_meia', 0),
+                                    qtd_infantil=s.get('qtd_infantil', 0),
+                                    idades_criancas=','.join(str(i) for i in s.get('idades', [])),
+                                    tipos_meia_entrada='\n'.join(str(tm.get('tipo')) for tm in s.get('tipos_meia', [])),
+                                    valor_unit_inteira=s['info'].get('valor_inteira', 0) if s.get('info') else 0,
+                                    valor_unit_meia=s['info'].get('valor_meia', 0) if s.get('info') else 0,
+                                    valor_unit_infantil=s['info'].get('valor_infantil', 0) if s.get('info') else 0,
+                                )
+                                lancamento.save()
+                    ordem.calcular_total()
+                    ordem.save()
+                    return JsonResponse({'success': True, 'ordem_id': ordem.id})
+                else:
+                    return JsonResponse({'error': 'Dados inválidos', 'form_errors': form.errors}, status=400)
             except Exception as e:
-                import traceback
-                error_msg = str(e)
-                traceback.print_exc()
-                print(f"ERRO AO SALVAR OS: {error_msg}")
-                return JsonResponse({'error': error_msg}, status=500, json_dumps_params={'ensure_ascii': False})
-        else:
-            # Formulário tradicional (manter compatibilidade)
-            form = LancamentoServicoForm(request.POST)
-            if form.is_valid():
-                lancamento = form.save(commit=False)
-                lancamento.criado_por = request.user
-                lancamento.save()
-                messages.success(request, 'Lançamento criado com sucesso!')
-                return redirect('servicos:lancamento_list')
-    else:
-        # GET - mostrar formulário
-        categorias = Categoria.objects.filter(ativo=True)
-        transfers = Transfer.objects.filter(ativo=True)
-        
-        context = {
-            'categorias': categorias,
-            'transfers': transfers,
-            'title': 'Nova Ordem de Serviço'
-        }
-        return render(request, 'servicos/os/ordem_servico_form.html', context)
+                return JsonResponse({
+                    'error': 'Erro inesperado',
+                    'exception': str(e),
+                    'traceback': traceback.format_exc()
+                }, status=500)
+
+    return render(request, 'servicos/os/ordem_servico_form.html', {
+        'form': form,
+        'editando': False,
+        'title': 'Nova Ordem de Serviço',
+        'categorias': categorias,
+        'transfers': transfers,
+        # ...outros contextos necessários...
+    })
 
 # Alias para retrocompatibilidade
 lancamento_create = ordem_servico_create
@@ -487,201 +462,218 @@ def ordem_servico_edit(request, pk):
     lancamento = get_object_or_404(LancamentoServico, pk=pk)
     ordem = lancamento.ordem_servico
     
-    if request.method == 'POST':
-        # Se for JSON (salvamento do formulário novo)
-        if request.content_type == 'application/json':
-            import json
-            from decimal import Decimal
-            try:
-                dados = json.loads(request.body)
-                servicos = dados.get('servicos', [])
-                roteiro = dados.get('roteiro', '')
-                clientes = dados.get('clientes', '')
-                hospedagem = dados.get('hospedagem', '')
-
-                if not servicos:
-                    return JsonResponse({'error': 'Nenhum serviço informado'}, status=400)
-
-                # Atualizar campos da OS
-                if ordem:
-                    ordem.roteiro = roteiro
-                    ordem.clientes = clientes
-                    ordem.hospedagem = hospedagem
-                    ordem.save()
-
-                    # Remover todos os lançamentos e transfers antigos da OS
-                    ordem.lancamentos.all().delete()
-                    ordem.transfers_os.all().delete()
-
-                    # Criar novos lançamentos com seus transfers
-                    for servico_data in servicos:
-                        # Extrair dados
-                        data_servico = servico_data['data']
-                        servico_id = servico_data['servico_id']
-                        qtd_inteira = int(servico_data.get('qtd_inteira') or 0)
-                        qtd_meia = int(servico_data.get('qtd_meia') or 0)
-                        qtd_infantil = int(servico_data.get('qtd_infantil') or 0)
-                        idades_raw = servico_data.get('idades', [])
-                        idades = [int(i) for i in idades_raw if i and str(i).strip()]
-                        tipos_meia = servico_data.get('tipos_meia', [])
-                        descricao = servico_data.get('descricao', '')
-                        
-                        # Buscar serviço
-                        servico = SubCategoria.objects.get(pk=servico_id)
-                        
-                        # Criar novo lançamento vinculado à OS
-                        novo_lancamento = LancamentoServico.objects.create(
-                            ordem_servico=ordem,
-                            data_servico=data_servico,
-                            categoria=servico.categoria,
-                            subcategoria=servico,
-                            qtd_inteira=qtd_inteira,
-                            qtd_meia=qtd_meia,
-                            qtd_infantil=qtd_infantil,
-                            idades_criancas=','.join(map(str, idades)) if idades else '',
-                            obs_publica=descricao,
-                            criado_por=request.user,
-                            valor_unit_inteira=servico.valor_inteira,
-                            valor_unit_meia=servico.valor_meia,
-                            valor_unit_infantil=servico.valor_infantil,
-                        )
-                        
-                        # Associar tipos de meia
-                        if tipos_meia:
-                            tipos_texto = '\n'.join([t.get('tipo', t.get('nome', '')) for t in tipos_meia])
-                            novo_lancamento.tipos_meia_entrada = tipos_texto
-                            novo_lancamento.save()
-                        
-                        # Criar transfers deste serviço específico
-                        transfers_servico = servico_data.get('transfers', [])
-                        for transfer_data in transfers_servico:
-                            transfer_obj = Transfer.objects.get(pk=transfer_data['transfer_id'])
-                            valor_transfer = Decimal(str(transfer_data.get('valor', 0)))
-                            
-                            TransferOS.objects.create(
-                                ordem_servico=ordem,
-                                lancamento_servico=novo_lancamento,  # VINCULAR AO LANÇAMENTO
-                                transfer=transfer_obj,
-                                data_transfer=transfer_data['data'],
-                                quantidade=transfer_data.get('quantidade', 1),
-                                valor=valor_transfer
-                            )
-                    
-                    # Atualizar totais da OS
-                    ordem.calcular_total()
-                    
-                    messages.success(request, f'Ordem de Serviço #{ordem.numero_os} atualizada com {len(servicos)} serviço(s)!')
-                    return JsonResponse({
-                        'success': True, 
-                        'message': f'Ordem de Serviço #{ordem.numero_os} atualizada com sucesso',
-                        'ordem_id': ordem.id,
-                        'numero_os': ordem.numero_os
-                    })
-                else:
-                    return JsonResponse({'error': 'Lançamento não possui Ordem de Serviço vinculada'}, status=400)
-                
-            except Exception as e:
-                import traceback
-                error_msg = str(e)
-                traceback.print_exc()
-                print(f"ERRO AO EDITAR OS: {error_msg}")
-                return JsonResponse({'error': error_msg}, status=500, json_dumps_params={'ensure_ascii': False})
-        else:
-            # Form tradicional (fallback)
-            form = LancamentoServicoForm(request.POST, instance=lancamento)
+    if request.method == 'POST' and request.content_type == 'application/json':
+        import json as _json
+        import traceback
+        try:
+            data = _json.loads(request.body)
+            form_data = {
+                'clientes': data.get('clientes', ''),
+                'hospedagem': data.get('hospedagem', ''),
+                'roteiro': data.get('roteiro', ''),
+                'status': data.get('status', ordem.status if hasattr(ordem, 'status') else 'orcamento'),
+            }
+            form = OrdemServicoForm(form_data, instance=ordem)
             if form.is_valid():
-                form.save()
-                messages.success(request, 'Lançamento atualizado com sucesso!')
-                return redirect('servicos:lancamento_list')
-    
-    # GET - preparar dados para o JavaScript e o formulário de edição da OS
-    categorias = Categoria.objects.filter(ativo=True)
-    transfers = Transfer.objects.filter(ativo=True)
-    import json
-    if ordem:
-        todos_lancamentos = ordem.lancamentos.all().order_by('id')
-        roteiro = ordem.roteiro
-        os_form = OrdemServicoForm(instance=ordem)
-    else:
-        todos_lancamentos = [lancamento]
-        roteiro = ""
-        os_form = None
-
-    lancamentos_data = []
-    for lanc in todos_lancamentos:
-        idades = []
-        if lanc.idades_criancas:
-            idades = [int(i.strip()) for i in lanc.idades_criancas.split(',') if i.strip()]
-        tipos_meia = []
-        if lanc.tipos_meia_entrada:
-            todos_tipos_meia = TipoMeiaEntrada.objects.filter(ativo=True)
-            mapa_tipos = {t.nome: t.id for t in todos_tipos_meia}
-            for tipo_texto in lanc.tipos_meia_entrada.split('\n'):
-                tipo_texto = tipo_texto.strip()
-                if tipo_texto:
-                    tipo_id = mapa_tipos.get(tipo_texto)
-                    if tipo_id:
-                        tipos_meia.append({'id': tipo_id, 'tipo': tipo_texto, 'nome': tipo_texto})
+                ordem = form.save()
+                # Remover todos os lançamentos e transfers antigos
+                ordem.lancamentos.all().delete()
+                ordem.transfers.all().delete()
+                servicos = data.get('servicos', [])
+                for s in servicos:
+                    if s.get('__transfer_avulso'):
+                        for transfer_data in s.get('transfers', []):
+                            transfer_id = transfer_data.get('transfer_id')
+                            transfer_valor = transfer_data.get('valor', 0)
+                            try:
+                                transfer_id = int(transfer_id)
+                            except Exception:
+                                continue
+                            try:
+                                transfer_obj = Transfer.objects.get(pk=transfer_id)
+                            except Transfer.DoesNotExist:
+                                return JsonResponse({
+                                    'error': 'Transfer não encontrado',
+                                    'transfer_id': transfer_id
+                                }, status=400)
+                            TransferOrdemServico.objects.create(
+                                ordem_servico=ordem,
+                                transfer=transfer_obj,
+                                valor=transfer_valor
+                            )
                     else:
-                        primeiro_tipo = todos_tipos_meia.first()
-                        if primeiro_tipo:
-                            tipos_meia.append({'id': primeiro_tipo.id, 'tipo': tipo_texto, 'nome': tipo_texto})
-        transfers_lista = []
-        if ordem:
-            for transfer_os in lanc.transfers_vinculados.all():
-                transfers_lista.append({
-                    'id': transfer_os.id,
-                    'transfer_id': transfer_os.transfer.id,
-                    'nome': transfer_os.transfer.nome,
-                    'data': transfer_os.data_transfer.strftime('%Y-%m-%d'),
-                    'quantidade': transfer_os.quantidade,
-                    'valor': float(transfer_os.valor)
-                })
+                        if s.get('servico_id') and s.get('categoria_id') and s.get('data'):
+                            lancamento = LancamentoServico(
+                                ordem_servico=ordem,
+                                categoria_id=s.get('categoria_id'),
+                                subcategoria_id=s.get('servico_id'),
+                                data_servico=s.get('data'),
+                                obs_publica=s.get('descricao', ''),
+                                qtd_inteira=s.get('qtd_inteira', 0),
+                                qtd_meia=s.get('qtd_meia', 0),
+                                qtd_infantil=s.get('qtd_infantil', 0),
+                                idades_criancas=','.join(str(i) for i in s.get('idades', [])),
+                                tipos_meia_entrada='\n'.join(str(tm.get('tipo')) for tm in s.get('tipos_meia', [])),
+                                valor_unit_inteira=s['info'].get('valor_inteira', 0) if s.get('info') else 0,
+                                valor_unit_meia=s['info'].get('valor_meia', 0) if s.get('info') else 0,
+                                valor_unit_infantil=s['info'].get('valor_infantil', 0) if s.get('info') else 0,
+                            )
+                            lancamento.save()
+                ordem.calcular_total()
+                ordem.save()
+                return JsonResponse({'success': True, 'ordem_id': ordem.id})
+            else:
+                return JsonResponse({'error': 'Dados inválidos', 'form_errors': form.errors}, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'error': 'Erro inesperado',
+                'exception': str(e),
+                'traceback': traceback.format_exc()
+            }, status=500)
+    elif request.method == 'POST':
+        form = OrdemServicoForm(request.POST, instance=ordem)
+        if form.is_valid():
+            ordem = form.save()
+            messages.success(request, 'Ordem de Serviço atualizada com sucesso!')
+            return redirect('servicos:ordem_servico_list')
+    else:
+        form = OrdemServicoForm(instance=ordem)
+    import json
+    categorias = Categoria.objects.filter(ativo=True)
+    transfers = Transfer.objects.filter(ativo=True) if hasattr(Transfer, 'ativo') else Transfer.objects.all()
+    # Serializar lançamentos e transfers para o JS
+    lancamentos_data = []
+    datas_servicos = [l.data_servico for l in ordem.lancamentos.all()]
+    menor_data = min(datas_servicos).strftime('%Y-%m-%d') if datas_servicos else ''
+    for l in ordem.lancamentos.all():
         lancamentos_data.append({
-            'id': lanc.id,
-            'data': lanc.data_servico.strftime('%Y-%m-%d'),
-            'categoria_id': lanc.categoria.id,
-            'servico_id': lanc.subcategoria.id,
-            'servico_nome': lanc.subcategoria.nome,
-            'qtd_inteira': lanc.qtd_inteira,
-            'qtd_meia': lanc.qtd_meia,
-            'qtd_infantil': lanc.qtd_infantil,
-            'idades': idades,
-            'tipos_meia': tipos_meia,
-            'transfers': transfers_lista,
-            'valor_transfer_ida': float(lanc.valor_transfer_ida),
-            'valor_transfer_volta': float(lanc.valor_transfer_volta),
-            'descricao': lanc.obs_publica or lanc.subcategoria.nome,
+            'id': l.id,
+            'data': l.data_servico.strftime('%Y-%m-%d'),
+            'categoria_id': l.categoria_id,
+            'servico_id': l.subcategoria_id,
+            'servico_nome': l.subcategoria.nome,
+            'qtd_inteira': l.qtd_inteira,
+            'qtd_meia': l.qtd_meia,
+            'qtd_infantil': l.qtd_infantil,
+            'idades': [int(i) for i in l.idades_criancas.split(',') if i.strip()] if l.idades_criancas else [],
+            'tipos_meia': [{'tipo': t} for t in l.tipos_meia_entrada.split('\n') if t.strip()],
+            'descricao': l.obs_publica,
+            'valor_transfer_ida': float(l.valor_transfer_ida),
+            'valor_transfer_volta': float(l.valor_transfer_volta),
+            'transfers': [],
             'info': {
-                'id': lanc.subcategoria.id,
-                'nome': lanc.subcategoria.nome,
-                'valor_inteira': float(lanc.subcategoria.valor_inteira),
-                'valor_meia': float(lanc.subcategoria.valor_meia),
-                'valor_infantil': float(lanc.subcategoria.valor_infantil),
-                'aceita_meia_entrada': lanc.subcategoria.aceita_meia_entrada,
-                'permite_infantil': lanc.subcategoria.permite_infantil,
-                'possui_isencao': lanc.subcategoria.possui_isencao,
-                'tem_idade_minima': lanc.subcategoria.tem_idade_minima,
-                'idade_minima': lanc.subcategoria.idade_minima,
-                'idade_minima_infantil': lanc.subcategoria.idade_minima_infantil,
-                'idade_maxima_infantil': lanc.subcategoria.idade_maxima_infantil,
-                'idade_minima_isencao': lanc.subcategoria.idade_isencao_min,
-                'idade_maxima_isencao': lanc.subcategoria.idade_isencao_max,
+                'id': l.subcategoria_id,
+                'nome': l.subcategoria.nome,
+                'descricao': l.subcategoria.descricao,
+                'categoria_nome': l.categoria.nome,
+                'valor_inteira': float(l.valor_unit_inteira),
+                'valor_meia': float(l.valor_unit_meia),
+                'valor_infantil': float(l.valor_unit_infantil),
+                'aceita_meia_entrada': getattr(l.subcategoria, 'aceita_meia_entrada', False),
+                'regras_meia_entrada': getattr(l.subcategoria, 'regras_meia_entrada', ''),
+                'permite_infantil': getattr(l.subcategoria, 'permite_infantil', False),
+                'idade_minima_infantil': getattr(l.subcategoria, 'idade_minima_infantil', 0),
+                'idade_maxima_infantil': getattr(l.subcategoria, 'idade_maxima_infantil', 0),
+                'possui_isencao': getattr(l.subcategoria, 'possui_isencao', False),
+                'idade_isencao_min': getattr(l.subcategoria, 'idade_isencao_min', 0),
+                'idade_isencao_max': getattr(l.subcategoria, 'idade_isencao_max', 0),
+                'texto_isencao': getattr(l.subcategoria, 'texto_isencao', ''),
+                'tem_idade_minima': getattr(l.subcategoria, 'tem_idade_minima', False),
+                'idade_minima': getattr(l.subcategoria, 'idade_minima', 0),
             }
         })
-    context = {
+
+    # Transfers avulsos enviados separadamente e também como __transfer_avulso em lancamentos_json (para roteiro/resumo)
+    transfers_data = []
+    for t in ordem.transfers.all():
+        transfer_dict = {
+            'transfer_id': str(t.transfer_id),
+            'nome': t.transfer.nome,
+            'valor': float(t.valor)
+        }
+        transfers_data.append(transfer_dict)
+        lancamentos_data.append({
+            'id': f'transfer_avulso_{t.id}',
+            'data': menor_data,
+            'servico_nome': t.transfer.nome,
+            'descricao': t.transfer.nome,
+            'qtd_inteira': 0,
+            'qtd_meia': 0,
+            'qtd_infantil': 0,
+            'idades': [],
+            'tipos_meia': [],
+            'transfers': [transfer_dict],
+            'valor_transfer_ida': float(t.valor),
+            'valor_transfer_volta': 0,
+            'info': {},
+            '__transfer_avulso': True,
+            '__nao_exibir_card': True
+        })
+
+    # Gerar roteiro exatamente como no cadastro
+    # Reutiliza a mesma lógica do JS para garantir consistência
+    # Agrupa por data, inclui transfers por data, e gera texto igual ao preview
+    por_data = {}
+    for l in ordem.lancamentos.all():
+        data = l.data_servico.strftime('%Y-%m-%d')
+        if data not in por_data:
+            por_data[data] = []
+        por_data[data].append(l)
+    transfers_por_data = {}
+    for t in ordem.transfers.all():
+        data = menor_data
+        if data not in transfers_por_data:
+            transfers_por_data[data] = []
+        transfers_por_data[data].append(t)
+    datas_ordenadas = sorted(por_data.keys())
+    roteiro = '=== ROTEIRO ===\n\n'
+    resumo_servicos = []
+    for data in datas_ordenadas:
+        roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
+        roteiro += '─' * 15 + '\n'
+        for l in por_data[data]:
+            roteiro += f'\n{l.obs_publica or l.subcategoria.nome}\n'
+            if l.qtd_inteira > 0:
+                roteiro += f'  • {l.qtd_inteira} Inteira(s)\n'
+            if l.qtd_meia > 0:
+                roteiro += f'  • {l.qtd_meia} Meia(s)\n'
+            if l.qtd_infantil > 0:
+                idades = [i for i in l.idades_criancas.split(",") if i.strip()]
+                roteiro += f'  • {l.qtd_infantil} Infantil(is) (idades: {", ".join(idades)})\n'
+            info = l.subcategoria
+            valor_inteira = float(getattr(info, 'valor_inteira', 0))
+            valor_meia = float(getattr(info, 'valor_meia', 0))
+            valor_infantil = float(getattr(info, 'valor_infantil', 0))
+            subtotal_ingressos = (l.qtd_inteira * valor_inteira) + (l.qtd_meia * valor_meia) + (l.qtd_infantil * valor_infantil)
+            resumo_servicos.append({
+                'nome': l.subcategoria.nome,
+                'valorIngressos': subtotal_ingressos
+            })
+        # Transfers deste dia
+        if data in transfers_por_data and transfers_por_data[data]:
+            roteiro += '\n 🚌 Transfers:\n'
+            for t in transfers_por_data[data]:
+                roteiro += f'     - 🚕 {t.transfer.nome} (R$ {float(t.valor):.2f})\n'
+        roteiro += '\n'
+    roteiro += '─' * 15 + '\n'
+    roteiro += '💰 RESUMO DE VALORES\n'
+    for item in resumo_servicos:
+        if item['valorIngressos'] > 0:
+            roteiro += f'\n🎫 {item["nome"]} - Ingresso: R$ {item["valorIngressos"]:.2f}'.replace('.', ',')
+    roteiro += '\n' + '─' * 15 + '\n'
+
+    return render(request, 'servicos/os/ordem_servico_form.html', {
+        'form': form,
+        'editando': True,
+        'title': f'Editar Ordem de Serviço #{ordem.numero_os}',
         'categorias': categorias,
         'transfers': transfers,
-        'title': f'Editar OS #{ordem.numero_os if ordem else lancamento.id}',
-        'editando': True,
         'lancamentos_json': json.dumps(lancamentos_data),
+        'transfers_json': json.dumps(transfers_data),
         'roteiro': roteiro,
-        'form': os_form,
-    }
-    return render(request, 'servicos/os/ordem_servico_form.html', context)
-
-# Alias para retrocompatibilidade
-lancamento_edit = ordem_servico_edit
+        # ...outros contextos necessários...
+    })
+# ...existing code...
 
 @require_permission('servicos.delete_ordemservico')
 def ordem_servico_delete(request, pk):
@@ -705,7 +697,6 @@ def ordem_servico_delete(request, pk):
             messages.error(request, f'Erro ao deletar: {str(e)}')
         return redirect('servicos:lancamento_list')
     
-    # Buscar todos os lançamentos da OS
     lancamentos = ordem.lancamentos.all() if ordem else [lancamento]
     
     context = {
@@ -717,29 +708,19 @@ def ordem_servico_delete(request, pk):
     return render(request, 'servicos/os/ordem_servico_confirm_delete.html', context)
 
 
+
 @require_permission('servicos.view_ordemservico')
 def ordem_servico_detail(request, pk):
     """Visualiza detalhes completos da Ordem de Serviço"""
-    lancamento = get_object_or_404(
-        LancamentoServico.objects.select_related(
-            'categoria', 'subcategoria', 'criado_por', 'ordem_servico'
-        ),
-        pk=pk
-    )
-    
-    ordem = lancamento.ordem_servico
-    
-    # Pegar todos os lançamentos da OS
-    if ordem:
-        todos_lancamentos = ordem.lancamentos.select_related('categoria', 'subcategoria').all()
-    else:
-        todos_lancamentos = [lancamento]
-    
+    from .models import OrdemServico
+    ordem = get_object_or_404(OrdemServico, pk=pk)
+    todos_lancamentos = ordem.lancamentos.select_related('categoria', 'subcategoria').all()
+    transfers = ordem.transfers.select_related('transfer').all()
     context = {
-        'lancamento': lancamento,
         'ordem': ordem,
         'todos_lancamentos': todos_lancamentos,
-        'title': f'OS #{ordem.numero_os if ordem else lancamento.id}'
+        'transfers': transfers,
+        'title': f'OS #{ordem.numero_os}'
     }
     return render(request, 'servicos/os/ordem_servico_detail.html', context)
 

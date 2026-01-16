@@ -294,8 +294,7 @@ class OrdemServico(models.Model):
         total = Decimal('0.00')
         for lancamento in self.lancamentos.all():
             total += lancamento.valor_total
-        for transfer in self.transfers_os.all():
-            total += transfer.valor
+        # Não soma transfers no valor total da OS (apenas ingressos)
         self.valor_total = total
         self.save(update_fields=['valor_total'])
     
@@ -364,31 +363,22 @@ class OrdemServico(models.Model):
         return texto
 
 
-class TransferOS(models.Model):
-    """Transfer vinculado a uma Ordem de Serviço"""
-    
+
+# Novo model: TransferOrdemServico
+class TransferOrdemServico(models.Model):
+    """Vincula transfer diretamente à Ordem de Serviço"""
     ordem_servico = models.ForeignKey(
-        OrdemServico,
+        'OrdemServico',
         on_delete=models.CASCADE,
-        related_name='transfers_os',
+        related_name='transfers',
         verbose_name='Ordem de Serviço'
     )
     transfer = models.ForeignKey(
-        Transfer,
+        'Transfer',
         on_delete=models.PROTECT,
-        related_name='lancamentos',
+        related_name='ordens_servico',
         verbose_name='Transfer'
     )
-    lancamento_servico = models.ForeignKey(
-        'LancamentoServico',
-        on_delete=models.CASCADE,
-        related_name='transfers_vinculados',
-        verbose_name='Lançamento de Serviço',
-        null=True,
-        blank=True
-    )
-    data_transfer = models.DateField('Data do Transfer')
-    quantidade = models.PositiveIntegerField('Quantidade', default=1)
     valor = models.DecimalField(
         'Valor',
         max_digits=10,
@@ -396,15 +386,16 @@ class TransferOS(models.Model):
         validators=[MinValueValidator(Decimal('0.00'))],
         default=Decimal('0.00')
     )
-    observacoes = models.TextField('Observações', blank=True)
-    
+    # Se quiser guardar data, descomente:
+    # data_transfer = models.DateField('Data do Transfer', null=True, blank=True)
+
     class Meta:
-        verbose_name = 'Transfer da OS'
-        verbose_name_plural = 'Transfers da OS'
-        ordering = ['data_transfer']
-    
+        verbose_name = 'Transfer vinculado à OS'
+        verbose_name_plural = 'Transfers vinculados à OS'
+        ordering = ['id']
+
     def __str__(self):
-        return f"{self.transfer.nome} - {self.data_transfer}"
+        return f"{self.transfer.nome} (OS #{self.ordem_servico.id})"
     
     def save(self, *args, **kwargs):
         """Captura o valor do transfer se não foi fornecido"""

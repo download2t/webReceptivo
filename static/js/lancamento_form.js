@@ -154,7 +154,6 @@
         document.getElementById('qtdInfantil').value = 0;
         document.getElementById('containerIdades').innerHTML = '';
         document.getElementById('containerTiposMeia').innerHTML = '';
-        document.getElementById('containerTransfers').innerHTML = '';
         document.getElementById('descricaoServico').value = '';
         contadorTransfers = 0;
         
@@ -355,18 +354,18 @@
         contadorTransfers++;
         const container = document.getElementById('containerTransfers');
         const templateSelect = document.getElementById('transferTemplate');
-        
+
         const div = document.createElement('div');
         div.className = 'transfer-opcao mb-2';
-        
+
         const wrapper = document.createElement('div');
         wrapper.className = 'd-flex align-items-center gap-2';
-        
+
         const label = document.createElement('label');
         label.className = 'form-label small mb-0';
         label.textContent = 'Opção ' + contadorTransfers;
         label.style.minWidth = '60px';
-        
+
         // Campo select do transfer
         const selectClone = templateSelect.cloneNode(true);
         selectClone.id = '';
@@ -374,7 +373,7 @@
         selectClone.className = 'form-select form-select-sm transfer-select';
         selectClone.setAttribute('data-transfer', contadorTransfers);
         selectClone.style.flex = '2';
-        
+
         // Campo de valor editável
         const valorInput = document.createElement('input');
         valorInput.type = 'number';
@@ -385,7 +384,7 @@
         valorInput.style.flex = '1';
         valorInput.style.minWidth = '100px';
         valorInput.value = '0.00';
-        
+
         // Evento para preencher o valor automaticamente ao selecionar transfer
         selectClone.addEventListener('change', function() {
             if (this.value) {
@@ -395,23 +394,69 @@
             } else {
                 valorInput.value = '0.00';
             }
+            // Adicionar transfer avulso ao roteiro imediatamente
+            adicionarTransferAvulsoAoRoteiro();
         });
-        
+
+        // Adicionar transfer avulso ao roteiro ao digitar valor
+        valorInput.addEventListener('input', function() {
+            adicionarTransferAvulsoAoRoteiro();
+        });
+
         const btnRemove = document.createElement('button');
         btnRemove.type = 'button';
         btnRemove.className = 'btn btn-sm btn-outline-danger';
         btnRemove.innerHTML = '<i class="bi bi-trash"></i>';
         btnRemove.addEventListener('click', function() {
             div.remove();
-            // Não decrementar contadorTransfers para evitar IDs duplicados
+            adicionarTransferAvulsoAoRoteiro();
         });
-        
+
         wrapper.appendChild(label);
         wrapper.appendChild(selectClone);
         wrapper.appendChild(valorInput);
         wrapper.appendChild(btnRemove);
         div.appendChild(wrapper);
         container.appendChild(div);
+
+        // Função para adicionar transfer avulso ao roteiro
+        function adicionarTransferAvulsoAoRoteiro() {
+            // Remove todos transfers avulsos do array
+            servicosAdicionados = servicosAdicionados.filter(function(s) { return !s.__transfer_avulso; });
+            // Coletar todos transfers do DOM
+            const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
+            transferOpcoes.forEach(function(opcao, idx) {
+                const select = opcao.querySelector('.transfer-select');
+                const valorInput = opcao.querySelector('.transfer-valor-input');
+                if (select && select.value && valorInput) {
+                    const option = select.selectedOptions[0];
+                    const transferNome = option.getAttribute('data-nome');
+                    const transferValor = parseFloat(valorInput.value) || 0;
+                    // Adiciona transfer avulso ao array
+                    servicosAdicionados.push({
+                        id: 'transfer_avulso_' + idx + '_' + Date.now(),
+                        servico_nome: transferNome,
+                        descricao: transferNome,
+                        qtd_inteira: 0,
+                        qtd_meia: 0,
+                        qtd_infantil: 0,
+                        idades: [],
+                        tipos_meia: [],
+                        transfers: [{
+                            transfer_id: select.value,
+                            nome: transferNome,
+                            valor: transferValor
+                        }],
+                        valor_transfer_ida: transferValor,
+                        valor_transfer_volta: 0,
+                        info: {},
+                        __transfer_avulso: true
+                    });
+                }
+            });
+            atualizarListaServicos();
+            atualizarRoteiro();
+        }
     }
 
     function adicionarServicoALista() {
@@ -655,34 +700,6 @@
                     });
                 }
                 
-                // Limpar transfers existentes antes de adicionar os novos
-                document.getElementById('containerTransfers').innerHTML = '';
-                contadorTransfers = 0;
-                
-                // Adicionar transfers
-                servico.transfers.forEach(function() {
-                    adicionarTransferOpcao();
-                });
-                
-                setTimeout(function() {
-                    // Buscar APENAS os selects e inputs do container de transfers
-                    const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
-                    transferOpcoes.forEach(function(opcao, idx) {
-                        if (servico.transfers[idx]) {
-                            const select = opcao.querySelector('.transfer-select');
-                            const valorInput = opcao.querySelector('.transfer-valor-input');
-                            
-                            if (select) {
-                                select.value = servico.transfers[idx].transfer_id || servico.transfers[idx].id;
-                            }
-                            
-                            if (valorInput && servico.transfers[idx].valor) {
-                                valorInput.value = parseFloat(servico.transfers[idx].valor).toFixed(2);
-                            }
-                        }
-                    });
-                }, 100);
-                
                 document.getElementById('descricaoServico').value = servico.descricao;
                 
                 // Scroll para o formulário
@@ -719,184 +736,213 @@
 
     function atualizarListaServicos() {
         const container = document.getElementById('listaServicos');
-        
-        if (servicosAdicionados.length === 0) {
+
+
+        // Exibir serviços normais e transfers avulsos
+        const servicosNormais = servicosAdicionados.filter(function(s) {
+            return !s.__transfer_avulso && !s.__nao_exibir_card;
+        });
+        const transfersAvulsos = servicosAdicionados.filter(function(s) { return s.__transfer_avulso; });
+
+        if (servicosNormais.length === 0 && transfersAvulsos.length === 0) {
             container.innerHTML = '<div class="text-center text-muted py-4">' +
                 '<i class="bi bi-inbox display-4 d-block mb-2"></i>' +
                 '<p>Nenhum serviço adicionado ainda</p>' +
                 '</div>';
             return;
         }
-        
+
         container.innerHTML = '';
-        
-        servicosAdicionados.forEach(function(servico) {
+
+        servicosNormais.forEach(function(servico) {
             const div = document.createElement('div');
             div.className = 'servico-adicionado';
-            
+            const idParam = (typeof servico.id === 'number' || !isNaN(Number(servico.id))) ? servico.id : `'${servico.id}'`;
             let html = '<div class="d-flex justify-content-between align-items-start mb-2">' +
                 '<div>' +
                 '<h6 class="mb-1"><i class="bi bi-calendar-event me-1"></i>' + formatarData(servico.data) + '</h6>' +
                 '<p class="mb-1"><strong>' + servico.servico_nome + '</strong></p>' +
                 '</div>' +
                 '<div class="btn-group">' +
-                '<button class="btn btn-sm btn-outline-primary" onclick="window.editarServico(' + servico.id + ')">' +
+                '<button class="btn btn-sm btn-outline-primary" onclick="window.editarServico(' + idParam + ')">' +
                 '<i class="bi bi-pencil"></i>' +
                 '</button>' +
-                '<button class="btn btn-sm btn-outline-danger" onclick="window.removerServico(' + servico.id + ')">' +
+                '<button class="btn btn-sm btn-outline-danger" onclick="window.removerServico(' + idParam + ')">' +
                 '<i class="bi bi-trash"></i>' +
                 '</button>' +
                 '</div>' +
                 '</div>';
-            
             html += '<div class="small">';
             if (servico.qtd_inteira > 0) html += '<span class="badge bg-primary me-1">' + servico.qtd_inteira + ' Inteira</span>';
             if (servico.qtd_meia > 0) html += '<span class="badge bg-info me-1">' + servico.qtd_meia + ' Meia</span>';
             if (servico.qtd_infantil > 0) html += '<span class="badge bg-success me-1">' + servico.qtd_infantil + ' Infantil (idades: ' + servico.idades.join(', ') + ')</span>';
             html += '</div>';
-            
-            if (servico.transfers.length > 0) {
-                html += '<div class="small mt-1"><i class="bi bi-bus-front me-1"></i>';
-                servico.transfers.forEach(function(t, idx) {
-                    html += t.nome;
-                    if (idx < servico.transfers.length - 1) html += ', ';
-                });
-                html += '</div>';
-            }
-            
             div.innerHTML = html;
             container.appendChild(div);
         });
-        
-        // Atualizar resumo de totais
-        atualizarResumoTotais();
+
+        // Exibir transfers avulsos com botão editar
+        transfersAvulsos.forEach(function(transfer) {
+            const div = document.createElement('div');
+            div.className = 'servico-adicionado';
+            const idParam = (typeof transfer.id === 'number' || !isNaN(Number(transfer.id))) ? transfer.id : `'${transfer.id}'`;
+            let html = '<div class="d-flex justify-content-between align-items-start mb-2">' +
+                '<div>' +
+                '<h6 class="mb-1"><i class="bi bi-calendar-event me-1"></i>' + formatarData(transfer.data) + '</h6>' +
+                '<p class="mb-1"><strong>' + transfer.servico_nome + '</strong></p>' +
+                '</div>' +
+                '<div class="btn-group">' +
+                '<button class="btn btn-sm btn-outline-primary" onclick="window.editarTransfer(' + idParam + ')">' +
+                '<i class="bi bi-pencil"></i>' +
+                '</button>' +
+                '<button class="btn btn-sm btn-outline-danger" onclick="window.removerServico(' + idParam + ')">' +
+                '<i class="bi bi-trash"></i>' +
+                '</button>' +
+                '</div>' +
+                '</div>';
+            html += '<div class="small">';
+            if (transfer.transfers && transfer.transfers.length > 0) {
+                transfer.transfers.forEach(function(t) {
+                    html += '<span class="badge bg-warning text-dark me-1">Transfer: ' + t.nome + ' - R$ ' + parseFloat(t.valor).toFixed(2).replace('.', ',') + '</span>';
+                });
+            }
+            html += '</div>';
+            div.innerHTML = html;
+            container.appendChild(div);
+        });
     }
-    
-    // Função para atualizar o resumo detalhado (tipo nota fiscal)
-    function atualizarResumoTotais() {
+    // Atualizar resumo de totais
+    atualizarResumoTotais();
+
+// Função para atualizar o resumo detalhado (tipo nota fiscal)
+function atualizarResumoTotais() {
         const container = document.getElementById('resumoDetalhado');
         const totalPaxEl = document.getElementById('totalPaxGeral');
         const valorTotalEl = document.getElementById('valorTotalGeral');
-        
         if (!container || !totalPaxEl || !valorTotalEl) {
             console.warn('Elementos do resumo não encontrados no DOM');
             return;
         }
-        
-        if (servicosAdicionados.length === 0) {
+        // Serviços e transfers
+        const servicosReais = servicosAdicionados.filter(s => !s.__transfer_avulso);
+        const transfersAvulsos = servicosAdicionados.filter(s => s.__transfer_avulso);
+        if (servicosReais.length === 0 && transfersAvulsos.length === 0) {
             container.innerHTML = '<div class="text-center text-muted py-3"><small>Nenhum serviço adicionado</small></div>';
             totalPaxEl.textContent = '0';
             valorTotalEl.textContent = 'R$ 0,00';
             return;
         }
-        
         let totalGeral = 0;
         let totalPaxGeral = 0;
         let html = '<div class="list-group list-group-flush">';
-        
-        servicosAdicionados.forEach(function(servico, index) {
+        let idx = 1;
+        servicosReais.forEach(function(servico) {
             const info = servico.info || {};
             const nomeServico = info.nome || 'Serviço sem nome';
             const data = servico.data || '';
-            
-            console.log('=== RESUMO - Serviço ' + (index + 1) + ' ===');
-            console.log('Nome:', nomeServico);
-            console.log('Transfers:', servico.transfers);
-            console.log('Quantidade de transfers:', servico.transfers ? servico.transfers.length : 0);
-            
-            // Calcula valores do serviço
             const qtdInteira = parseInt(servico.qtd_inteira) || 0;
             const qtdMeia = parseInt(servico.qtd_meia) || 0;
             const qtdInfantil = parseInt(servico.qtd_infantil) || 0;
-            
             const valorInteira = parseFloat(info.valor_inteira || 0);
             const valorMeia = parseFloat(info.valor_meia || 0);
             const valorInfantil = parseFloat(info.valor_infantil || 0);
-            
             const subtotalInteira = qtdInteira * valorInteira;
             const subtotalMeia = qtdMeia * valorMeia;
             const subtotalInfantil = qtdInfantil * valorInfantil;
-            
-            // Transfer - somar todos os transfers do array
-            let totalTransfer = 0;
-            if (servico.transfers && servico.transfers.length > 0) {
-                console.log('=== CALCULANDO TRANSFERS NO RESUMO ===');
-                servico.transfers.forEach(function(transfer, tIdx) {
-                    const valorTransfer = parseFloat(transfer.valor || 0);
-                    console.log(`Transfer ${tIdx + 1}: ${transfer.nome} - Valor: R$ ${valorTransfer}`);
-                    totalTransfer += valorTransfer;
-                });
-                console.log(`Total de transfers: R$ ${totalTransfer}`);
-            }
-            
-            const subtotalServico = subtotalInteira + subtotalMeia + subtotalInfantil + totalTransfer;
+            const subtotalServico = subtotalInteira + subtotalMeia + subtotalInfantil;
             totalGeral += subtotalServico;
             totalPaxGeral += qtdInteira + qtdMeia + qtdInfantil;
-            
             html += '<div class="list-group-item p-2">';
             html += '<div class="d-flex justify-content-between align-items-start mb-2">';
             html += '<div class="flex-grow-1">';
-            html += '<strong class="d-block">' + (index + 1) + '. ' + nomeServico + '</strong>';
+            html += '<strong class="d-block">' + (idx++) + '. ' + nomeServico + '</strong>';
             html += '<small class="text-muted">' + formatarDataBrasileira(data) + '</small>';
             html += '</div>';
             html += '<span class="badge bg-secondary">' + (qtdInteira + qtdMeia + qtdInfantil) + ' PAX</span>';
             html += '</div>';
-            
-            // Detalhes dos valores
             html += '<div class="small ms-3">';
-            
             if (qtdInteira > 0) {
                 html += '<div class="d-flex justify-content-between">';
                 html += '<span class="text-primary">• ' + qtdInteira + ' Inteira(s) × R$ ' + valorInteira.toFixed(2).replace('.', ',') + '</span>';
                 html += '<span class="text-primary">R$ ' + subtotalInteira.toFixed(2).replace('.', ',') + '</span>';
                 html += '</div>';
             }
-            
             if (qtdMeia > 0) {
                 html += '<div class="d-flex justify-content-between">';
                 html += '<span class="text-info">• ' + qtdMeia + ' Meia(s) × R$ ' + valorMeia.toFixed(2).replace('.', ',') + '</span>';
                 html += '<span class="text-info">R$ ' + subtotalMeia.toFixed(2).replace('.', ',') + '</span>';
                 html += '</div>';
             }
-            
             if (qtdInfantil > 0) {
                 html += '<div class="d-flex justify-content-between">';
                 html += '<span class="text-success">• ' + qtdInfantil + ' Infantil(is) × R$ ' + valorInfantil.toFixed(2).replace('.', ',') + '</span>';
                 html += '<span class="text-success">R$ ' + subtotalInfantil.toFixed(2).replace('.', ',') + '</span>';
                 html += '</div>';
             }
-            
-            // Transfers - mostrar cada um com seu nome
-            if (servico.transfers && servico.transfers.length > 0) {
-                console.log('Exibindo ' + servico.transfers.length + ' transfers para:', nomeServico);
-                servico.transfers.forEach(function(transfer, tIdx) {
-                    console.log('  Transfer ' + (tIdx + 1) + ':', transfer.nome, 'R$', transfer.valor);
-                    const valorTransfer = parseFloat(transfer.valor || 0);
-                    if (valorTransfer > 0) {
-                        html += '<div class="d-flex justify-content-between">';
-                        html += '<span class="text-warning">• ' + transfer.nome + '</span>';
-                        html += '<span class="text-warning">R$ ' + valorTransfer.toFixed(2).replace('.', ',') + '</span>';
-                        html += '</div>';
-                    }
-                });
-            }
-            
-            html += '</div>';
-            
-            // Subtotal do serviço
             html += '<div class="d-flex justify-content-end mt-2 pt-2 border-top">';
             html += '<strong>Subtotal: <span class="text-dark">R$ ' + subtotalServico.toFixed(2).replace('.', ',') + '</span></strong>';
             html += '</div>';
-            
+            html += '</div>';
             html += '</div>';
         });
-        
+        // Detalhar transfers avulsos
+        transfersAvulsos.forEach(function(transfer) {
+            html += '<div class="list-group-item p-2">';
+            html += '<div class="d-flex justify-content-between align-items-start mb-2">';
+            html += '<div class="flex-grow-1">';
+            html += '<strong class="d-block">' + (idx++) + '. Transfer</strong>';
+            html += '<small class="text-muted">' + formatarDataBrasileira(transfer.data) + '</small>';
+            html += '</div>';
+            html += '<span class="badge bg-warning text-dark">Transfer</span>';
+            html += '</div>';
+            html += '<div class="small ms-3">';
+            if (transfer.transfers && transfer.transfers.length > 0) {
+                transfer.transfers.forEach(function(t) {
+                    html += '<div class="d-flex justify-content-between">';
+                    html += '<span class="text-warning">• ' + t.nome + '</span>';
+                    html += '<span class="text-warning">R$ ' + parseFloat(t.valor).toFixed(2).replace('.', ',') + '</span>';
+                    html += '</div>';
+                    totalGeral += parseFloat(t.valor) || 0;
+                });
+            }
+            html += '</div>';
+            html += '</div>';
+        });
         html += '</div>';
-        
         container.innerHTML = html;
         totalPaxEl.textContent = totalPaxGeral;
         valorTotalEl.textContent = 'R$ ' + totalGeral.toFixed(2).replace('.', ',');
     }
+        // Função para editar transfer avulso
+        window.editarTransfer = function(id) {
+            // Busca o transfer avulso pelo id
+            const transfer = servicosAdicionados.find(function(s) { return s.id === id; });
+            if (!transfer) return;
+            // Preenche o containerTransfers com o transfer selecionado para edição
+            // Limpa todos os transfers do DOM
+            document.getElementById('containerTransfers').innerHTML = '';
+            contadorTransfers = 0;
+            // Adiciona o transfer selecionado ao DOM para edição
+            adicionarTransferOpcao();
+            // Preenche os campos
+            const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
+            if (transferOpcoes.length > 0) {
+                const opcao = transferOpcoes[0];
+                const select = opcao.querySelector('.transfer-select');
+                const valorInput = opcao.querySelector('.transfer-valor-input');
+                if (select && transfer.transfers && transfer.transfers.length > 0) {
+                    select.value = transfer.transfers[0].transfer_id;
+                    select.dispatchEvent(new Event('change'));
+                }
+                if (valorInput && transfer.transfers && transfer.transfers.length > 0) {
+                    valorInput.value = parseFloat(transfer.transfers[0].valor).toFixed(2);
+                }
+            }
+            // Remove o transfer antigo do array para evitar duplicidade ao salvar
+            servicosAdicionados = servicosAdicionados.filter(function(s) { return s.id !== id; });
+            atualizarListaServicos();
+            atualizarRoteiro();
+        }
     
     // Função auxiliar para formatar data
     function formatarDataBrasileira(data) {
@@ -919,98 +965,100 @@
             return;
         }
         
-        // Agrupar por data
+        // Separar transfers avulsos dos serviços
+        const transfersAvulsos = servicosAdicionados.filter(s => s.__transfer_avulso);
+        const servicosNormais = servicosAdicionados.filter(s => !s.__transfer_avulso);
+
+        // Agrupar serviços por data
         const porData = {};
-        servicosAdicionados.forEach(function(servico) {
+        servicosNormais.forEach(function(servico) {
             if (!porData[servico.data]) {
                 porData[servico.data] = [];
             }
             porData[servico.data].push(servico);
         });
-        
+        // Agrupar transfers avulsos por data (usando data do primeiro serviço do dia, ou string vazia se não houver)
+        const transfersPorData = {};
+        transfersAvulsos.forEach(function(transfer) {
+            // Tentar usar a data do transfer, se existir, senão agrupar no primeiro dia
+            let data = transfer.data;
+            if (!data) {
+                // Se não tem data, usar a menor data dos serviços
+                const datasServicos = Object.keys(porData);
+                data = datasServicos.length > 0 ? datasServicos[0] : '';
+            }
+            if (!transfersPorData[data]) transfersPorData[data] = [];
+            transfersPorData[data].push(transfer);
+        });
+
         // Ordenar datas
         const datasOrdenadas = Object.keys(porData).sort();
-        
+
         // Gerar roteiro
         let roteiro = '=== ROTEIRO ===\n\n';
-        
+
         // Array para armazenar resumo de valores
         const resumoServicos = [];
-        
+
         datasOrdenadas.forEach(function(data) {
             roteiro += '📅 ' + formatarData(data) + '\n';
             roteiro += '─'.repeat(15) + '\n';
-            
+
             porData[data].forEach(function(servico, idx) {
-                roteiro += '\n' + servico.descricao + '\n';
-                
+                roteiro += '\n' + (servico.descricao || '') + '\n';
+
                 if (servico.qtd_inteira > 0) roteiro += '  • ' + servico.qtd_inteira + ' Inteira(s)\n';
                 if (servico.qtd_meia > 0) roteiro += '  • ' + servico.qtd_meia + ' Meia(s)\n';
                 if (servico.qtd_infantil > 0) roteiro += '  • ' + servico.qtd_infantil + ' Infantil(is) (idades: ' + servico.idades.join(', ') + ')\n';
-                
-                if (servico.transfers.length > 0) {
-                    roteiro += '  🚌 Transfers:\n';
-                    servico.transfers.forEach(function(t) {
-                        roteiro += '     - ' + t.nome + ' (R$ ' + parseFloat(t.valor).toFixed(2) + ')\n';
-                    });
-                }
-                
-                roteiro += '';
-                
-                // Calcular valores do serviço para o resumo
+
+                // Adicionar ao resumo
                 const info = servico.info || {};
                 const qtdInteira = parseInt(servico.qtd_inteira) || 0;
                 const qtdMeia = parseInt(servico.qtd_meia) || 0;
                 const qtdInfantil = parseInt(servico.qtd_infantil) || 0;
-                
                 const valorInteira = parseFloat(info.valor_inteira || 0);
                 const valorMeia = parseFloat(info.valor_meia || 0);
                 const valorInfantil = parseFloat(info.valor_infantil || 0);
-                
                 const subtotalIngressos = (qtdInteira * valorInteira) + (qtdMeia * valorMeia) + (qtdInfantil * valorInfantil);
-                
-                // Calcular total de transfers
-                let totalTransfers = 0;
-                if (servico.transfers && servico.transfers.length > 0) {
-                    servico.transfers.forEach(function(t) {
-                        totalTransfers += parseFloat(t.valor || 0);
-                    });
-                }
-                
-                const valorTotal = subtotalIngressos + totalTransfers;
-                
-                // Adicionar ao resumo
                 resumoServicos.push({
                     nome: servico.servico_nome || servico.descricao,
-                    valorIngressos: subtotalIngressos,
-                    valorTransfers: totalTransfers,
-                    valorTotal: valorTotal
+                    valorIngressos: subtotalIngressos
                 });
             });
-            
-            roteiro += '\n\n';
+
+            // Transfers deste dia
+            if (transfersPorData[data] && transfersPorData[data].length > 0) {
+                roteiro += '\n 🚌 Transfers:\n';
+                transfersPorData[data].forEach(function(transfer) {
+                    if (transfer.transfers && transfer.transfers.length > 0) {
+                        transfer.transfers.forEach(function(t) {
+                            roteiro += '     - 🚕 ' + t.nome + ' (R$ ' + parseFloat(t.valor).toFixed(2).replace('.', ',') + ')\n';
+                        });
+                    }
+                });
+            }
+
+            roteiro += '\n';
         });
-        
-        // Adicionar resumo de valores no final
-        if (resumoServicos.length > 0) {
-            roteiro += '─'.repeat(15) + '\n';
-            roteiro += '💰 RESUMO DE VALORES\n';
-            roteiro += '─'.repeat(15) + '\n';
-            
-            resumoServicos.forEach(function(item) {
-                if (item.valorIngressos > 0) {
-                    roteiro += '\n🎫 ' + item.nome + ' - Ingresso: R$ ' + item.valorIngressos.toFixed(2).replace('.', ',');
-                }
-            });
-            
-            roteiro += '\n' + '─'.repeat(15) + '\n';
-        }
-        
-        preview.textContent = roteiro;
+
+        roteiro += '─'.repeat(15) + '\n';
+        roteiro += '💰 RESUMO DE VALORES\n';
+        resumoServicos.forEach(function(item) {
+            if (item.valorIngressos > 0) {
+                roteiro += '\n🎫 ' + item.nome + ' - Ingresso: R$ ' + item.valorIngressos.toFixed(2).replace('.', ',');
+            }
+        });
+        roteiro += '\n' + '─'.repeat(15) + '\n';
+
+        preview.innerHTML = roteiro;
     }
 
     function formatarData(data) {
+        if (!data || typeof data !== 'string' || !data.includes('-')) {
+            return '';
+        }
         const partes = data.split('-');
+        if (partes.length !== 3) return data;
         return partes[2] + '/' + partes[1] + '/' + partes[0];
     }
 
@@ -1097,7 +1145,6 @@
         document.getElementById('qtdInfantil').value = 0;
         document.getElementById('containerIdades').innerHTML = '';
         document.getElementById('containerTiposMeia').innerHTML = '';
-        document.getElementById('containerTransfers').innerHTML = '';
         document.getElementById('descricaoServico').value = '';
         
         // Ocultar campos condicionais
@@ -1180,7 +1227,6 @@
                 console.log('Carregando lançamento ' + (index + 1) + ':', lancamento);
                 console.log('  - tipos_meia recebidos:', lancamento.tipos_meia);
                 console.log('  - idades recebidas:', lancamento.idades);
-                
                 // Garantir que o objeto tem todas as propriedades necessárias
                 const servicoCompleto = {
                     id: lancamento.id || Date.now() + index,
@@ -1199,7 +1245,9 @@
                     descricao: lancamento.descricao || '',
                     info: lancamento.info || {}
                 };
-                
+                // Se for transfer avulso, manter flags especiais
+                if (lancamento.__transfer_avulso) servicoCompleto.__transfer_avulso = true;
+                if (lancamento.__nao_exibir_card) servicoCompleto.__nao_exibir_card = true;
                 servicosAdicionados.push(servicoCompleto);
                 console.log('Serviço adicionado:', servicoCompleto);
             });

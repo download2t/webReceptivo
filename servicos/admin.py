@@ -4,7 +4,7 @@ Configuração do Django Admin para serviços turísticos
 from django.contrib import admin
 from .models import (
     Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico,
-    Transfer, Cliente, OrdemServico, TransferOS
+    Transfer, Cliente, OrdemServico, TransferOrdemServico
 )
 
 
@@ -124,10 +124,11 @@ class LancamentoServicoInline(admin.TabularInline):
     readonly_fields = ('valor_total',)
 
 
-class TransferOSInline(admin.TabularInline):
-    model = TransferOS
+
+class TransferOrdemServicoInline(admin.TabularInline):
+    model = TransferOrdemServico
     extra = 0
-    fields = ('data_transfer', 'transfer', 'quantidade', 'valor', 'observacoes')
+    fields = ('transfer', 'valor')
 
 
 @admin.register(OrdemServico)
@@ -137,7 +138,7 @@ class OrdemServicoAdmin(admin.ModelAdmin):
     search_fields = ('numero_os', 'cliente__nome')
     date_hierarchy = 'data_criacao'
     readonly_fields = ('numero_os', 'valor_total', 'data_criacao', 'atualizado_em', 'criado_por')
-    inlines = [LancamentoServicoInline, TransferOSInline]
+    inlines = [LancamentoServicoInline, TransferOrdemServicoInline]
     
     fieldsets = (
         ('Informações Básicas', {
@@ -170,9 +171,9 @@ class OrdemServicoAdmin(admin.ModelAdmin):
         obj.calcular_total()
 
 
-@admin.register(TransferOS)
-class TransferOSAdmin(admin.ModelAdmin):
-    list_display = ('ordem_servico', 'transfer', 'data_transfer', 'quantidade', 'valor')
-    list_filter = ('data_transfer',)
+
+# Registrar TransferOrdemServico no admin
+@admin.register(TransferOrdemServico)
+class TransferOrdemServicoAdmin(admin.ModelAdmin):
+    list_display = ('ordem_servico', 'transfer', 'valor')
     search_fields = ('ordem_servico__numero_os', 'transfer__nome')
-    date_hierarchy = 'data_transfer'

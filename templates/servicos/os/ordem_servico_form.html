@@ -34,7 +34,8 @@
                     <p class="text-white-50 small mb-0 mt-1">Selecione categoria, serviço e quantidades</p>
                 </div>
                 <div class="card-body">
-                    <!-- Campos OS: Clientes e Hospedagem -->
+                    <!-- Seleção Básica -->
+                             <!-- Campos OS: Clientes e Hospedagem -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label for="id_clientes" class="form-label fw-600 text-dark">Clientes</label>
@@ -45,7 +46,6 @@
                             <input type="text" name="hospedagem" id="id_hospedagem" class="form-control" placeholder="Informação de hospedagem" value="{{ form.hospedagem.value|default_if_none:'' }}">
                         </div>
                     </div>
-                    <!-- Seleção Básica -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label fw-600 text-dark">Data do Serviço <span class="text-danger">*</span></label>
@@ -66,7 +66,15 @@
                                 <option value="" class="text-muted">Selecione uma categoria acima</option>
                             </select>
                         </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-600 text-dark">Transfers <span class="text-secondary small"></span></label>
+                            <div id="containerTransfers"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddTransfer">
+                                <i class="bi bi-plus-circle me-1"></i>Adicionar Transfer
+                            </button>
+                        </div>
                     </div>
+                    
 
                     <!-- Campos Dinâmicos do Serviço -->
                     <div class="campos-servico" id="camposServico">
@@ -137,14 +145,6 @@
                                       placeholder="Será gerada automaticamente, mas você pode editar"></textarea>
                         </div>
 
-                        <!-- Transfers -->
-                        <div class="mb-4">
-                            <label class="form-label fw-600 text-dark">Transfers <span class="text-secondary small">(opcional)</span></label>
-                            <div id="containerTransfers"></div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddTransfer">
-                                <i class="bi bi-plus-circle me-1"></i>Adicionar Transfer
-                            </button>
-                        </div>
 
                         <!-- Botões de Ação -->
                         <div class="d-grid gap-2 pt-2 border-top">

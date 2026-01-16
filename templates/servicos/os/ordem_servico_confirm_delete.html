@@ -113,15 +113,6 @@
                                         </div>
                                         {% endif %}
                                         
-                                        {% if lanc.transfers_vinculados.exists %}
-                                        <div class="small mt-2 text-warning">
-                                            <i class="bi bi-bus-front me-1"></i>
-                                            <strong>Transfers:</strong>
-                                            {% for transfer in lanc.transfers_vinculados.all %}
-                                                {{ transfer.transfer.nome }} (R$ {{ transfer.valor|floatformat:2 }}){% if not forloop.last %}, {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
                                     </div>
                                     <div class="text-end ms-3">
                                         <strong class="text-success">R$ {{ lanc.valor_total|floatformat:2 }}</strong>
