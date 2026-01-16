@@ -164,11 +164,15 @@
     line-height: 19px;
     white-space: pre-wrap;
     word-wrap: break-word;
-    align-self: flex-end;
+    align-self: center;
     max-width: 95%;
-    margin-bottom: 5px;
-    margin-top: auto; 
+    margin-bottom: auto;
+    margin-top: auto;
     text-align: left;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .whatsapp-bubble::after {

@@ -14,7 +14,6 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Detalhes da OS: {{ ordem.numero_os }}</h4>
-            <p class="text-muted mb-0">Cliente: <strong>{{ ordem.cliente.nome|default:"Não informado" }}</strong></p>
             {% if ordem.clientes %}
             <p class="text-muted mb-0">Clientes (texto): <strong>{{ ordem.clientes }}</strong></p>
             {% endif %}
