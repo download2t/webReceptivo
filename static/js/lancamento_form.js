@@ -1257,19 +1257,16 @@ function atualizarResumoTotais() {
             
             // Atualizar a UI
             atualizarListaServicos();
-            
-            // Se há roteiro salvo, definir no preview
+            atualizarResumoTotais();
+            atualizarRoteiro();
+            // Se há roteiro salvo, também exibe no preview (mas sempre atualiza resumo)
             if (roteiro) {
                 const roteiroElement = document.getElementById('roteiroPreview');
                 if (roteiroElement) {
                     roteiroElement.textContent = roteiro;
                     console.log('Roteiro carregado no preview');
                 }
-            } else {
-                console.log('Gerando roteiro automaticamente...');
-                atualizarRoteiro();
             }
-            
             console.log('=== CARREGAMENTO CONCLUÍDO ===');
         } else {
             console.warn('Nenhum lançamento para carregar ou array vazio');
