@@ -34,6 +34,17 @@
                     <p class="text-white-50 small mb-0 mt-1">Selecione categoria, serviço e quantidades</p>
                 </div>
                 <div class="card-body">
+                    <!-- Campos OS: Clientes e Hospedagem -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="id_clientes" class="form-label fw-600 text-dark">Clientes</label>
+                            <input type="text" name="clientes" id="id_clientes" class="form-control" placeholder="Nome(s) do(s) cliente(s) desta OS" value="{{ form.clientes.value|default_if_none:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_hospedagem" class="form-label fw-600 text-dark">Hospedagem</label>
+                            <input type="text" name="hospedagem" id="id_hospedagem" class="form-control" placeholder="Informação de hospedagem" value="{{ form.hospedagem.value|default_if_none:'' }}">
+                        </div>
+                    </div>
                     <!-- Seleção Básica -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">

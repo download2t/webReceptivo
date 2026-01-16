@@ -13,7 +13,17 @@
     document.addEventListener('DOMContentLoaded', function() {
         carregarDadosDjango();
         inicializarEventos();
-        
+
+        // Preencher campos de texto OS ao editar
+        if (djangoData.editando) {
+            if (typeof djangoData.clientes === 'string' && document.getElementById('id_clientes')) {
+                document.getElementById('id_clientes').value = djangoData.clientes;
+            }
+            if (typeof djangoData.hospedagem === 'string' && document.getElementById('id_hospedagem')) {
+                document.getElementById('id_hospedagem').value = djangoData.hospedagem;
+            }
+        }
+
         // Se estiver editando, carregar TODOS os lançamentos
         if (djangoData.editando && djangoData.lancamentosData && djangoData.lancamentosData.length > 0) {
             carregarLancamentosParaEdicao(djangoData.lancamentosData, djangoData.roteiro);
@@ -1115,7 +1125,9 @@
         
         const dados = {
             servicos: servicosAdicionados,
-            roteiro: document.getElementById('roteiroPreview').textContent
+            roteiro: document.getElementById('roteiroPreview').textContent,
+            clientes: document.getElementById('id_clientes') ? document.getElementById('id_clientes').value : '',
+            hospedagem: document.getElementById('id_hospedagem') ? document.getElementById('id_hospedagem').value : ''
         };
         
         // URL varia se está editando ou criando

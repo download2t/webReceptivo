@@ -53,8 +53,20 @@
                                 
                                 {% if ordem.cliente %}
                                 <div class="mb-0">
-                                    <small class="text-muted d-block">Cliente</small>
+                                    <small class="text-muted d-block">Cliente (relacional)</small>
                                     <strong>{{ ordem.cliente.nome }}</strong>
+                                </div>
+                                {% endif %}
+                                {% if ordem.clientes %}
+                                <div class="mb-0">
+                                    <small class="text-muted d-block">Clientes (texto)</small>
+                                    <strong>{{ ordem.clientes }}</strong>
+                                </div>
+                                {% endif %}
+                                {% if ordem.hospedagem %}
+                                <div class="mb-0">
+                                    <small class="text-muted d-block">Hospedagem</small>
+                                    <strong>{{ ordem.hospedagem }}</strong>
                                 </div>
                                 {% endif %}
                             </div>

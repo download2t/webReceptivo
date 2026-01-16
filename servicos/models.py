@@ -234,6 +234,9 @@ class OrdemServico(models.Model):
     data_fim = models.DateField('Data de Fim', null=True, blank=True)
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='orcamento')
     
+    # Campos adicionais
+    clientes = models.CharField('Clientes', max_length=255, blank=True, help_text='Nome(s) do(s) cliente(s) desta OS')
+    hospedagem = models.CharField('Hospedagem', max_length=255, blank=True, help_text='Informação de hospedagem')
     # Roteiro formatado (editável pelo usuário)
     roteiro = models.TextField('Roteiro', blank=True, help_text='Roteiro formatado para o cliente')
     observacoes = models.TextField('Observações', blank=True)

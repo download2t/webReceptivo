@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count
 from django.views.decorators.http import require_http_methods
 from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico, TransferOS
-from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm
+from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm, OrdemServicoForm
 from .permissions import require_permission
 
 
@@ -359,6 +359,8 @@ def ordem_servico_create(request):
                 dados = json.loads(request.body)
                 servicos = dados.get('servicos', [])
                 roteiro = dados.get('roteiro', '')
+                clientes = dados.get('clientes', '')
+                hospedagem = dados.get('hospedagem', '')
                 
                 if not servicos:
                     return JsonResponse({'error': 'Nenhum serviço informado'}, status=400)
@@ -367,6 +369,8 @@ def ordem_servico_create(request):
                 ordem = OrdemServico.objects.create(
                     cliente=None,  # Sem cliente por enquanto
                     roteiro=roteiro,
+                    clientes=clientes,
+                    hospedagem=hospedagem,
                     status='confirmado',
                     criado_por=request.user
                 )
@@ -492,19 +496,23 @@ def ordem_servico_edit(request, pk):
                 dados = json.loads(request.body)
                 servicos = dados.get('servicos', [])
                 roteiro = dados.get('roteiro', '')
-                
+                clientes = dados.get('clientes', '')
+                hospedagem = dados.get('hospedagem', '')
+
                 if not servicos:
                     return JsonResponse({'error': 'Nenhum serviço informado'}, status=400)
-                
-                # Atualizar roteiro da OS
+
+                # Atualizar campos da OS
                 if ordem:
                     ordem.roteiro = roteiro
+                    ordem.clientes = clientes
+                    ordem.hospedagem = hospedagem
                     ordem.save()
-                    
+
                     # Remover todos os lançamentos e transfers antigos da OS
                     ordem.lancamentos.all().delete()
                     ordem.transfers_os.all().delete()
-                    
+
                     # Criar novos lançamentos com seus transfers
                     for servico_data in servicos:
                         # Extrair dados
@@ -586,59 +594,40 @@ def ordem_servico_edit(request, pk):
                 messages.success(request, 'Lançamento atualizado com sucesso!')
                 return redirect('servicos:lancamento_list')
     
-    # GET - preparar dados para o JavaScript
+    # GET - preparar dados para o JavaScript e o formulário de edição da OS
     categorias = Categoria.objects.filter(ativo=True)
     transfers = Transfer.objects.filter(ativo=True)
-    
-    # Converter TODOS os lançamentos da OS para formato JavaScript
     import json
-    
-    # Pegar todos os lançamentos da mesma OS
     if ordem:
         todos_lancamentos = ordem.lancamentos.all().order_by('id')
         roteiro = ordem.roteiro
+        os_form = OrdemServicoForm(instance=ordem)
     else:
         todos_lancamentos = [lancamento]
         roteiro = ""
-    
+        os_form = None
+
     lancamentos_data = []
-    
     for lanc in todos_lancamentos:
         idades = []
         if lanc.idades_criancas:
             idades = [int(i.strip()) for i in lanc.idades_criancas.split(',') if i.strip()]
-        
         tipos_meia = []
         if lanc.tipos_meia_entrada:
-            # Buscar todos os tipos de meia disponíveis para fazer o mapeamento
             todos_tipos_meia = TipoMeiaEntrada.objects.filter(ativo=True)
             mapa_tipos = {t.nome: t.id for t in todos_tipos_meia}
-            
             for tipo_texto in lanc.tipos_meia_entrada.split('\n'):
                 tipo_texto = tipo_texto.strip()
                 if tipo_texto:
-                    # Tentar encontrar o ID real pelo nome
                     tipo_id = mapa_tipos.get(tipo_texto)
                     if tipo_id:
-                        tipos_meia.append({
-                            'id': tipo_id,
-                            'tipo': tipo_texto,
-                            'nome': tipo_texto
-                        })
+                        tipos_meia.append({'id': tipo_id, 'tipo': tipo_texto, 'nome': tipo_texto})
                     else:
-                        # Se não encontrar, usar o primeiro tipo disponível como fallback
                         primeiro_tipo = todos_tipos_meia.first()
                         if primeiro_tipo:
-                            tipos_meia.append({
-                                'id': primeiro_tipo.id,
-                                'tipo': tipo_texto,
-                                'nome': tipo_texto
-                            })
-        
-        # Coletar transfers deste lançamento usando o vínculo direto
+                            tipos_meia.append({'id': primeiro_tipo.id, 'tipo': tipo_texto, 'nome': tipo_texto})
         transfers_lista = []
         if ordem:
-            # Usar o related_name 'transfers_vinculados' do campo lancamento_servico
             for transfer_os in lanc.transfers_vinculados.all():
                 transfers_lista.append({
                     'id': transfer_os.id,
@@ -648,7 +637,6 @@ def ordem_servico_edit(request, pk):
                     'quantidade': transfer_os.quantidade,
                     'valor': float(transfer_os.valor)
                 })
-        
         lancamentos_data.append({
             'id': lanc.id,
             'data': lanc.data_servico.strftime('%Y-%m-%d'),
@@ -681,7 +669,6 @@ def ordem_servico_edit(request, pk):
                 'idade_maxima_isencao': lanc.subcategoria.idade_isencao_max,
             }
         })
-    
     context = {
         'categorias': categorias,
         'transfers': transfers,
@@ -689,6 +676,7 @@ def ordem_servico_edit(request, pk):
         'editando': True,
         'lancamentos_json': json.dumps(lancamentos_data),
         'roteiro': roteiro,
+        'form': os_form,
     }
     return render(request, 'servicos/os/ordem_servico_form.html', context)
 

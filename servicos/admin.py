@@ -141,7 +141,7 @@ class OrdemServicoAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('numero_os', 'cliente', 'status')
+            'fields': ('numero_os', 'cliente', 'clientes', 'hospedagem', 'status')
         }),
         ('Período', {
             'fields': ('data_inicio', 'data_fim')

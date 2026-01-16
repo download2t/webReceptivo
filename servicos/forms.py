@@ -426,9 +426,16 @@ class OrdemServicoForm(forms.ModelForm):
     
     class Meta:
         model = OrdemServico
-        fields = ['cliente', 'data_inicio', 'data_fim', 'status', 'roteiro', 'observacoes']
+        fields = ['clientes', 'hospedagem', 'data_inicio', 'data_fim', 'status', 'roteiro', 'observacoes']
         widgets = {
-            'cliente': forms.Select(attrs={'class': 'form-select'}),
+            'clientes': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome(s) do(s) cliente(s) desta OS'
+            }),
+            'hospedagem': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Informação de hospedagem'
+            }),
             'data_inicio': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date'
