@@ -1179,11 +1179,9 @@ function atualizarResumoTotais() {
         
         // URL varia se está editando ou criando
         let url = djangoData.urls.ordemServicoCreate || djangoData.urls.lancamentoCreate;
-        
-        if (djangoData.editando && djangoData.lancamentosData && djangoData.lancamentosData.length > 0) {
-            // Pegar o ID do primeiro lançamento (todos pertencem à mesma OS)
-            const primeiroLancamentoId = djangoData.lancamentosData[0].id;
-            url = '/servicos/lancamentos/' + primeiroLancamentoId + '/editar/';
+        // Se estiver editando, usar o id da Ordem de Serviço
+        if (djangoData.editando && djangoData.ordemId) {
+            url = '/servicos/ordens-servico/' + djangoData.ordemId + '/editar/';
         }
         
         console.log('URL de salvamento:', url);

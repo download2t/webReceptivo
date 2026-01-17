@@ -284,34 +284,57 @@ def tipo_meia_delete(request, pk):
 
 @require_permission('servicos.view_ordemservico')
 def ordem_servico_list(request):
-    """Lista Ordens de Serviço (OS) com seus lançamentos agrupados"""
-    ordens = OrdemServico.objects.select_related('criado_por').prefetch_related(
-        'lancamentos__categoria',
-        'lancamentos__subcategoria'
-    ).all().order_by('-data_criacao')
-    
-    # Filtros
+    # Listagem e filtros de Ordens de Serviço
     search = request.GET.get('search', '')
     categoria_id = request.GET.get('categoria', '')
     data_inicio = request.GET.get('data_inicio', '')
     data_fim = request.GET.get('data_fim', '')
-    
+
+    ordens = OrdemServico.objects.all()
+
     if search:
         ordens = ordens.filter(
             Q(numero_os__icontains=search) |
             Q(lancamentos__subcategoria__nome__icontains=search) |
-            Q(roteiro__icontains=search)
+            Q(criado_por__username__icontains=search) |
+            Q(criado_por__first_name__icontains=search) |
+            Q(criado_por__last_name__icontains=search)
         ).distinct()
-    
     if categoria_id:
-        ordens = ordens.filter(lancamentos__categoria_id=categoria_id).distinct()
-    
+        ordens = ordens.filter(lancamentos__subcategoria__categoria_id=categoria_id).distinct()
     if data_inicio:
         ordens = ordens.filter(lancamentos__data_servico__gte=data_inicio).distinct()
-    
     if data_fim:
         ordens = ordens.filter(lancamentos__data_servico__lte=data_fim).distinct()
-    
+
+    # Estatísticas
+    stats = {
+        'total_ordens': ordens.count(),
+        'total_servicos': sum(os.lancamentos.count() for os in ordens),
+    }
+
+    # Paginação
+    paginator = Paginator(ordens, 20)
+    page = request.GET.get('page')
+    ordens = paginator.get_page(page)
+
+    categorias = Categoria.objects.filter(ativo=True)
+
+    # Debug: Verificar permissões do usuário
+    has_add_perm = request.user.has_perm('servicos.add_ordemservico')
+
+    context = {
+        'ordens': ordens,
+        'categorias': categorias,
+        'stats': stats,
+        'search': search,
+        'categoria_filter': categoria_id,
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
+        'title': 'Ordens de Serviço',
+        'debug_has_add_perm': has_add_perm,  # Debug
+    }
+    return render(request, 'servicos/os/ordem_servico_list.html', context)
     # Estatísticas
     stats = {
         'total_ordens': ordens.count(),
@@ -458,9 +481,8 @@ lancamento_create = ordem_servico_create
 
 @require_permission('servicos.change_ordemservico')
 def ordem_servico_edit(request, pk):
-    """Edita lançamento existente - usa mesmo template de criação"""
-    lancamento = get_object_or_404(LancamentoServico, pk=pk)
-    ordem = lancamento.ordem_servico
+    """Edita Ordem de Serviço existente - usa mesmo template de criação"""
+    ordem = get_object_or_404(OrdemServico, pk=pk)
     
     if request.method == 'POST' and request.content_type == 'application/json':
         import json as _json
@@ -678,32 +700,21 @@ def ordem_servico_edit(request, pk):
 @require_permission('servicos.delete_ordemservico')
 def ordem_servico_delete(request, pk):
     """Deleta Ordem de Serviço inteira com todos os lançamentos"""
-    lancamento = get_object_or_404(LancamentoServico, pk=pk)
-    ordem = lancamento.ordem_servico
-    
+    ordem = get_object_or_404(OrdemServico, pk=pk)
     if request.method == 'POST':
         try:
-            if ordem:
-                numero_os = ordem.numero_os
-                qtd_servicos = ordem.lancamentos.count()
-                # Deletar a OS inteira (cascade vai deletar os lançamentos)
-                ordem.delete()
-                messages.success(request, f'Ordem de Serviço #{numero_os} deletada com sucesso ({qtd_servicos} serviço(s))!')
-            else:
-                # Lançamento sem OS, deletar só ele
-                lancamento.delete()
-                messages.success(request, 'Lançamento deletado com sucesso!')
+            numero_os = ordem.numero_os
+            qtd_servicos = ordem.lancamentos.count()
+            ordem.delete()
+            messages.success(request, f'Ordem de Serviço #{numero_os} deletada com sucesso ({qtd_servicos} serviço(s))!')
         except Exception as e:
             messages.error(request, f'Erro ao deletar: {str(e)}')
-        return redirect('servicos:lancamento_list')
-    
-    lancamentos = ordem.lancamentos.all() if ordem else [lancamento]
-    
+        return redirect('servicos:ordem_servico_list')
+    lancamentos = ordem.lancamentos.all()
     context = {
-        'lancamento': lancamento,
         'ordem': ordem,
         'lancamentos': lancamentos,
-        'title': f'Deletar OS #{ordem.numero_os if ordem else lancamento.id}'
+        'title': f'Deletar OS #{ordem.numero_os}'
     }
     return render(request, 'servicos/os/ordem_servico_confirm_delete.html', context)
 

@@ -167,6 +167,8 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="fw-600 text-dark">OS #</th>
+                                        <th class="fw-600 text-dark">Cliente</th>
+                                        <th class="fw-600 text-dark">Hospedagem</th>
                                         <th class="fw-600 text-dark">Serviços</th>
                                         <th class="fw-600 text-dark text-center">Qtd</th>
                                         <th class="fw-600 text-dark text-end">Valor</th>
@@ -178,6 +180,20 @@
                                     {% for ordem in ordens %}
                                     <tr>
                                         <td><strong>{{ ordem.numero_os }}</strong></td>
+                                        <td>
+                                            {% if ordem.clientes %}
+                                                {{ ordem.clientes }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if ordem.hospedagem %}
+                                                {{ ordem.hospedagem }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             {% with lancamentos=ordem.lancamentos.all total=ordem.lancamentos.count %}
                                             {% for lancamento in lancamentos|slice:":2" %}
@@ -203,25 +219,21 @@
                                             <small class="text-muted">{{ ordem.data_criacao|date:"d/m/Y H:i" }}</small>
                                         </td>
                                         <td class="text-end">
-                                            {% with primeiro_lancamento=ordem.lancamentos.first %}
-                                            {% if primeiro_lancamento %}
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm" title="Detalhes">
+                                                <a href="{% url 'servicos:ordem_servico_detail' ordem.id %}" class="btn btn-info btn-sm" title="Detalhes">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                                 {% if perms.servicos.change_ordemservico %}
-                                                <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm" title="Editar">
+                                                <a href="{% url 'servicos:ordem_servico_edit' ordem.id %}" class="btn btn-warning btn-sm" title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                                 {% endif %}
                                                 {% if perms.servicos.delete_ordemservico %}
-                                                <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm" title="Excluir">
+                                                <a href="{% url 'servicos:ordem_servico_delete' ordem.id %}" class="btn btn-danger btn-sm" title="Excluir">
                                                     <i class="bi bi-trash"></i>
                                                 </a>
                                                 {% endif %}
                                             </div>
-                                            {% endif %}
-                                            {% endwith %}
                                         </td>
                                     </tr>
                                     {% empty %}
@@ -247,8 +259,26 @@
                                         <h5 class="mb-1 fw-600 text-white">
                                             <i class="bi bi-receipt me-2"></i>OS #{{ ordem.numero_os }}
                                         </h5>
-                                        <small class="text-white-50">
+                                        <small class="text-white-50 d-block">
                                             <i class="bi bi-person me-1"></i>{{ ordem.criado_por.get_full_name|default:ordem.criado_por.username }}
+                                        </small>
+                                        <small class="text-white-50 d-block">
+                                            <i class="bi bi-person-badge me-1"></i>
+                                            Cliente:
+                                            {% if ordem.clientes %}
+                                                {{ ordem.clientes }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </small>
+                                        <small class="text-white-50 d-block">
+                                            <i class="bi bi-house-door me-1"></i>
+                                            Hospedagem:
+                                            {% if ordem.hospedagem %}
+                                                {{ ordem.hospedagem}}
+                                            {% else %}
+                                                -
+                                            {% endif %}
                                         </small>
                                     </div>
                                     <div class="text-end">
@@ -300,23 +330,21 @@
                                 </div>
                                 
                                 <!-- Ações -->
-                                {% if primeiro_lancamento %}
                                 <div class="btn-group w-100" role="group">
-                                    <a href="{% url 'servicos:ordem_servico_detail' primeiro_lancamento.id %}" class="btn btn-info btn-sm">
+                                    <a href="{% url 'servicos:ordem_servico_detail' ordem.id %}" class="btn btn-info btn-sm">
                                         <i class="bi bi-eye me-1"></i>Detalhes
                                     </a>
                                     {% if perms.servicos.change_ordemservico %}
-                                    <a href="{% url 'servicos:ordem_servico_edit' primeiro_lancamento.id %}" class="btn btn-warning btn-sm">
+                                    <a href="{% url 'servicos:ordem_servico_edit' ordem.id %}" class="btn btn-warning btn-sm">
                                         <i class="bi bi-pencil me-1"></i>Editar
                                     </a>
                                     {% endif %}
                                     {% if perms.servicos.delete_ordemservico %}
-                                    <a href="{% url 'servicos:ordem_servico_delete' primeiro_lancamento.id %}" class="btn btn-danger btn-sm">
+                                    <a href="{% url 'servicos:ordem_servico_delete' ordem.id %}" class="btn btn-danger btn-sm">
                                         <i class="bi bi-trash me-1"></i>Excluir
                                     </a>
                                     {% endif %}
                                 </div>
-                                {% endif %}
                             </div>
                         </div>
                         {% endwith %}

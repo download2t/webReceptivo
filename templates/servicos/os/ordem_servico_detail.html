@@ -15,15 +15,15 @@
         <div>
             <h4 class="mb-1 fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Detalhes da OS: {{ ordem.numero_os }}</h4>
             {% if ordem.clientes %}
-            <p class="text-muted mb-0">Clientes (texto): <strong>{{ ordem.clientes }}</strong></p>
+            <p class="text-muted mb-0">Clientes: <strong>{{ ordem.clientes }}</strong></p>
             {% endif %}
             {% if ordem.hospedagem %}
             <p class="text-muted mb-0">Hospedagem: <strong>{{ ordem.hospedagem }}</strong></p>
             {% endif %}
         </div>
         <div class="btn-group">
-            {% if perms.servicos.change_ordemservico %}
-            <a href="{% url 'servicos:ordem_servico_edit' lancamento.id %}" class="btn btn-primary">
+            {% if perms.servicos.change_ordemservico and ordem.id %}
+            <a href="{% url 'servicos:ordem_servico_edit' ordem.id %}" class="btn btn-primary">
                 <i class="bi bi-pencil-square"></i> Editar OS
             </a>
             {% endif %}

@@ -289,6 +289,7 @@
     },
     "csrfToken": "{{ csrf_token }}",
     "editando": {% if editando %}true{% else %}false{% endif %},
+    "ordemId": {% if editando and form.instance.id %}{{ form.instance.id }}{% else %}null{% endif %},
     "lancamentosData": {% if lancamentos_json %}{{ lancamentos_json|safe }}{% else %}[]{% endif %},
     "roteiro": "{{ roteiro|escapejs }}"
 }
