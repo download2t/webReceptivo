@@ -1,5 +1,5 @@
 """
-Comando para recalcular os valores totais de todas as Ordens de Serviço
+Comando para recalcular os valores totais de todas as Ordens de Serviço.
 """
 from django.core.management.base import BaseCommand
 from servicos.models import OrdemServico

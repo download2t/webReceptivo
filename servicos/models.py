@@ -290,11 +290,12 @@ class OrdemServico(models.Model):
         super().save(*args, **kwargs)
     
     def calcular_total(self):
-        """Calcula o valor total somando todos os lançamentos"""
+        """Calcula o valor total somando lançamentos e transfers"""
         total = Decimal('0.00')
         for lancamento in self.lancamentos.all():
             total += lancamento.valor_total
-        # Não soma transfers no valor total da OS (apenas ingressos)
+        for transfer in self.transfers.all():
+            total += transfer.valor
         self.valor_total = total
         self.save(update_fields=['valor_total'])
     
@@ -704,7 +705,7 @@ class LancamentoServico(models.Model):
         total += self.qtd_infantil_pagam_inteira * self.valor_unit_inteira
         
         # Crianças isentas não somam (R$ 0,00)
-        # NOTA: Transfers agora são vinculados à OS via TransferOS, não aos lançamentos individuais
+        # Transfers são somados no total da OrdemServico, não aqui.
         
         return total
     

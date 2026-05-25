@@ -296,6 +296,8 @@ def ordem_servico_list(request):
         ordens = ordens.filter(
             Q(numero_os__icontains=search) |
             Q(lancamentos__subcategoria__nome__icontains=search) |
+            Q(transfers__transfer__nome__icontains=search) |
+            Q(transfers__nome_personalizado__icontains=search) |
             Q(criado_por__username__icontains=search) |
             Q(criado_por__first_name__icontains=search) |
             Q(criado_por__last_name__icontains=search)
@@ -310,7 +312,7 @@ def ordem_servico_list(request):
     # Estatísticas
     stats = {
         'total_ordens': ordens.count(),
-        'total_servicos': sum(os.lancamentos.count() for os in ordens),
+        'total_servicos': sum(os.lancamentos.count() + os.transfers.count() for os in ordens),
     }
 
     # Paginação
@@ -654,36 +656,46 @@ def ordem_servico_edit(request, pk):
         if data not in transfers_por_data:
             transfers_por_data[data] = []
         transfers_por_data[data].append(t)
-    datas_ordenadas = sorted(por_data.keys())
+    datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
     roteiro = '=== ROTEIRO ===\n\n'
     resumo_servicos = []
     for data in datas_ordenadas:
-        roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
-        roteiro += '─' * 15 + '\n'
-        for l in por_data[data]:
-            roteiro += f'\n{l.obs_publica or l.subcategoria.nome}\n'
-            if l.qtd_inteira > 0:
-                roteiro += f'  • {l.qtd_inteira} Inteira(s)\n'
-            if l.qtd_meia > 0:
-                roteiro += f'  • {l.qtd_meia} Meia(s)\n'
-            if l.qtd_infantil > 0:
-                idades = [i for i in l.idades_criancas.split(",") if i.strip()]
-                roteiro += f'  • {l.qtd_infantil} Infantil(is) (idades: {", ".join(idades)})\n'
-            info = l.subcategoria
-            valor_inteira = float(getattr(info, 'valor_inteira', 0))
-            valor_meia = float(getattr(info, 'valor_meia', 0))
-            valor_infantil = float(getattr(info, 'valor_infantil', 0))
-            subtotal_ingressos = (l.qtd_inteira * valor_inteira) + (l.qtd_meia * valor_meia) + (l.qtd_infantil * valor_infantil)
-            resumo_servicos.append({
-                'nome': l.subcategoria.nome,
-                'valorIngressos': subtotal_ingressos
-            })
-        # Transfers deste dia
-        if data in transfers_por_data and transfers_por_data[data]:
+        tem_servicos = data in por_data and por_data[data]
+        tem_transfers = data in transfers_por_data and transfers_por_data[data]
+
+        if data:
+            roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
+            roteiro += '─' * 15 + '\n'
+        elif tem_transfers and not tem_servicos:
+            roteiro += '🚌 Transfers\n'
+            roteiro += '─' * 15 + '\n'
+
+        if tem_servicos:
+            for l in por_data[data]:
+                roteiro += f'\n{l.obs_publica or l.subcategoria.nome}\n'
+                if l.qtd_inteira > 0:
+                    roteiro += f'  • {l.qtd_inteira} Inteira(s)\n'
+                if l.qtd_meia > 0:
+                    roteiro += f'  • {l.qtd_meia} Meia(s)\n'
+                if l.qtd_infantil > 0:
+                    idades = [i for i in l.idades_criancas.split(",") if i.strip()]
+                    roteiro += f'  • {l.qtd_infantil} Infantil(is) (idades: {", ".join(idades)})\n'
+                info = l.subcategoria
+                valor_inteira = float(getattr(info, 'valor_inteira', 0))
+                valor_meia = float(getattr(info, 'valor_meia', 0))
+                valor_infantil = float(getattr(info, 'valor_infantil', 0))
+                subtotal_ingressos = (l.qtd_inteira * valor_inteira) + (l.qtd_meia * valor_meia) + (l.qtd_infantil * valor_infantil)
+                resumo_servicos.append({
+                    'nome': l.subcategoria.nome,
+                    'valorIngressos': subtotal_ingressos
+                })
+
+        if tem_transfers:
             roteiro += '\n 🚌 Transfers:\n'
             for t in transfers_por_data[data]:
                 nome_exibicao = getattr(t, 'nome_personalizado', '') or t.transfer.nome
                 roteiro += f'     - 🚕 {nome_exibicao} (R$ {float(t.valor):.2f})\n'
+
         roteiro += '\n'
     roteiro += '─' * 15 + '\n'
     roteiro += '💰 RESUMO DE VALORES\n'
