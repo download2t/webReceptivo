@@ -384,12 +384,14 @@
         nomeInput.placeholder = 'Nome na OS';
         nomeInput.style.flex = '2';
         nomeInput.style.minWidth = '180px';
+        nomeInput.disabled = true;
 
         const dataInput = document.createElement('input');
         dataInput.type = 'date';
         dataInput.className = 'form-control form-control-sm transfer-data-input';
         dataInput.style.flex = '1';
         dataInput.style.minWidth = '150px';
+        dataInput.disabled = true;
 
         // Campo de valor editável
         const valorInput = document.createElement('input');
@@ -401,6 +403,13 @@
         valorInput.style.flex = '1';
         valorInput.style.minWidth = '100px';
         valorInput.value = '0.00';
+        valorInput.disabled = true;
+
+        function atualizarEstadoCamposTransfer(habilitado) {
+            nomeInput.disabled = !habilitado;
+            dataInput.disabled = !habilitado;
+            valorInput.disabled = !habilitado;
+        }
 
         // Evento para preencher o valor automaticamente ao selecionar transfer
         selectClone.addEventListener('change', function() {
@@ -416,9 +425,12 @@
                         dataInput.value = dataServicoInput.value;
                     }
                 }
+                atualizarEstadoCamposTransfer(true);
             } else {
                 nomeInput.value = '';
                 valorInput.value = '0.00';
+                dataInput.value = '';
+                atualizarEstadoCamposTransfer(false);
             }
             // Adicionar transfer avulso ao roteiro imediatamente
             atualizarTransferAvulsoAoRoteiro();
@@ -467,6 +479,7 @@
             if (dados.valor !== undefined && dados.valor !== null && dados.valor !== '') {
                 valorInput.value = parseFloat(dados.valor).toFixed(2);
             }
+            atualizarEstadoCamposTransfer(true);
             atualizarTransferEdicaoUI();
             atualizarTransferAvulsoAoRoteiro();
         }
