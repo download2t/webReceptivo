@@ -420,6 +420,7 @@ def ordem_servico_create(request):
                             for transfer_data in s.get('transfers', []):
                                 transfer_id = transfer_data.get('transfer_id')
                                 transfer_valor = transfer_data.get('valor', 0)
+                                nome_personalizado = transfer_data.get('nome_personalizado', '')
                                 try:
                                     transfer_id = int(transfer_id)
                                 except Exception:
@@ -434,6 +435,7 @@ def ordem_servico_create(request):
                                 TransferOrdemServico.objects.create(
                                     ordem_servico=ordem,
                                     transfer=transfer_obj,
+                                    nome_personalizado=nome_personalizado,
                                     valor=transfer_valor
                                 )
                         else:
@@ -507,6 +509,7 @@ def ordem_servico_edit(request, pk):
                         for transfer_data in s.get('transfers', []):
                             transfer_id = transfer_data.get('transfer_id')
                             transfer_valor = transfer_data.get('valor', 0)
+                            nome_personalizado = transfer_data.get('nome_personalizado', '')
                             try:
                                 transfer_id = int(transfer_id)
                             except Exception:
@@ -521,6 +524,7 @@ def ordem_servico_edit(request, pk):
                             TransferOrdemServico.objects.create(
                                 ordem_servico=ordem,
                                 transfer=transfer_obj,
+                                nome_personalizado=nome_personalizado,
                                 valor=transfer_valor
                             )
                     else:
@@ -608,17 +612,20 @@ def ordem_servico_edit(request, pk):
     # Transfers avulsos enviados separadamente e também como __transfer_avulso em lancamentos_json (para roteiro/resumo)
     transfers_data = []
     for t in ordem.transfers.all():
+        nome_exibicao = t.nome_exibicao if hasattr(t, 'nome_exibicao') else (getattr(t, 'nome_personalizado', '') or t.transfer.nome)
         transfer_dict = {
             'transfer_id': str(t.transfer_id),
             'nome': t.transfer.nome,
+            'nome_personalizado': getattr(t, 'nome_personalizado', ''),
+            'nome_exibicao': nome_exibicao,
             'valor': float(t.valor)
         }
         transfers_data.append(transfer_dict)
         lancamentos_data.append({
             'id': f'transfer_avulso_{t.id}',
             'data': menor_data,
-            'servico_nome': t.transfer.nome,
-            'descricao': t.transfer.nome,
+            'servico_nome': nome_exibicao,
+            'descricao': nome_exibicao,
             'qtd_inteira': 0,
             'qtd_meia': 0,
             'qtd_infantil': 0,
@@ -675,7 +682,8 @@ def ordem_servico_edit(request, pk):
         if data in transfers_por_data and transfers_por_data[data]:
             roteiro += '\n 🚌 Transfers:\n'
             for t in transfers_por_data[data]:
-                roteiro += f'     - 🚕 {t.transfer.nome} (R$ {float(t.valor):.2f})\n'
+                nome_exibicao = getattr(t, 'nome_personalizado', '') or t.transfer.nome
+                roteiro += f'     - 🚕 {nome_exibicao} (R$ {float(t.valor):.2f})\n'
         roteiro += '\n'
     roteiro += '─' * 15 + '\n'
     roteiro += '💰 RESUMO DE VALORES\n'

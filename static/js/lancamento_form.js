@@ -374,6 +374,13 @@
         selectClone.setAttribute('data-transfer', contadorTransfers);
         selectClone.style.flex = '2';
 
+        const nomeInput = document.createElement('input');
+        nomeInput.type = 'text';
+        nomeInput.className = 'form-control form-control-sm transfer-nome-input';
+        nomeInput.placeholder = 'Nome na OS';
+        nomeInput.style.flex = '2';
+        nomeInput.style.minWidth = '180px';
+
         // Campo de valor editável
         const valorInput = document.createElement('input');
         valorInput.type = 'number';
@@ -390,11 +397,18 @@
             if (this.value) {
                 const option = this.selectedOptions[0];
                 const transferValor = option.getAttribute('data-valor');
+                const transferNome = option.getAttribute('data-nome') || '';
+                nomeInput.value = transferNome;
                 valorInput.value = parseFloat(transferValor).toFixed(2);
             } else {
+                nomeInput.value = '';
                 valorInput.value = '0.00';
             }
             // Adicionar transfer avulso ao roteiro imediatamente
+            adicionarTransferAvulsoAoRoteiro();
+        });
+
+        nomeInput.addEventListener('input', function() {
             adicionarTransferAvulsoAoRoteiro();
         });
 
@@ -414,6 +428,7 @@
 
         wrapper.appendChild(label);
         wrapper.appendChild(selectClone);
+        wrapper.appendChild(nomeInput);
         wrapper.appendChild(valorInput);
         wrapper.appendChild(btnRemove);
         div.appendChild(wrapper);
@@ -427,16 +442,18 @@
             const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
             transferOpcoes.forEach(function(opcao, idx) {
                 const select = opcao.querySelector('.transfer-select');
+                const nomeInput = opcao.querySelector('.transfer-nome-input');
                 const valorInput = opcao.querySelector('.transfer-valor-input');
                 if (select && select.value && valorInput) {
                     const option = select.selectedOptions[0];
                     const transferNome = option.getAttribute('data-nome');
+                    const nomePersonalizado = nomeInput ? nomeInput.value.trim() : '';
                     const transferValor = parseFloat(valorInput.value) || 0;
                     // Adiciona transfer avulso ao array
                     servicosAdicionados.push({
                         id: 'transfer_avulso_' + idx + '_' + Date.now(),
-                        servico_nome: transferNome,
-                        descricao: transferNome,
+                        servico_nome: nomePersonalizado || transferNome,
+                        descricao: nomePersonalizado || transferNome,
                         qtd_inteira: 0,
                         qtd_meia: 0,
                         qtd_infantil: 0,
@@ -445,6 +462,8 @@
                         transfers: [{
                             transfer_id: select.value,
                             nome: transferNome,
+                            nome_personalizado: nomePersonalizado,
+                            nome_exibicao: nomePersonalizado || transferNome,
                             valor: transferValor
                         }],
                         valor_transfer_ida: transferValor,
@@ -803,7 +822,8 @@
             html += '<div class="small">';
             if (transfer.transfers && transfer.transfers.length > 0) {
                 transfer.transfers.forEach(function(t) {
-                    html += '<span class="badge bg-warning text-dark me-1">Transfer: ' + t.nome + ' - R$ ' + parseFloat(t.valor).toFixed(2).replace('.', ',') + '</span>';
+                    const nomeExibicao = t.nome_personalizado || t.nome_exibicao || t.nome;
+                    html += '<span class="badge bg-warning text-dark me-1">Transfer: ' + nomeExibicao + ' - R$ ' + parseFloat(t.valor).toFixed(2).replace('.', ',') + '</span>';
                 });
             }
             html += '</div>';
@@ -899,7 +919,8 @@ function atualizarResumoTotais() {
             if (transfer.transfers && transfer.transfers.length > 0) {
                 transfer.transfers.forEach(function(t) {
                     html += '<div class="d-flex justify-content-between">';
-                    html += '<span class="text-warning">• ' + t.nome + '</span>';
+                    const nomeExibicao = t.nome_personalizado || t.nome_exibicao || t.nome;
+                    html += '<span class="text-warning">• ' + nomeExibicao + '</span>';
                     html += '<span class="text-warning">R$ ' + parseFloat(t.valor).toFixed(2).replace('.', ',') + '</span>';
                     html += '</div>';
                     totalGeral += parseFloat(t.valor) || 0;
@@ -929,10 +950,14 @@ function atualizarResumoTotais() {
             if (transferOpcoes.length > 0) {
                 const opcao = transferOpcoes[0];
                 const select = opcao.querySelector('.transfer-select');
+                const nomeInput = opcao.querySelector('.transfer-nome-input');
                 const valorInput = opcao.querySelector('.transfer-valor-input');
                 if (select && transfer.transfers && transfer.transfers.length > 0) {
                     select.value = transfer.transfers[0].transfer_id;
                     select.dispatchEvent(new Event('change'));
+                }
+                if (nomeInput && transfer.transfers && transfer.transfers.length > 0) {
+                    nomeInput.value = transfer.transfers[0].nome_personalizado || transfer.transfers[0].nome_exibicao || transfer.transfers[0].nome || '';
                 }
                 if (valorInput && transfer.transfers && transfer.transfers.length > 0) {
                     valorInput.value = parseFloat(transfer.transfers[0].valor).toFixed(2);
@@ -1031,7 +1056,7 @@ function atualizarResumoTotais() {
                 transfer.transfers.forEach(function(t) {
                     const valorTransfer = parseFloat(t.valor) || 0;
                     resumoTransfers.push({
-                        nome: t.nome || 'Transfer',
+                        nome: t.nome_personalizado || t.nome_exibicao || t.nome || 'Transfer',
                         valor: valorTransfer
                     });
                     totalGeral += valorTransfer;
@@ -1172,7 +1197,7 @@ function atualizarResumoTotais() {
 
     function salvarOrdemServico() {
         if (servicosAdicionados.length === 0) {
-            alert('Adicione ao menos um serviço');
+            alert('Adicione ao menos um serviço ou transfer');
             return;
         }
         

@@ -379,6 +379,12 @@ class TransferOrdemServico(models.Model):
         related_name='ordens_servico',
         verbose_name='Transfer'
     )
+    nome_personalizado = models.CharField(
+        'Nome Personalizado',
+        max_length=200,
+        blank=True,
+        default=''
+    )
     valor = models.DecimalField(
         'Valor',
         max_digits=10,
@@ -395,7 +401,11 @@ class TransferOrdemServico(models.Model):
         ordering = ['id']
 
     def __str__(self):
-        return f"{self.transfer.nome} (OS #{self.ordem_servico.id})"
+        return f"{self.nome_exibicao} (OS #{self.ordem_servico.id})"
+
+    @property
+    def nome_exibicao(self):
+        return self.nome_personalizado.strip() if self.nome_personalizado else self.transfer.nome
     
     def save(self, *args, **kwargs):
         """Captura o valor do transfer se não foi fornecido"""

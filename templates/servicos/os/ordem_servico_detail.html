@@ -116,6 +116,17 @@
                                 <span>+ R$ {{ lanc.valor_transfer_ida|add:lanc.valor_transfer_volta|floatformat:2 }}</span>
                             </div>
                             {% endif %}
+                            {% if transfers %}
+                            <div class="mt-2 small text-start">
+                                <div class="text-muted fw-semibold mb-1">Transfers lançados nesta OS</div>
+                                {% for transfer in transfers %}
+                                <div class="d-flex justify-content-between gap-2 text-warning">
+                                    <span>• {{ transfer.nome_personalizado|default:transfer.transfer.nome }}</span>
+                                    <span>R$ {{ transfer.valor|floatformat:2 }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                             <h5 class="text-success mt-2 mb-0 fw-bold">R$ {{ lanc.valor_total|floatformat:2 }}</h5>
                         </div>
                     </div>
