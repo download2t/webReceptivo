@@ -608,6 +608,10 @@ def ordem_servico_edit(request, pk):
     categorias = Categoria.objects.filter(ativo=True)
     transfer_nome_personalizado_disponivel = _transfer_nome_personalizado_disponivel()
     transfers = Transfer.objects.filter(ativo=True) if hasattr(Transfer, 'ativo') else Transfer.objects.all()
+    tipos_meia_por_nome = {
+        tipo.nome.strip().lower(): tipo.id
+        for tipo in TipoMeiaEntrada.objects.all()
+    }
     # Serializar lançamentos e transfers para o JS
     lancamentos_data = []
     datas_servicos = [l.data_servico for l in ordem.lancamentos.all()]
@@ -623,7 +627,13 @@ def ordem_servico_edit(request, pk):
             'qtd_meia': l.qtd_meia,
             'qtd_infantil': l.qtd_infantil,
             'idades': [int(i) for i in l.idades_criancas.split(',') if i.strip()] if l.idades_criancas else [],
-            'tipos_meia': [{'tipo': t} for t in l.tipos_meia_entrada.split('\n') if t.strip()],
+            'tipos_meia': [
+                {
+                    'tipo': t,
+                    'id': tipos_meia_por_nome.get(t.strip().lower())
+                }
+                for t in l.tipos_meia_entrada.split('\n') if t.strip()
+            ],
             'descricao': l.obs_publica,
             'valor_transfer_ida': float(l.valor_transfer_ida),
             'valor_transfer_volta': float(l.valor_transfer_volta),

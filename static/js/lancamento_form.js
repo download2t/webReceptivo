@@ -742,9 +742,20 @@
                         console.log('Selects encontrados:', tiposSelects.length);
                         
                         tiposSelects.forEach(function(select, idx) {
-                            if (servico.tipos_meia[idx] && servico.tipos_meia[idx].id) {
-                                console.log('Definindo select', idx, 'para ID:', servico.tipos_meia[idx].id, '- Nome:', servico.tipos_meia[idx].nome);
-                                select.value = servico.tipos_meia[idx].id;
+                            const tipoMeiaSalvo = servico.tipos_meia[idx];
+                            if (tipoMeiaSalvo) {
+                                const valorParaSelecionar = tipoMeiaSalvo.id || tipoMeiaSalvo.tipo || tipoMeiaSalvo.nome;
+                                console.log('Definindo select', idx, 'para:', valorParaSelecionar, '- Dados:', tipoMeiaSalvo);
+                                select.value = valorParaSelecionar;
+
+                                if (!select.value && tipoMeiaSalvo.tipo) {
+                                    const optionMatch = Array.from(select.options).find(function(option) {
+                                        return option.textContent.trim() === String(tipoMeiaSalvo.tipo).trim();
+                                    });
+                                    if (optionMatch) {
+                                        select.value = optionMatch.value;
+                                    }
+                                }
                             } else {
                                 console.warn('Tipo de meia não encontrado para índice:', idx);
                             }
