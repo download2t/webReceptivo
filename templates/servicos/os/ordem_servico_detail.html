@@ -122,7 +122,7 @@
                                 <div class="text-muted fw-semibold mb-1">Transfers lançados nesta OS</div>
                                 {% for transfer in transfers_resumo %}
                                 <div class="d-flex justify-content-between gap-2 text-warning">
-                                    <span>• {{ transfer.nome_exibicao }}</span>
+                                    <span>• {{ transfer.nome_exibicao }}{% if transfer.data_transfer_br %} <span class="text-muted">({{ transfer.data_transfer_br }})</span>{% endif %}</span>
                                     <span>R$ {{ transfer.valor|floatformat:2 }}</span>
                                 </div>
                                 {% endfor %}
@@ -169,6 +169,9 @@
                         </div>
                         <div class="ticket-body py-2">
                             <div class="text-dark fw-semibold">{{ transfer.nome_exibicao|default:transfer.nome }}</div>
+                                {% if transfer.data_transfer_br %}
+                                <div class="text-muted small">Data do transfer: {{ transfer.data_transfer_br }}</div>
+                                {% endif %}
                             {% if transfer.nome_exibicao != transfer.nome and transfer.nome %}
                             <div class="text-muted small">Nome base: {{ transfer.nome }}</div>
                             {% endif %}

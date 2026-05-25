@@ -393,8 +393,7 @@ class TransferOrdemServico(models.Model):
         validators=[MinValueValidator(Decimal('0.00'))],
         default=Decimal('0.00')
     )
-    # Se quiser guardar data, descomente:
-    # data_transfer = models.DateField('Data do Transfer', null=True, blank=True)
+    data_transfer = models.DateField('Data do Transfer', null=True, blank=True)
 
     class Meta:
         verbose_name = 'Transfer vinculado à OS'
@@ -402,7 +401,8 @@ class TransferOrdemServico(models.Model):
         ordering = ['id']
 
     def __str__(self):
-        return f"{self.nome_exibicao} (OS #{self.ordem_servico.id})"
+        data = f" - {self.data_transfer.strftime('%d/%m/%Y')}" if self.data_transfer else ''
+        return f"{self.nome_exibicao}{data} (OS #{self.ordem_servico.id})"
 
     @property
     def nome_exibicao(self):

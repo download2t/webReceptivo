@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db import connection
 from django.db.models import Q, Sum, Count
+from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_http_methods
 from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico, TransferOrdemServico
 from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm, OrdemServicoForm
@@ -40,8 +41,9 @@ def _gerar_preview_roteiro_ordem(ordem):
 
     transfers_por_data = {}
     if transfers:
-        data_transfer = lancamentos[0].data_servico.strftime('%Y-%m-%d') if lancamentos else ''
-        transfers_por_data.setdefault(data_transfer, []).extend(transfers)
+        for transfer_ordem in transfers:
+            data_transfer = transfer_ordem.data_transfer.strftime('%Y-%m-%d') if getattr(transfer_ordem, 'data_transfer', None) else ''
+            transfers_por_data.setdefault(data_transfer, []).append(transfer_ordem)
 
     datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
 
@@ -55,9 +57,6 @@ def _gerar_preview_roteiro_ordem(ordem):
 
         if data:
             roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
-            roteiro += '─' * 15 + '\n'
-        elif tem_transfers and not tem_servicos:
-            roteiro += '🚌 Transfers\n'
             roteiro += '─' * 15 + '\n'
 
         if tem_servicos:
@@ -89,10 +88,14 @@ def _gerar_preview_roteiro_ordem(ordem):
             roteiro += '\n 🚌 Transfers:\n'
             for transfer_ordem in transfers_por_data[data]:
                 nome_exibicao = getattr(transfer_ordem, 'nome_exibicao', '') or transfer_ordem.transfer.nome
-                roteiro += f'     - 🚕 {nome_exibicao} ({_formatar_moeda_br(transfer_ordem.valor)})\n'
+                data_transfer = transfer_ordem.data_transfer.strftime('%d/%m/%Y') if getattr(transfer_ordem, 'data_transfer', None) else ''
+                data_texto = f' - {data_transfer}' if data_transfer else ''
+                roteiro += f'     - 🚕 {nome_exibicao}{data_texto} ({_formatar_moeda_br(transfer_ordem.valor)})\n'
                 resumo_transfers.append({
                     'nome': nome_exibicao,
                     'valor': float(transfer_ordem.valor),
+                    'data_transfer': transfer_ordem.data_transfer.strftime('%Y-%m-%d') if getattr(transfer_ordem, 'data_transfer', None) else '',
+                    'data_transfer_br': transfer_ordem.data_transfer.strftime('%d/%m/%Y') if getattr(transfer_ordem, 'data_transfer', None) else '',
                 })
 
         roteiro += '\n'
@@ -103,7 +106,8 @@ def _gerar_preview_roteiro_ordem(ordem):
     if resumo_transfers:
         roteiro += '\n 🚌 Transfers:\n'
         for item in resumo_transfers:
-            roteiro += f'\t- 🚕 {item["nome"]} ({_formatar_moeda_br(item["valor"])})\n'
+            data_texto = f' - {formatar_data_br(item["data_transfer"])}' if item.get('data_transfer') else ''
+            roteiro += f'\t- 🚕 {item["nome"]}{data_texto} ({_formatar_moeda_br(item["valor"])})\n'
 
     if resumo_servicos:
         roteiro += '\n 🎫 TICKETS:\n'
@@ -116,6 +120,15 @@ def _gerar_preview_roteiro_ordem(ordem):
     roteiro += '\n' + '─' * 15 + '\n'
 
     return roteiro, resumo_transfers, transfers
+
+
+def formatar_data_br(data_iso):
+    if not data_iso:
+        return ''
+    partes = data_iso.split('-')
+    if len(partes) == 3:
+        return f'{partes[2]}/{partes[1]}/{partes[0]}'
+    return data_iso
 
 
 # ==================== VIEWS DE CATEGORIA ====================
@@ -551,6 +564,7 @@ def ordem_servico_create(request):
                                 transfer_id = transfer_data.get('transfer_id')
                                 transfer_valor = transfer_data.get('valor', 0)
                                 nome_personalizado = transfer_data.get('nome_personalizado', '')
+                                data_transfer = parse_date(transfer_data.get('data_transfer') or '') if transfer_data.get('data_transfer') else None
                                 try:
                                     transfer_id = int(transfer_id)
                                 except Exception:
@@ -566,7 +580,8 @@ def ordem_servico_create(request):
                                     ordem_servico=ordem,
                                     transfer=transfer_obj,
                                     nome_personalizado=nome_personalizado,
-                                    valor=transfer_valor
+                                    valor=transfer_valor,
+                                    data_transfer=data_transfer,
                                 )
                         else:
                             # Só cria lançamento se houver serviço válido
@@ -643,6 +658,7 @@ def ordem_servico_edit(request, pk):
                             transfer_id = transfer_data.get('transfer_id')
                             transfer_valor = transfer_data.get('valor', 0)
                             nome_personalizado = transfer_data.get('nome_personalizado', '')
+                            data_transfer = parse_date(transfer_data.get('data_transfer') or '') if transfer_data.get('data_transfer') else None
                             try:
                                 transfer_id = int(transfer_id)
                             except Exception:
@@ -658,7 +674,8 @@ def ordem_servico_edit(request, pk):
                                 ordem_servico=ordem,
                                 transfer=transfer_obj,
                                 nome_personalizado=nome_personalizado,
-                                valor=transfer_valor
+                                valor=transfer_valor,
+                                data_transfer=data_transfer,
                             )
                     else:
                         if s.get('servico_id') and s.get('categoria_id') and s.get('data'):
@@ -761,17 +778,20 @@ def ordem_servico_edit(request, pk):
     if transfer_nome_personalizado_disponivel:
         for t in ordem.transfers.select_related('transfer').all():
             nome_exibicao = t.nome_exibicao if hasattr(t, 'nome_exibicao') else (getattr(t, 'nome_personalizado', '') or t.transfer.nome)
+            data_transfer = t.data_transfer.strftime('%Y-%m-%d') if getattr(t, 'data_transfer', None) else ''
             transfer_dict = {
                 'transfer_id': str(t.transfer_id),
                 'nome': t.transfer.nome,
                 'nome_personalizado': getattr(t, 'nome_personalizado', ''),
                 'nome_exibicao': nome_exibicao,
-                'valor': float(t.valor)
+                'valor': float(t.valor),
+                'data_transfer': data_transfer,
             }
             transfers_data.append(transfer_dict)
             lancamentos_data.append({
                 'id': f'transfer_avulso_{t.id}',
-                'data': menor_data,
+                'data': data_transfer or menor_data,
+                'data_transfer': data_transfer,
                 'servico_nome': nome_exibicao,
                 'descricao': nome_exibicao,
                 'qtd_inteira': 0,
@@ -799,7 +819,7 @@ def ordem_servico_edit(request, pk):
     transfers_por_data = {}
     if transfer_nome_personalizado_disponivel:
         for t in ordem.transfers.all():
-            data = menor_data
+            data = t.data_transfer.strftime('%Y-%m-%d') if getattr(t, 'data_transfer', None) else menor_data
             if data not in transfers_por_data:
                 transfers_por_data[data] = []
             transfers_por_data[data].append(t)

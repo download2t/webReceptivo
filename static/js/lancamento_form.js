@@ -385,6 +385,12 @@
         nomeInput.style.flex = '2';
         nomeInput.style.minWidth = '180px';
 
+        const dataInput = document.createElement('input');
+        dataInput.type = 'date';
+        dataInput.className = 'form-control form-control-sm transfer-data-input';
+        dataInput.style.flex = '1';
+        dataInput.style.minWidth = '150px';
+
         // Campo de valor editável
         const valorInput = document.createElement('input');
         valorInput.type = 'number';
@@ -404,6 +410,12 @@
                 const transferNome = option.getAttribute('data-nome') || '';
                 nomeInput.value = transferNome;
                 valorInput.value = parseFloat(transferValor).toFixed(2);
+                if (!dataInput.value) {
+                    const dataServicoInput = document.getElementById('dataServico');
+                    if (dataServicoInput && dataServicoInput.value) {
+                        dataInput.value = dataServicoInput.value;
+                    }
+                }
             } else {
                 nomeInput.value = '';
                 valorInput.value = '0.00';
@@ -413,6 +425,10 @@
         });
 
         nomeInput.addEventListener('input', function() {
+            atualizarTransferAvulsoAoRoteiro();
+        });
+
+        dataInput.addEventListener('input', function() {
             atualizarTransferAvulsoAoRoteiro();
         });
 
@@ -432,6 +448,7 @@
 
         wrapper.appendChild(label);
         wrapper.appendChild(selectClone);
+        wrapper.appendChild(dataInput);
         wrapper.appendChild(nomeInput);
         wrapper.appendChild(valorInput);
         wrapper.appendChild(btnRemove);
@@ -443,6 +460,9 @@
             selectClone.dispatchEvent(new Event('change'));
             if (dados.nome_personalizado !== undefined) {
                 nomeInput.value = dados.nome_personalizado;
+            }
+            if (dados.data_transfer !== undefined && dados.data_transfer !== null && dados.data_transfer !== '') {
+                dataInput.value = dados.data_transfer;
             }
             if (dados.valor !== undefined && dados.valor !== null && dados.valor !== '') {
                 valorInput.value = parseFloat(dados.valor).toFixed(2);
@@ -462,16 +482,20 @@
             const transferOpcoes = document.querySelectorAll('#containerTransfers .transfer-opcao');
             transferOpcoes.forEach(function(opcao, idx) {
                 const select = opcao.querySelector('.transfer-select');
+                const dataInput = opcao.querySelector('.transfer-data-input');
                 const nomeInput = opcao.querySelector('.transfer-nome-input');
                 const valorInput = opcao.querySelector('.transfer-valor-input');
                 if (select && select.value && valorInput) {
                     const option = select.selectedOptions[0];
                     const transferNome = option.getAttribute('data-nome');
                     const nomePersonalizado = nomeInput ? nomeInput.value.trim() : '';
+                    const dataTransfer = dataInput ? dataInput.value : '';
                     const transferValor = parseFloat(valorInput.value) || 0;
                     // Adiciona transfer avulso ao array
                     itensBase.push({
                         id: transferEditandoId || ('transfer_avulso_' + idx + '_' + Date.now()),
+                        data: dataTransfer,
+                        data_transfer: dataTransfer,
                         servico_nome: nomePersonalizado || transferNome,
                         descricao: nomePersonalizado || transferNome,
                         qtd_inteira: 0,
@@ -484,7 +508,8 @@
                             nome: transferNome,
                             nome_personalizado: nomePersonalizado,
                             nome_exibicao: nomePersonalizado || transferNome,
-                            valor: transferValor
+                            valor: transferValor,
+                            data_transfer: dataTransfer
                         }],
                         valor_transfer_ida: transferValor,
                         valor_transfer_volta: 0,
@@ -601,11 +626,14 @@
         console.log('Quantidade de transfers encontrados:', transferOpcoes.length);
         transferOpcoes.forEach(function(opcao, idx) {
             const select = opcao.querySelector('.transfer-select');
+            const dataInput = opcao.querySelector('.transfer-data-input');
             const valorInput = opcao.querySelector('.transfer-valor-input');
             
             console.log('Transfer #' + (idx + 1) + ':');
             console.log('  - Select encontrado:', !!select);
             console.log('  - Select value:', select ? select.value : 'N/A');
+            console.log('  - Data encontrada:', !!dataInput);
+            console.log('  - Data value:', dataInput ? dataInput.value : 'N/A');
             console.log('  - Input valor encontrado:', !!valorInput);
             console.log('  - Input valor:', valorInput ? valorInput.value : 'N/A');
             
@@ -613,13 +641,20 @@
                 const option = select.selectedOptions[0];
                 const transferNome = option.getAttribute('data-nome');
                 const transferValor = parseFloat(valorInput.value) || 0; // Usar o valor editável
+                const dataTransfer = dataInput ? dataInput.value : '';
+
+                if (!dataTransfer) {
+                    alert('Preencha a data de todos os transfers.');
+                    return;
+                }
                 
                 console.log('  ✅ Transfer adicionado:', transferNome, 'Valor: R$', transferValor);
                 
                 transfers.push({
                     transfer_id: select.value,  // ID do transfer
                     nome: transferNome,
-                    data: dataServico,  // Usar a mesma data do serviço
+                    data: dataTransfer,
+                    data_transfer: dataTransfer,
                     quantidade: 1,  // Padrão 1
                     valor: transferValor
                 });
@@ -996,7 +1031,8 @@ function atualizarResumoTotais() {
                     adicionarTransferOpcao({
                         transfer_id: item.transfer_id,
                         nome_personalizado: item.nome_personalizado || item.nome_exibicao || item.nome || '',
-                        valor: item.valor
+                        valor: item.valor,
+                        data_transfer: item.data_transfer || item.data || ''
                     });
                 });
             }
@@ -1041,20 +1077,24 @@ function atualizarResumoTotais() {
             return;
         }
         
-        // Separar transfers avulsos dos serviços
-        const transfersAvulsos = servicosAdicionados.filter(s => s.__transfer_avulso);
-        const servicosNormais = servicosAdicionados.filter(s => !s.__transfer_avulso);
-
-        // Agrupar serviços por data
+        // Agrupar serviços e transfers por data
         const porData = {};
-        servicosNormais.forEach(function(servico) {
-            if (!porData[servico.data]) {
-                porData[servico.data] = [];
+        servicosAdicionados.forEach(function(item) {
+            if (item.__transfer_avulso) {
+                const dataTransfer = item.data_transfer || item.data || '';
+                if (!porData[dataTransfer]) {
+                    porData[dataTransfer] = { servicos: [], transfers: [] };
+                }
+                porData[dataTransfer].transfers.push(item);
+            } else {
+                if (!porData[item.data]) {
+                    porData[item.data] = { servicos: [], transfers: [] };
+                }
+                porData[item.data].servicos.push(item);
             }
-            porData[servico.data].push(servico);
         });
 
-        // Ordenar datas
+        // Ordenar datas presentes em qualquer item
         const datasOrdenadas = Object.keys(porData).sort();
 
         // Gerar roteiro
@@ -1076,7 +1116,7 @@ function atualizarResumoTotais() {
             roteiro += '📅 ' + formatarData(data) + '\n';
             roteiro += '─'.repeat(15) + '\n';
 
-            porData[data].forEach(function(servico, idx) {
+            porData[data].servicos.forEach(function(servico, idx) {
                 roteiro += '\n' + (servico.descricao || '') + '\n';
 
                 if (servico.qtd_inteira > 0) roteiro += '  • ' + servico.qtd_inteira + ' Inteira(s)\n';
@@ -1099,34 +1139,24 @@ function atualizarResumoTotais() {
                 totalGeral += subtotalIngressos;
             });
 
-            roteiro += '\n';
-        });
-
-        if (datasOrdenadas.length === 0 && transfersAvulsos.length > 0) {
-            roteiro += '🚌 Transfers:\n';
-            roteiro += '─'.repeat(15) + '\n';
-            transfersAvulsos.forEach(function(transfer) {
-                if (transfer.transfers && transfer.transfers.length > 0) {
-                    transfer.transfers.forEach(function(t) {
-                        const nomeExibicao = t.nome_personalizado || t.nome_exibicao || t.nome || 'Transfer';
-                        roteiro += '     - 🚕 ' + nomeExibicao + ' (R$ ' + formatarMoeda(parseFloat(t.valor) || 0) + ')\n';
-                    });
-                }
-            });
-            roteiro += '\n';
-        }
-
-        transfersAvulsos.forEach(function(transfer) {
-            if (transfer.transfers && transfer.transfers.length > 0) {
-                transfer.transfers.forEach(function(t) {
-                    const valorTransfer = parseFloat(t.valor) || 0;
-                    resumoTransfers.push({
-                        nome: t.nome_personalizado || t.nome_exibicao || t.nome || 'Transfer',
-                        valor: valorTransfer
-                    });
-                    totalGeral += valorTransfer;
+            if (porData[data].transfers.length > 0) {
+                roteiro += '\n 🚌 Transfers:\n';
+                porData[data].transfers.forEach(function(transfer) {
+                    if (transfer.transfers && transfer.transfers.length > 0) {
+                        transfer.transfers.forEach(function(t) {
+                            const nomeExibicao = t.nome_personalizado || t.nome_exibicao || t.nome || 'Transfer';
+                            roteiro += '     - 🚕 ' + nomeExibicao + ' (R$ ' + formatarMoeda(parseFloat(t.valor) || 0) + ')\n';
+                            resumoTransfers.push({
+                                nome: nomeExibicao,
+                                valor: parseFloat(t.valor) || 0
+                            });
+                            totalGeral += parseFloat(t.valor) || 0;
+                        });
+                    }
                 });
             }
+
+            roteiro += '\n';
         });
 
         roteiro += '─'.repeat(15) + '\n';
@@ -1265,6 +1295,14 @@ function atualizarResumoTotais() {
             alert('Adicione ao menos um serviço ou transfer');
             return;
         }
+
+        const transferSemData = servicosAdicionados.find(function(item) {
+            return item.__transfer_avulso && (!item.data_transfer || !String(item.data_transfer).trim());
+        });
+        if (transferSemData) {
+            alert('Preencha a data de todos os transfers antes de salvar.');
+            return;
+        }
         
         console.log('=== SALVANDO ORDEM DE SERVIÇO ===');
         console.log('Serviços a salvar:', servicosAdicionados.length);
@@ -1329,6 +1367,7 @@ function atualizarResumoTotais() {
                 const servicoCompleto = {
                     id: lancamento.id || Date.now() + index,
                     data: lancamento.data,
+                    data_transfer: lancamento.data_transfer || lancamento.data || '',
                     categoria_id: lancamento.categoria_id,
                     servico_id: lancamento.servico_id,
                     servico_nome: lancamento.servico_nome,
