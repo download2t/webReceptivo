@@ -22,7 +22,7 @@ function getCookie(name) {
 }
 
 function copiarRoteiro() {
-  const roteiroElement = document.getElementById("roteiroText");
+  const roteiroElement = document.getElementById("roteiroPreview") || document.getElementById("roteiroText");
   if (!roteiroElement) return;
 
   // innerText é crucial para manter a quebra de linha visual correta
@@ -71,7 +71,7 @@ function fallbackCopia(text) {
 async function traduzirRoteiro() {
   const languageSelector = document.getElementById("languageSelector");
   const targetLang = languageSelector.value;
-  const roteiroText = document.getElementById("roteiroText");
+  const roteiroText = document.getElementById("roteiroPreview") || document.getElementById("roteiroText");
   const loadingDiv = document.getElementById("loadingTranslation");
   const avisoErro = document.getElementById("avisoErro");
   const translateBtn = document.getElementById("translateBtn");
