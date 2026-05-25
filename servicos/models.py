@@ -2,7 +2,6 @@
 Models para gerenciamento de serviços turísticos
 """
 from django.db import models
-from django.db import connection
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from django.utils import timezone
@@ -295,20 +294,8 @@ class OrdemServico(models.Model):
         total = Decimal('0.00')
         for lancamento in self.lancamentos.all():
             total += lancamento.valor_total
-
-        try:
-            tabela_transfers = TransferOrdemServico._meta.db_table
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    f'SELECT COALESCE(SUM(valor), 0) FROM {tabela_transfers} WHERE ordem_servico_id = %s',
-                    [self.pk]
-                )
-                total_transfers = cursor.fetchone()[0] or 0
-            total += Decimal(str(total_transfers))
-        except Exception:
-            # Em ambientes antigos sem a coluna nova, não interrompe o salvamento da OS.
-            pass
-
+        for transfer in self.transfers.all():
+            total += transfer.valor
         self.valor_total = total
         self.save(update_fields=['valor_total'])
     

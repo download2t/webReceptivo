@@ -23,17 +23,6 @@ def _transfer_nome_personalizado_disponivel():
         return False
 
 
-def _criar_transfer_ordem_servico(ordem, transfer_obj, nome_personalizado, valor):
-    kwargs = {
-        'ordem_servico': ordem,
-        'transfer': transfer_obj,
-        'valor': valor,
-    }
-    if _transfer_nome_personalizado_disponivel():
-        kwargs['nome_personalizado'] = nome_personalizado
-    return TransferOrdemServico.objects.create(**kwargs)
-
-
 # ==================== VIEWS DE CATEGORIA ====================
 
 @require_permission('servicos.view_categoria')
@@ -477,11 +466,11 @@ def ordem_servico_create(request):
                                         'error': 'Transfer não encontrado',
                                         'transfer_id': transfer_id
                                     }, status=400)
-                                _criar_transfer_ordem_servico(
-                                    ordem=ordem,
-                                    transfer_obj=transfer_obj,
+                                TransferOrdemServico.objects.create(
+                                    ordem_servico=ordem,
+                                    transfer=transfer_obj,
                                     nome_personalizado=nome_personalizado,
-                                    valor=transfer_valor,
+                                    valor=transfer_valor
                                 )
                         else:
                             # Só cria lançamento se houver serviço válido
@@ -508,6 +497,9 @@ def ordem_servico_create(request):
                 else:
                     return JsonResponse({'error': 'Dados inválidos', 'form_errors': form.errors}, status=400)
             except Exception as e:
+                import logging
+                logger = logging.getLogger('django')
+                logger.exception('Erro inesperado ao criar Ordem de Serviço')
                 return JsonResponse({
                     'error': 'Erro inesperado',
                     'exception': str(e),
@@ -566,11 +558,11 @@ def ordem_servico_edit(request, pk):
                                     'error': 'Transfer não encontrado',
                                     'transfer_id': transfer_id
                                 }, status=400)
-                            _criar_transfer_ordem_servico(
-                                ordem=ordem,
-                                transfer_obj=transfer_obj,
+                            TransferOrdemServico.objects.create(
+                                ordem_servico=ordem,
+                                transfer=transfer_obj,
                                 nome_personalizado=nome_personalizado,
-                                valor=transfer_valor,
+                                valor=transfer_valor
                             )
                     else:
                         if s.get('servico_id') and s.get('categoria_id') and s.get('data'):
@@ -596,6 +588,9 @@ def ordem_servico_edit(request, pk):
             else:
                 return JsonResponse({'error': 'Dados inválidos', 'form_errors': form.errors}, status=400)
         except Exception as e:
+            import logging
+            logger = logging.getLogger('django')
+            logger.exception('Erro inesperado ao editar Ordem de Serviço')
             return JsonResponse({
                 'error': 'Erro inesperado',
                 'exception': str(e),
