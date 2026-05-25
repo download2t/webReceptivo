@@ -23,6 +23,101 @@ def _transfer_nome_personalizado_disponivel():
         return False
 
 
+def _formatar_moeda_br(valor):
+    return f'R$ {float(valor):.2f}'.replace('.', ',')
+
+
+def _gerar_preview_roteiro_ordem(ordem):
+    """Gera o preview no mesmo formato visual usado no cadastro."""
+    lancamentos = list(ordem.lancamentos.select_related('categoria', 'subcategoria').all())
+    transfer_nome_personalizado_disponivel = _transfer_nome_personalizado_disponivel()
+    transfers = list(ordem.transfers.select_related('transfer').all()) if transfer_nome_personalizado_disponivel else []
+
+    por_data = {}
+    for lancamento in lancamentos:
+        data = lancamento.data_servico.strftime('%Y-%m-%d')
+        por_data.setdefault(data, []).append(lancamento)
+
+    transfers_por_data = {}
+    if transfers:
+        data_transfer = lancamentos[0].data_servico.strftime('%Y-%m-%d') if lancamentos else ''
+        transfers_por_data.setdefault(data_transfer, []).extend(transfers)
+
+    datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
+
+    roteiro = '=== ROTEIRO ===\n\n'
+    resumo_servicos = []
+    resumo_transfers = []
+
+    for data in datas_ordenadas:
+        tem_servicos = data in por_data and por_data[data]
+        tem_transfers = data in transfers_por_data and transfers_por_data[data]
+
+        if data:
+            roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
+            roteiro += '─' * 15 + '\n'
+        elif tem_transfers and not tem_servicos:
+            roteiro += '🚌 Transfers\n'
+            roteiro += '─' * 15 + '\n'
+
+        if tem_servicos:
+            for lancamento in por_data[data]:
+                roteiro += f'\n{lancamento.obs_publica or lancamento.subcategoria.nome}\n'
+                if lancamento.qtd_inteira > 0:
+                    roteiro += f'  • {lancamento.qtd_inteira} Inteira(s)\n'
+                if lancamento.qtd_meia > 0:
+                    roteiro += f'  • {lancamento.qtd_meia} Meia(s)\n'
+                if lancamento.qtd_infantil > 0:
+                    idades = [i for i in lancamento.idades_criancas.split(',') if i.strip()]
+                    roteiro += f'  • {lancamento.qtd_infantil} Infantil(is) (idades: {", ".join(idades)})\n'
+
+                info = lancamento.subcategoria
+                valor_inteira = float(getattr(info, 'valor_inteira', 0))
+                valor_meia = float(getattr(info, 'valor_meia', 0))
+                valor_infantil = float(getattr(info, 'valor_infantil', 0))
+                subtotal_ingressos = (
+                    (lancamento.qtd_inteira * valor_inteira)
+                    + (lancamento.qtd_meia * valor_meia)
+                    + (lancamento.qtd_infantil * valor_infantil)
+                )
+                resumo_servicos.append({
+                    'nome': lancamento.subcategoria.nome,
+                    'valorIngressos': subtotal_ingressos,
+                })
+
+        if tem_transfers:
+            roteiro += '\n 🚌 Transfers:\n'
+            for transfer_ordem in transfers_por_data[data]:
+                nome_exibicao = getattr(transfer_ordem, 'nome_exibicao', '') or transfer_ordem.transfer.nome
+                roteiro += f'     - 🚕 {nome_exibicao} ({_formatar_moeda_br(transfer_ordem.valor)})\n'
+                resumo_transfers.append({
+                    'nome': nome_exibicao,
+                    'valor': float(transfer_ordem.valor),
+                })
+
+        roteiro += '\n'
+
+    roteiro += '─' * 15 + '\n'
+    roteiro += '💰 RESUMO DE VALORES\n'
+
+    if resumo_transfers:
+        roteiro += '\n 🚌 Transfers:\n'
+        for item in resumo_transfers:
+            roteiro += f'\t- 🚕 {item["nome"]} ({_formatar_moeda_br(item["valor"])})\n'
+
+    if resumo_servicos:
+        roteiro += '\n 🎫 TICKETS:\n'
+        for item in resumo_servicos:
+            if item['valorIngressos'] > 0:
+                roteiro += f'\t- {item["nome"]} - Ingresso: {_formatar_moeda_br(item["valorIngressos"])}\n'
+
+    total_geral = sum(item['valorIngressos'] for item in resumo_servicos) + sum(item['valor'] for item in resumo_transfers)
+    roteiro += f' 💰 TOTAL: {_formatar_moeda_br(total_geral)}\n'
+    roteiro += '\n' + '─' * 15 + '\n'
+
+    return roteiro, resumo_transfers, transfers
+
+
 # ==================== VIEWS DE CATEGORIA ====================
 
 @require_permission('servicos.view_categoria')
@@ -344,6 +439,7 @@ def ordem_servico_list(request):
                 for transfer_ordem in ordem.transfers.select_related('transfer').all():
                     nome_exibicao = getattr(transfer_ordem, 'nome_exibicao', '') or transfer_ordem.transfer.nome
                     ordem.transfers_resumo.append({
+                        'nome': nome_exibicao,
                         'nome_exibicao': nome_exibicao,
                         'valor': transfer_ordem.valor,
                     })
@@ -799,10 +895,12 @@ def ordem_servico_detail(request, pk):
     ordem = get_object_or_404(OrdemServico, pk=pk)
     todos_lancamentos = ordem.lancamentos.select_related('categoria', 'subcategoria').all()
     transfer_nome_personalizado_disponivel = _transfer_nome_personalizado_disponivel()
-    transfers = ordem.transfers.select_related('transfer').all() if transfer_nome_personalizado_disponivel else []
+    preview_roteiro, transfers_resumo, transfers = _gerar_preview_roteiro_ordem(ordem)
     context = {
         'ordem': ordem,
         'todos_lancamentos': todos_lancamentos,
+        'preview_roteiro': preview_roteiro,
+        'transfers_resumo': transfers_resumo,
         'transfers': transfers,
         'transfer_nome_personalizado_disponivel': transfer_nome_personalizado_disponivel,
         'title': f'OS #{ordem.numero_os}'

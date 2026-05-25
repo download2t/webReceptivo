@@ -116,12 +116,12 @@
                                 <span>+ R$ {{ lanc.valor_transfer_ida|add:lanc.valor_transfer_volta|floatformat:2 }}</span>
                             </div>
                             {% endif %}
-                            {% if transfers %}
+                            {% if transfers_resumo %}
                             <div class="mt-2 small text-start">
                                 <div class="text-muted fw-semibold mb-1">Transfers lançados nesta OS</div>
-                                {% for transfer in transfers %}
+                                {% for transfer in transfers_resumo %}
                                 <div class="d-flex justify-content-between gap-2 text-warning">
-                                    <span>• {{ transfer.nome_personalizado|default:transfer.transfer.nome }}</span>
+                                    <span>• {{ transfer.nome_exibicao }}</span>
                                     <span>R$ {{ transfer.valor|floatformat:2 }}</span>
                                 </div>
                                 {% endfor %}
@@ -148,6 +148,35 @@
                 {% endif %}
             </div>
             {% endfor %}
+
+            {% if not todos_lancamentos and transfers_resumo %}
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small mb-3 fw-bold ps-1">
+                        <i class="bi bi-bus-front me-1"></i> Transfers desta OS
+                    </h6>
+                    {% for transfer in transfers_resumo %}
+                    <div class="ticket-card mb-3">
+                        <div class="ticket-header">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-warning rounded-pill">{{ forloop.counter }}</span>
+                                <span class="fw-bold">Transfer</span>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-currency-dollar me-1"></i> R$ {{ transfer.valor|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="ticket-body py-2">
+                            <div class="text-dark fw-semibold">{{ transfer.nome_exibicao|default:transfer.nome }}</div>
+                            {% if transfer.nome_exibicao != transfer.nome and transfer.nome %}
+                            <div class="text-muted small">Nome base: {{ transfer.nome }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             {% if ordem.observacoes %}
             <div class="card bg-light border-0 shadow-sm mt-4">
@@ -226,7 +255,7 @@
 </div>
 
 <script>
-    const roteiroOriginal = `{{ ordem.roteiro|escapejs }}`;
+    const roteiroOriginal = `{{ preview_roteiro|default:ordem.roteiro|escapejs }}`;
 </script>
 {% endblock %}
 
