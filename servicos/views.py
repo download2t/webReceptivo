@@ -23,6 +23,17 @@ def _transfer_nome_personalizado_disponivel():
         return False
 
 
+def _criar_transfer_ordem_servico(ordem, transfer_obj, nome_personalizado, valor):
+    kwargs = {
+        'ordem_servico': ordem,
+        'transfer': transfer_obj,
+        'valor': valor,
+    }
+    if _transfer_nome_personalizado_disponivel():
+        kwargs['nome_personalizado'] = nome_personalizado
+    return TransferOrdemServico.objects.create(**kwargs)
+
+
 # ==================== VIEWS DE CATEGORIA ====================
 
 @require_permission('servicos.view_categoria')
@@ -466,11 +477,11 @@ def ordem_servico_create(request):
                                         'error': 'Transfer não encontrado',
                                         'transfer_id': transfer_id
                                     }, status=400)
-                                TransferOrdemServico.objects.create(
-                                    ordem_servico=ordem,
-                                    transfer=transfer_obj,
+                                _criar_transfer_ordem_servico(
+                                    ordem=ordem,
+                                    transfer_obj=transfer_obj,
                                     nome_personalizado=nome_personalizado,
-                                    valor=transfer_valor
+                                    valor=transfer_valor,
                                 )
                         else:
                             # Só cria lançamento se houver serviço válido
@@ -555,11 +566,11 @@ def ordem_servico_edit(request, pk):
                                     'error': 'Transfer não encontrado',
                                     'transfer_id': transfer_id
                                 }, status=400)
-                            TransferOrdemServico.objects.create(
-                                ordem_servico=ordem,
-                                transfer=transfer_obj,
+                            _criar_transfer_ordem_servico(
+                                ordem=ordem,
+                                transfer_obj=transfer_obj,
                                 nome_personalizado=nome_personalizado,
-                                valor=transfer_valor
+                                valor=transfer_valor,
                             )
                     else:
                         if s.get('servico_id') and s.get('categoria_id') and s.get('data'):
