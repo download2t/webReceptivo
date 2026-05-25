@@ -748,8 +748,7 @@ def ajax_load_subcategorias(request):
     
     if categoria_id:
         subcategorias = SubCategoria.objects.filter(
-            categoria_id=categoria_id,
-            ativo=True
+            categoria_id=categoria_id
         ).values(
             'id', 'nome', 
             'valor_inteira', 'valor_meia', 'valor_infantil',
