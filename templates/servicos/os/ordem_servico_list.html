@@ -195,7 +195,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% with lancamentos=ordem.lancamentos.all total_lancamentos=ordem.lancamentos.count transfers=ordem.transfers.all total_transfers=ordem.transfers.count total_itens=ordem.lancamentos.count|add:ordem.transfers.count %}
+                                            {% with lancamentos=ordem.lancamentos.all total_itens=ordem.total_itens|default:ordem.lancamentos.count %}
                                             {% for lancamento in lancamentos|slice:":2" %}
                                             <div class="mb-1 small">
                                                 <span class="badge bg-info bg-opacity-50 text-dark">{{ lancamento.data_servico|date:"d/m" }}</span>
@@ -203,10 +203,10 @@
                                                 <small class="text-muted">({{ lancamento.total_pax }} pax)</small>
                                             </div>
                                             {% endfor %}
-                                            {% if transfers %}
+                                            {% if ordem.transfers_resumo %}
                                             <div class="mt-2 pt-2 border-top">
                                                 <div class="small text-muted fw-600 mb-1">Transfers</div>
-                                                {% for transfer in transfers %}
+                                                {% for transfer in ordem.transfers_resumo %}
                                                 <div class="mb-1 small">
                                                     <span class="badge bg-warning bg-opacity-50 text-dark">Transfer</span>
                                                     <strong>{{ transfer.nome_exibicao }}</strong>
@@ -221,7 +221,7 @@
                                             {% endwith %}
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-primary">{{ ordem.lancamentos.count|add:ordem.transfers.count }}</span>
+                                            <span class="badge bg-primary">{{ ordem.total_itens|default:ordem.lancamentos.count }}</span>
                                         </td>
                                         <td class="text-end">
                                             <strong class="text-success fs-5">R$ {{ ordem.valor_total|floatformat:2 }}</strong>
@@ -305,7 +305,7 @@
                                     <h6 class="mb-2 fw-600 text-dark">
                                         <i class="bi bi-bag-check me-2"></i>Serviços
                                     </h6>
-                                    {% with lancamentos=ordem.lancamentos.all total_lancamentos=ordem.lancamentos.count transfers=ordem.transfers.all total_transfers=ordem.transfers.count total_itens=ordem.lancamentos.count|add:ordem.transfers.count %}
+                                    {% with lancamentos=ordem.lancamentos.all total_itens=ordem.total_itens|default:ordem.lancamentos.count %}
                                     {% for lancamento in lancamentos|slice:":3" %}
                                     <div class="servico-item mb-2 p-2 bg-light rounded">
                                         <div class="d-flex justify-content-between align-items-start gap-2">
@@ -325,12 +325,12 @@
                                         </div>
                                     </div>
                                     {% endfor %}
-                                    {% if transfers %}
+                                    {% if ordem.transfers_resumo %}
                                     <div class="mt-3">
                                         <h6 class="mb-2 fw-600 text-dark">
                                             <i class="bi bi-car-front me-2"></i>Transfers
                                         </h6>
-                                        {% for transfer in transfers %}
+                                        {% for transfer in ordem.transfers_resumo %}
                                         <div class="servico-item mb-2 p-2 bg-light rounded">
                                             <div class="d-flex justify-content-between align-items-start gap-2">
                                                 <div class="flex-grow-1">

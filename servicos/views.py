@@ -6,11 +6,21 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.db import connection
 from django.db.models import Q, Sum, Count
 from django.views.decorators.http import require_http_methods
 from .models import Categoria, SubCategoria, TipoMeiaEntrada, LancamentoServico, Transfer, OrdemServico, TransferOrdemServico
 from .forms import CategoriaForm, SubCategoriaForm, TipoMeiaEntradaForm, LancamentoServicoForm, TransferForm, OrdemServicoForm
 from .permissions import require_permission
+
+
+def _transfer_nome_personalizado_disponivel():
+    try:
+        with connection.cursor() as cursor:
+            columns = [column.name for column in connection.introspection.get_table_description(cursor, TransferOrdemServico._meta.db_table)]
+        return 'nome_personalizado' in columns
+    except Exception:
+        return False
 
 
 # ==================== VIEWS DE CATEGORIA ====================
@@ -289,19 +299,23 @@ def ordem_servico_list(request):
     categoria_id = request.GET.get('categoria', '')
     data_inicio = request.GET.get('data_inicio', '')
     data_fim = request.GET.get('data_fim', '')
+    transfer_nome_personalizado_disponivel = _transfer_nome_personalizado_disponivel()
 
     ordens = OrdemServico.objects.all()
 
     if search:
-        ordens = ordens.filter(
+        filtros = (
             Q(numero_os__icontains=search) |
             Q(lancamentos__subcategoria__nome__icontains=search) |
-            Q(transfers__transfer__nome__icontains=search) |
-            Q(transfers__nome_personalizado__icontains=search) |
             Q(criado_por__username__icontains=search) |
             Q(criado_por__first_name__icontains=search) |
             Q(criado_por__last_name__icontains=search)
-        ).distinct()
+        )
+        if transfer_nome_personalizado_disponivel:
+            filtros |= Q(transfers__transfer__nome__icontains=search) | Q(transfers__nome_personalizado__icontains=search)
+        else:
+            filtros |= Q(transfers__transfer__nome__icontains=search)
+        ordens = ordens.filter(filtros).distinct()
     if categoria_id:
         ordens = ordens.filter(lancamentos__subcategoria__categoria_id=categoria_id).distinct()
     if data_inicio:
@@ -312,13 +326,30 @@ def ordem_servico_list(request):
     # Estatísticas
     stats = {
         'total_ordens': ordens.count(),
-        'total_servicos': sum(os.lancamentos.count() + os.transfers.count() for os in ordens),
+        'total_servicos': sum(
+            os.lancamentos.count() + (os.transfers.count() if transfer_nome_personalizado_disponivel else 0)
+            for os in ordens
+        ),
     }
 
     # Paginação
     paginator = Paginator(ordens, 20)
     page = request.GET.get('page')
     ordens = paginator.get_page(page)
+
+    for ordem in ordens:
+        ordem.transfers_resumo = []
+        if transfer_nome_personalizado_disponivel:
+            try:
+                for transfer_ordem in ordem.transfers.select_related('transfer').all():
+                    nome_exibicao = getattr(transfer_ordem, 'nome_exibicao', '') or transfer_ordem.transfer.nome
+                    ordem.transfers_resumo.append({
+                        'nome_exibicao': nome_exibicao,
+                        'valor': transfer_ordem.valor,
+                    })
+            except Exception:
+                ordem.transfers_resumo = []
+        ordem.total_itens = ordem.lancamentos.count() + len(ordem.transfers_resumo)
 
     categorias = Categoria.objects.filter(ativo=True)
 
@@ -334,6 +365,7 @@ def ordem_servico_list(request):
         'data_inicio': data_inicio,
         'data_fim': data_fim,
         'title': 'Ordens de Serviço',
+        'transfer_nome_personalizado_disponivel': transfer_nome_personalizado_disponivel,
         'debug_has_add_perm': has_add_perm,  # Debug
     }
     return render(request, 'servicos/os/ordem_servico_list.html', context)
@@ -568,6 +600,7 @@ def ordem_servico_edit(request, pk):
         form = OrdemServicoForm(instance=ordem)
     import json
     categorias = Categoria.objects.filter(ativo=True)
+    transfer_nome_personalizado_disponivel = _transfer_nome_personalizado_disponivel()
     transfers = Transfer.objects.filter(ativo=True) if hasattr(Transfer, 'ativo') else Transfer.objects.all()
     # Serializar lançamentos e transfers para o JS
     lancamentos_data = []
@@ -613,33 +646,34 @@ def ordem_servico_edit(request, pk):
 
     # Transfers avulsos enviados separadamente e também como __transfer_avulso em lancamentos_json (para roteiro/resumo)
     transfers_data = []
-    for t in ordem.transfers.all():
-        nome_exibicao = t.nome_exibicao if hasattr(t, 'nome_exibicao') else (getattr(t, 'nome_personalizado', '') or t.transfer.nome)
-        transfer_dict = {
-            'transfer_id': str(t.transfer_id),
-            'nome': t.transfer.nome,
-            'nome_personalizado': getattr(t, 'nome_personalizado', ''),
-            'nome_exibicao': nome_exibicao,
-            'valor': float(t.valor)
-        }
-        transfers_data.append(transfer_dict)
-        lancamentos_data.append({
-            'id': f'transfer_avulso_{t.id}',
-            'data': menor_data,
-            'servico_nome': nome_exibicao,
-            'descricao': nome_exibicao,
-            'qtd_inteira': 0,
-            'qtd_meia': 0,
-            'qtd_infantil': 0,
-            'idades': [],
-            'tipos_meia': [],
-            'transfers': [transfer_dict],
-            'valor_transfer_ida': float(t.valor),
-            'valor_transfer_volta': 0,
-            'info': {},
-            '__transfer_avulso': True,
-            '__nao_exibir_card': True
-        })
+    if transfer_nome_personalizado_disponivel:
+        for t in ordem.transfers.select_related('transfer').all():
+            nome_exibicao = t.nome_exibicao if hasattr(t, 'nome_exibicao') else (getattr(t, 'nome_personalizado', '') or t.transfer.nome)
+            transfer_dict = {
+                'transfer_id': str(t.transfer_id),
+                'nome': t.transfer.nome,
+                'nome_personalizado': getattr(t, 'nome_personalizado', ''),
+                'nome_exibicao': nome_exibicao,
+                'valor': float(t.valor)
+            }
+            transfers_data.append(transfer_dict)
+            lancamentos_data.append({
+                'id': f'transfer_avulso_{t.id}',
+                'data': menor_data,
+                'servico_nome': nome_exibicao,
+                'descricao': nome_exibicao,
+                'qtd_inteira': 0,
+                'qtd_meia': 0,
+                'qtd_infantil': 0,
+                'idades': [],
+                'tipos_meia': [],
+                'transfers': [transfer_dict],
+                'valor_transfer_ida': float(t.valor),
+                'valor_transfer_volta': 0,
+                'info': {},
+                '__transfer_avulso': True,
+                '__nao_exibir_card': True
+            })
 
     # Gerar roteiro exatamente como no cadastro
     # Reutiliza a mesma lógica do JS para garantir consistência
@@ -651,11 +685,12 @@ def ordem_servico_edit(request, pk):
             por_data[data] = []
         por_data[data].append(l)
     transfers_por_data = {}
-    for t in ordem.transfers.all():
-        data = menor_data
-        if data not in transfers_por_data:
-            transfers_por_data[data] = []
-        transfers_por_data[data].append(t)
+    if transfer_nome_personalizado_disponivel:
+        for t in ordem.transfers.all():
+            data = menor_data
+            if data not in transfers_por_data:
+                transfers_por_data[data] = []
+            transfers_por_data[data].append(t)
     datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
     roteiro = '=== ROTEIRO ===\n\n'
     resumo_servicos = []
@@ -713,6 +748,7 @@ def ordem_servico_edit(request, pk):
         'lancamentos_json': json.dumps(lancamentos_data),
         'transfers_json': json.dumps(transfers_data),
         'roteiro': roteiro,
+        'transfer_nome_personalizado_disponivel': transfer_nome_personalizado_disponivel,
         # ...outros contextos necessários...
     })
 # ...existing code...
@@ -746,11 +782,13 @@ def ordem_servico_detail(request, pk):
     from .models import OrdemServico
     ordem = get_object_or_404(OrdemServico, pk=pk)
     todos_lancamentos = ordem.lancamentos.select_related('categoria', 'subcategoria').all()
-    transfers = ordem.transfers.select_related('transfer').all()
+    transfer_nome_personalizado_disponivel = _transfer_nome_personalizado_disponivel()
+    transfers = ordem.transfers.select_related('transfer').all() if transfer_nome_personalizado_disponivel else []
     context = {
         'ordem': ordem,
         'todos_lancamentos': todos_lancamentos,
         'transfers': transfers,
+        'transfer_nome_personalizado_disponivel': transfer_nome_personalizado_disponivel,
         'title': f'OS #{ordem.numero_os}'
     }
     return render(request, 'servicos/os/ordem_servico_detail.html', context)
