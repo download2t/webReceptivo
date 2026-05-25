@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-bsw_!9+hej6n!=#6hz8-l
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    '31.97.254.220',
+    '72.60.31.133',
     'mydevsystem.site',
     'www.mydevsystem.site',
 ]
