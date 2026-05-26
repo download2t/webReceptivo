@@ -363,10 +363,10 @@
         div.className = 'transfer-opcao mb-2';
 
         const wrapper = document.createElement('div');
-        wrapper.className = 'd-flex align-items-center gap-2';
+        wrapper.className = 'transfer-fields d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-2';
 
         const label = document.createElement('label');
-        label.className = 'form-label small mb-0';
+        label.className = 'form-label small mb-0 transfer-label';
         label.textContent = 'Opção ' + contadorTransfers;
         label.style.minWidth = '60px';
 
@@ -377,6 +377,7 @@
         selectClone.className = 'form-select form-select-sm transfer-select';
         selectClone.setAttribute('data-transfer', contadorTransfers);
         selectClone.style.flex = '2';
+        selectClone.style.width = '100%';
 
         const nomeInput = document.createElement('input');
         nomeInput.type = 'text';
@@ -384,6 +385,7 @@
         nomeInput.placeholder = 'Nome na OS';
         nomeInput.style.flex = '2';
         nomeInput.style.minWidth = '180px';
+        nomeInput.style.width = '100%';
         nomeInput.disabled = true;
 
         const dataInput = document.createElement('input');
@@ -391,6 +393,7 @@
         dataInput.className = 'form-control form-control-sm transfer-data-input';
         dataInput.style.flex = '1';
         dataInput.style.minWidth = '150px';
+        dataInput.style.width = '100%';
         dataInput.disabled = true;
 
         // Campo de valor editável
@@ -402,6 +405,7 @@
         valorInput.placeholder = 'Valor';
         valorInput.style.flex = '1';
         valorInput.style.minWidth = '100px';
+        valorInput.style.width = '100%';
         valorInput.value = '0.00';
         valorInput.disabled = true;
 
@@ -452,6 +456,7 @@
         const btnRemove = document.createElement('button');
         btnRemove.type = 'button';
         btnRemove.className = 'btn btn-sm btn-outline-danger';
+        btnRemove.style.minWidth = '44px';
         btnRemove.innerHTML = '<i class="bi bi-trash"></i>';
         btnRemove.addEventListener('click', function() {
             div.remove();

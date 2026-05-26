@@ -247,6 +247,37 @@ h1 {
     margin-bottom: 0.5rem;
 }
 
+.transfer-opcao .transfer-fields {
+    width: 100%;
+}
+
+@media (max-width: 767.98px) {
+    .transfer-opcao {
+        padding: 0.75rem 0.65rem;
+    }
+
+    .transfer-opcao .transfer-fields {
+        gap: 0.5rem !important;
+    }
+
+    .transfer-opcao .transfer-label {
+        min-width: 0 !important;
+        margin-bottom: 0.15rem !important;
+    }
+
+    .transfer-opcao .transfer-select,
+    .transfer-opcao .transfer-data-input,
+    .transfer-opcao .transfer-nome-input,
+    .transfer-opcao .transfer-valor-input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .transfer-opcao .btn-outline-danger {
+        width: 100%;
+    }
+}
+
 .campos-servico {
     display: none;
 }
