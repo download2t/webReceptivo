@@ -1084,167 +1084,167 @@ function atualizarResumoTotais() {
         return data;
     }
 
-function atualizarRoteiro() {
-  const preview = document.getElementById("roteiroPreview");
+   function atualizarRoteiro() {
+     const preview = document.getElementById("roteiroPreview");
 
-  if (servicosAdicionados.length === 0) {
-    preview.innerHTML =
-      '<div class="text-center text-muted">' +
-      '<i class="bi bi-file-earmark-text display-3 d-block mb-3"></i>' +
-      "<p>Adicione serviços para visualizar o roteiro</p>" +
-      "</div>";
-    return;
-  }
+     if (servicosAdicionados.length === 0) {
+       preview.innerHTML =
+         '<div class="text-center text-muted">' +
+         '<i class="bi bi-file-earmark-text display-3 d-block mb-3"></i>' +
+         "<p>Adicione serviços para visualizar o roteiro</p>" +
+         "</div>";
+       return;
+     }
 
-  // Agrupar serviços e transfers por data
-  const porData = {};
-  servicosAdicionados.forEach(function (item) {
-    if (item.__transfer_avulso) {
-      const dataTransfer = item.data_transfer || item.data || "";
-      if (!porData[dataTransfer]) {
-        porData[dataTransfer] = { servicos: [], transfers: [] };
-      }
-      porData[dataTransfer].transfers.push(item);
-    } else {
-      if (!porData[item.data]) {
-        porData[item.data] = { servicos: [], transfers: [] };
-      }
-      porData[item.data].servicos.push(item);
-    }
-  });
+     // Agrupar serviços e transfers por data
+     const porData = {};
+     servicosAdicionados.forEach(function (item) {
+       if (item.__transfer_avulso) {
+         const dataTransfer = item.data_transfer || item.data || "";
+         if (!porData[dataTransfer]) {
+           porData[dataTransfer] = { servicos: [], transfers: [] };
+         }
+         porData[dataTransfer].transfers.push(item);
+       } else {
+         if (!porData[item.data]) {
+           porData[item.data] = { servicos: [], transfers: [] };
+         }
+         porData[item.data].servicos.push(item);
+       }
+     });
 
-  const datasOrdenadas = Object.keys(porData).sort();
+     // Ordenar datas presentes em qualquer item
+     const datasOrdenadas = Object.keys(porData).sort();
 
-  // Variáveis de Totais e Resumos
-  const resumoIngressos = [];
-  const resumoTransfers = [];
-  let totalGeral = 0;
-  let totalTickets = 0;
-  let totalTransfers = 0;
+     // Gerar roteiro
+     let roteiro = "=== ROTEIRO ===\n\n";
 
-  function formatarMoeda(valor) {
-    return new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(valor);
-  }
+     // Resumos separados para deixar a prévia mais clara
+     const resumoIngressos = [];
+     const resumoTransfers = [];
+     let totalGeral = 0;
+     let totalTickets = 0; // ADICIONADO: Acumulador de Tickets
+     let totalTransfers = 0; // ADICIONADO: Acumulador de Transfers
 
-  // Cabeçalho Profissional
-  let roteiro = "✨ *ROTEIRO DE VIAGEM PERSONALIZADO* ✨\n";
-  roteiro +=
-    "Olá! Preparamos o detalhamento do seu roteiro. Confira abaixo as atividades programadas:\n\n";
+     function formatarMoeda(valor) {
+       return new Intl.NumberFormat("pt-BR", {
+         minimumFractionDigits: 2,
+         maximumFractionDigits: 2,
+       }).format(valor);
+     }
 
-  // Detalhamento Diário
-  datasOrdenadas.forEach(function (data) {
-    roteiro += "🗓️ *DIA | " + formatarData(data) + "*\n";
-    roteiro += "───────────────────\n";
+     datasOrdenadas.forEach(function (data) {
+       roteiro += "📅 " + formatarData(data) + "\n";
+       roteiro += "─".repeat(15) + "\n";
 
-    // Serviços / Ingressos
-    if (porData[data].servicos.length > 0) {
-      roteiro += "🎟️ *Atividades & Ingressos:*\n";
-      porData[data].servicos.forEach(function (servico) {
-        let descQuantidades = [];
-        if (servico.qtd_inteira > 0)
-          descQuantidades.push(servico.qtd_inteira + "x Inteira");
-        if (servico.qtd_meia > 0)
-          descQuantidades.push(servico.qtd_meia + "x Meia");
-        if (servico.qtd_infantil > 0)
-          descQuantidades.push(servico.qtd_infantil + "x Infantil");
+       porData[data].servicos.forEach(function (servico, idx) {
+         roteiro += "\n" + (servico.descricao || "") + "\n";
 
-        const nomeAtividade = servico.servico_nome || servico.descricao || "";
-        roteiro +=
-          "  • " + nomeAtividade + " (" + descQuantidades.join(", ") + ")\n";
+         if (servico.qtd_inteira > 0)
+           roteiro += "  • " + servico.qtd_inteira + " Inteira(s)\n";
+         if (servico.qtd_meia > 0)
+           roteiro += "  • " + servico.qtd_meia + " Meia(s)\n";
+         if (servico.qtd_infantil > 0)
+           roteiro +=
+             "  • " +
+             servico.qtd_infantil +
+             " Infantil(is) (idades: " +
+             servico.idades.join(", ") +
+             ")\n";
 
-        // Somatórias para o resumo financeiro
-        const info = servico.info || {};
-        const qtdInteira = parseInt(servico.qtd_inteira) || 0;
-        const qtdMeia = parseInt(servico.qtd_meia) || 0;
-        const qtdInfantil = parseInt(servico.qtd_infantil) || 0;
-        const valorInteira = parseFloat(info.valor_inteira || 0);
-        const valorMeia = parseFloat(info.valor_meia || 0);
-        const valorInfantil = parseFloat(info.valor_infantil || 0);
+         // Adicionar ao resumo
+         const info = servico.info || {};
+         const qtdInteira = parseInt(servico.qtd_inteira) || 0;
+         const qtdMeia = parseInt(servico.qtd_meia) || 0;
+         const qtdInfantil = parseInt(servico.qtd_infantil) || 0;
+         const valorInteira = parseFloat(info.valor_inteira || 0);
+         const valorMeia = parseFloat(info.valor_meia || 0);
+         const valorInfantil = parseFloat(info.valor_infantil || 0);
 
-        const subtotalIngressos =
-          qtdInteira * valorInteira +
-          qtdMeia * valorMeia +
-          qtdInfantil * valorInfantil;
-        resumoIngressos.push({
-          nome: nomeAtividade,
-          valorIngressos: subtotalIngressos,
-        });
+         const subtotalIngressos =
+           qtdInteira * valorInteira +
+           qtdMeia * valorMeia +
+           qtdInfantil * valorInfantil;
+         resumoIngressos.push({
+           nome: servico.servico_nome || servico.descricao,
+           valorIngressos: subtotalIngressos,
+         });
 
-        totalTickets += subtotalIngressos;
-        totalGeral += subtotalIngressos;
-      });
-      roteiro += "\n";
-    }
+         totalTickets += subtotalIngressos; // ADICIONADO: Soma no total de tickets
+         totalGeral += subtotalIngressos;
+       });
 
-    // Transfers
-    if (porData[data].transfers.length > 0) {
-      roteiro += "🚘 *Transporte Privativo:*\n";
-      porData[data].transfers.forEach(function (transfer) {
-        if (transfer.transfers && transfer.transfers.length > 0) {
-          transfer.transfers.forEach(function (t) {
-            const nomeExibicao =
-              t.nome_personalizado || t.nome_exibicao || t.nome || "Transfer";
-            const valorT = parseFloat(t.valor) || 0;
+       if (porData[data].transfers.length > 0) {
+         roteiro += "\n 🚌 Transfers:\n";
+         porData[data].transfers.forEach(function (transfer) {
+           if (transfer.transfers && transfer.transfers.length > 0) {
+             transfer.transfers.forEach(function (t) {
+               const nomeExibicao =
+                 t.nome_personalizado ||
+                 t.nome_exibicao ||
+                 t.nome ||
+                 "Transfer";
+               const valorT = parseFloat(t.valor) || 0; // Armazena na variável para facilitar a soma
 
-            roteiro += "  • " + nomeExibicao + "\n";
+               roteiro +=
+                 "     - 🚕 " +
+                 nomeExibicao +
+                 " (R$ " +
+                 formatarMoeda(valorT) +
+                 ")\n";
 
-            resumoTransfers.push({
-              nome: nomeExibicao,
-              valor: valorT,
-            });
+               resumoTransfers.push({
+                 nome: nomeExibicao,
+                 valor: valorT,
+               });
 
-            totalTransfers += valorT;
-            totalGeral += valorT;
-          });
-        }
-      });
-      roteiro += "\n";
-    }
-  });
+               totalTransfers += valorT; // ADICIONADO: Soma no total de transfers
+               totalGeral += valorT;
+             });
+           }
+         });
+       }
 
-  // Resumo Financeiro Profissional
-  roteiro += "═══════════════════\n";
-  roteiro += "💼 *RESUMO FINANCEIRO*\n";
-  roteiro += "═══════════════════\n";
+       roteiro += "\n";
+     });
 
-  if (resumoTransfers.length > 0) {
-    roteiro += "\n🚘 *Investimento em Transporte:*\n";
-    resumoTransfers.forEach(function (item) {
-      roteiro +=
-        "  • " + item.nome + ": R$ " + formatarMoeda(item.valor) + "\n";
-    });
-    roteiro +=
-      "  _*Subtotal Transporte: R$ " + formatarMoeda(totalTransfers) + "*_\n";
-  }
+     roteiro += "─".repeat(15) + "\n";
+     roteiro += "💰 RESUMO DE VALORES\n";
 
-  if (resumoIngressos.length > 0) {
-    roteiro += "\n🎟️ *Investimento em Ingressos:*\n";
-    resumoIngressos.forEach(function (item) {
-      if (item.valorIngressos > 0) {
-        roteiro +=
-          "  • " +
-          item.nome +
-          ": R$ " +
-          formatarMoeda(item.valorIngressos) +
-          "\n";
-      }
-    });
-    roteiro +=
-      "  _*Subtotal Ingressos: R$ " + formatarMoeda(totalTickets) + "*_\n";
-  }
+     if (resumoTransfers.length > 0) {
+       roteiro += "\n 🚌 Transfers:\n";
+       resumoTransfers.forEach(function (item) {
+         roteiro +=
+           "\t- 🚕 " + item.nome + " (R$ " + formatarMoeda(item.valor) + ")\n";
+       });
+       // ADICIONADO: Linha de total de transfers
+       roteiro +=
+         " 💰 TOTAL Transfers: R$ " + formatarMoeda(totalTransfers) + "\n";
+     }
 
-  roteiro += "\n───────────────────\n";
-  roteiro +=
-    "💎 *VALOR TOTAL DO PACOTE: R$ " + formatarMoeda(totalGeral) + "*\n";
-  roteiro += "───────────────────\n\n";
-  roteiro +=
-    "Ficamos à disposição para esclarecer qualquer dúvida ou realizar ajustes no roteiro!";
+     if (resumoIngressos.length > 0) {
+       roteiro += "\n 🎫 TICKETS:\n";
+       resumoIngressos.forEach(function (item) {
+         if (item.valorIngressos > 0) {
+           roteiro +=
+             "\t- " +
+             item.nome +
+             " - Ingresso: R$ " +
+             formatarMoeda(item.valorIngressos) +
+             "\n";
+         }
+       });
+       // ADICIONADO: Linha de total de tickets
+       roteiro += " 💰 TOTAL TICKETS: R$ " + formatarMoeda(totalTickets) + "\n";
+     }
 
-  preview.innerHTML = roteiro;
-}
+     // ALTERADO: Formatação do fechamento do Roteiro
+     roteiro += "─".repeat(15) + "\n";
+     roteiro += " 💰 TOTAL ROTEIRO: R$ " + formatarMoeda(totalGeral) + "\n";
+     roteiro += "─".repeat(15) + "\n";
+
+     preview.innerHTML = roteiro;
+   }
 
     function formatarData(data) {
         if (!data || typeof data !== 'string' || !data.includes('-')) {
