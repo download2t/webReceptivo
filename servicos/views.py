@@ -47,28 +47,37 @@ def _gerar_preview_roteiro_ordem(ordem):
 
     datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
 
-    roteiro = '=== ROTEIRO ===\n\n'
+    roteiro = '✨ *ROTEIRO DE VIAGEM PERSONALIZADO* ✨\n'
+    roteiro += 'Olá! Preparamos o detalhamento do seu roteiro. Confira abaixo as atividades programadas:\n\n'
+
     resumo_servicos = []
     resumo_transfers = []
+    total_tickets = 0.0
+    total_transfers = 0.0
+    total_geral = 0.0
 
     for data in datas_ordenadas:
         tem_servicos = data in por_data and por_data[data]
         tem_transfers = data in transfers_por_data and transfers_por_data[data]
 
         if data:
-            roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
-            roteiro += '─' * 15 + '\n'
+            roteiro += f'🗓️ *DIA | {data[8:10]}/{data[5:7]}/{data[0:4]}*\n'
+            roteiro += '───────────────────\n'
 
         if tem_servicos:
+            roteiro += '🎟️ *Atividades & Ingressos:*\n'
             for lancamento in por_data[data]:
-                roteiro += f'\n{lancamento.obs_publica or lancamento.subcategoria.nome}\n'
+                qtds = []
                 if lancamento.qtd_inteira > 0:
-                    roteiro += f'  • {lancamento.qtd_inteira} Inteira(s)\n'
+                    qtds.append(f'{lancamento.qtd_inteira}x Inteira')
                 if lancamento.qtd_meia > 0:
-                    roteiro += f'  • {lancamento.qtd_meia} Meia(s)\n'
+                    qtds.append(f'{lancamento.qtd_meia}x Meia')
                 if lancamento.qtd_infantil > 0:
-                    idades = [i for i in lancamento.idades_criancas.split(',') if i.strip()]
-                    roteiro += f'  • {lancamento.qtd_infantil} Infantil(is) (idades: {", ".join(idades)})\n'
+                    qtds.append(f'{lancamento.qtd_infantil}x Infantil')
+                
+                desc_quantidades = ', '.join(qtds)
+                nome_atividade = lancamento.obs_publica or lancamento.subcategoria.nome
+                roteiro += f'  • {nome_atividade} ({desc_quantidades})\n'
 
                 info = lancamento.subcategoria
                 valor_inteira = float(getattr(info, 'valor_inteira', 0))
@@ -80,47 +89,53 @@ def _gerar_preview_roteiro_ordem(ordem):
                     + (lancamento.qtd_infantil * valor_infantil)
                 )
                 resumo_servicos.append({
-                    'nome': lancamento.subcategoria.nome,
+                    'nome': nome_atividade,
                     'valorIngressos': subtotal_ingressos,
                 })
+                total_tickets += subtotal_ingressos
+                total_geral += subtotal_ingressos
+            roteiro += '\n'
 
         if tem_transfers:
-            roteiro += '\n 🚌 Transfers:\n'
+            roteiro += '🚘 *Transporte Privativo:*\n'
             for transfer_ordem in transfers_por_data[data]:
                 nome_exibicao = getattr(transfer_ordem, 'nome_exibicao', '') or transfer_ordem.transfer.nome
-                data_transfer = transfer_ordem.data_transfer.strftime('%d/%m/%Y') if getattr(transfer_ordem, 'data_transfer', None) else ''
-                data_texto = f' - {data_transfer}' if data_transfer else ''
-                roteiro += f'     - 🚕 {nome_exibicao}{data_texto} ({_formatar_moeda_br(transfer_ordem.valor)})\n'
+                roteiro += f'  • {nome_exibicao}\n'
+                
+                valor_t = float(transfer_ordem.valor)
                 resumo_transfers.append({
                     'nome': nome_exibicao,
-                    'valor': float(transfer_ordem.valor),
+                    'valor': valor_t,
                     'data_transfer': transfer_ordem.data_transfer.strftime('%Y-%m-%d') if getattr(transfer_ordem, 'data_transfer', None) else '',
                     'data_transfer_br': transfer_ordem.data_transfer.strftime('%d/%m/%Y') if getattr(transfer_ordem, 'data_transfer', None) else '',
                 })
+                total_transfers += valor_t
+                total_geral += valor_t
+            roteiro += '\n'
 
-        roteiro += '\n'
-
-    roteiro += '─' * 15 + '\n'
-    roteiro += '💰 RESUMO DE VALORES\n'
+    roteiro += '═══════════════════\n'
+    roteiro += '💼 *RESUMO FINANCEIRO*\n'
+    roteiro += '═══════════════════\n'
 
     if resumo_transfers:
-        roteiro += '\n 🚌 Transfers:\n'
+        roteiro += '\n🚘 *Investimento em Transporte:*\n'
         for item in resumo_transfers:
-            data_texto = f' - {formatar_data_br(item["data_transfer"])}' if item.get('data_transfer') else ''
-            roteiro += f'\t- 🚕 {item["nome"]}{data_texto} ({_formatar_moeda_br(item["valor"])})\n'
+            roteiro += f'  • {item["nome"]}: {_formatar_moeda_br(item["valor"])}\n'
+        roteiro += f'  _*Subtotal Transporte: {_formatar_moeda_br(total_transfers)}*_\n'
 
     if resumo_servicos:
-        roteiro += '\n 🎫 TICKETS:\n'
+        roteiro += '\n🎟️ *Investimento em Ingressos:*\n'
         for item in resumo_servicos:
             if item['valorIngressos'] > 0:
-                roteiro += f'\t- {item["nome"]} - Ingresso: {_formatar_moeda_br(item["valorIngressos"])}\n'
+                roteiro += f'  • {item["nome"]}: {_formatar_moeda_br(item["valorIngressos"])}\n'
+        roteiro += f'  _*Subtotal Ingressos: {_formatar_moeda_br(total_tickets)}*_\n'
 
-    total_geral = sum(item['valorIngressos'] for item in resumo_servicos) + sum(item['valor'] for item in resumo_transfers)
-    roteiro += f' 💰 TOTAL: {_formatar_moeda_br(total_geral)}\n'
-    roteiro += '\n' + '─' * 15 + '\n'
+    roteiro += '\n───────────────────\n'
+    roteiro += f'💎 *VALOR TOTAL DO PACOTE: {_formatar_moeda_br(total_geral)}*\n'
+    roteiro += '───────────────────\n\n'
+    roteiro += 'Ficamos à disposição para esclarecer qualquer dúvida ou realizar ajustes no roteiro!'
 
     return roteiro, resumo_transfers, transfers
-
 
 def formatar_data_br(data_iso):
     if not data_iso:
@@ -478,40 +493,11 @@ def ordem_servico_list(request):
         'debug_has_add_perm': has_add_perm,  # Debug
     }
     return render(request, 'servicos/os/ordem_servico_list.html', context)
-    # Estatísticas
-    stats = {
-        'total_ordens': ordens.count(),
-        'total_servicos': sum(os.lancamentos.count() for os in ordens),
-    }
-    
-    # Paginação
-    paginator = Paginator(ordens, 20)
-    page = request.GET.get('page')
-    ordens = paginator.get_page(page)
-    
-    categorias = Categoria.objects.filter(ativo=True)
-    
-    # Debug: Verificar permissões do usuário
-    has_add_perm = request.user.has_perm('servicos.add_ordemservico')
-    
-    context = {
-        'ordens': ordens,
-        'categorias': categorias,
-        'stats': stats,
-        'search': search,
-        'categoria_filter': categoria_id,
-        'data_inicio': data_inicio,
-        'data_fim': data_fim,
-        'title': 'Ordens de Serviço',
-        'debug_has_add_perm': has_add_perm,  # Debug
-    }
-    return render(request, 'servicos/os/ordem_servico_list.html', context)
 
 # Alias para retrocompatibilidade
 lancamento_list = ordem_servico_list
 
 
-@require_permission('servicos.add_ordemservico')
 @require_permission('servicos.add_ordemservico')
 def ordem_servico_create(request):
     """Cria novo lançamento / ordem de serviço com múltiplos serviços"""
@@ -522,7 +508,6 @@ def ordem_servico_create(request):
     form = OrdemServicoForm()
     categorias = Categoria.objects.filter(ativo=True)
     transfers = Transfer.objects.filter(ativo=True) if hasattr(Transfer, 'ativo') else Transfer.objects.all()
-                        # DEBUG: Logar transfers recebidos
 
     if request.method == 'POST':
         if request.content_type == 'application/json':
@@ -807,69 +792,8 @@ def ordem_servico_edit(request, pk):
                 '__nao_exibir_card': True
             })
 
-    # Gerar roteiro exatamente como no cadastro
-    # Reutiliza a mesma lógica do JS para garantir consistência
-    # Agrupa por data, inclui transfers por data, e gera texto igual ao preview
-    por_data = {}
-    for l in ordem.lancamentos.all():
-        data = l.data_servico.strftime('%Y-%m-%d')
-        if data not in por_data:
-            por_data[data] = []
-        por_data[data].append(l)
-    transfers_por_data = {}
-    if transfer_nome_personalizado_disponivel:
-        for t in ordem.transfers.all():
-            data = t.data_transfer.strftime('%Y-%m-%d') if getattr(t, 'data_transfer', None) else menor_data
-            if data not in transfers_por_data:
-                transfers_por_data[data] = []
-            transfers_por_data[data].append(t)
-    datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
-    roteiro = '=== ROTEIRO ===\n\n'
-    resumo_servicos = []
-    for data in datas_ordenadas:
-        tem_servicos = data in por_data and por_data[data]
-        tem_transfers = data in transfers_por_data and transfers_por_data[data]
-
-        if data:
-            roteiro += f'📅 {data[8:10]}/{data[5:7]}/{data[0:4]}\n'
-            roteiro += '─' * 15 + '\n'
-        elif tem_transfers and not tem_servicos:
-            roteiro += '🚌 Transfers\n'
-            roteiro += '─' * 15 + '\n'
-
-        if tem_servicos:
-            for l in por_data[data]:
-                roteiro += f'\n{l.obs_publica or l.subcategoria.nome}\n'
-                if l.qtd_inteira > 0:
-                    roteiro += f'  • {l.qtd_inteira} Inteira(s)\n'
-                if l.qtd_meia > 0:
-                    roteiro += f'  • {l.qtd_meia} Meia(s)\n'
-                if l.qtd_infantil > 0:
-                    idades = [i for i in l.idades_criancas.split(",") if i.strip()]
-                    roteiro += f'  • {l.qtd_infantil} Infantil(is) (idades: {", ".join(idades)})\n'
-                info = l.subcategoria
-                valor_inteira = float(getattr(info, 'valor_inteira', 0))
-                valor_meia = float(getattr(info, 'valor_meia', 0))
-                valor_infantil = float(getattr(info, 'valor_infantil', 0))
-                subtotal_ingressos = (l.qtd_inteira * valor_inteira) + (l.qtd_meia * valor_meia) + (l.qtd_infantil * valor_infantil)
-                resumo_servicos.append({
-                    'nome': l.subcategoria.nome,
-                    'valorIngressos': subtotal_ingressos
-                })
-
-        if tem_transfers:
-            roteiro += '\n 🚌 Transfers:\n'
-            for t in transfers_por_data[data]:
-                nome_exibicao = getattr(t, 'nome_personalizado', '') or t.transfer.nome
-                roteiro += f'     - 🚕 {nome_exibicao} (R$ {float(t.valor):.2f})\n'
-
-        roteiro += '\n'
-    roteiro += '─' * 15 + '\n'
-    roteiro += '💰 RESUMO DE VALORES\n'
-    for item in resumo_servicos:
-        if item['valorIngressos'] > 0:
-            roteiro += f'\n🎫 {item["nome"]} - Ingresso: R$ {item["valorIngressos"]:.2f}'.replace('.', ',')
-    roteiro += '\n' + '─' * 15 + '\n'
+    # Gerar roteiro através do método otimizado
+    roteiro, _, _ = _gerar_preview_roteiro_ordem(ordem)
 
     return render(request, 'servicos/os/ordem_servico_form.html', {
         'form': form,
@@ -883,7 +807,7 @@ def ordem_servico_edit(request, pk):
         'transfer_nome_personalizado_disponivel': transfer_nome_personalizado_disponivel,
         # ...outros contextos necessários...
     })
-# ...existing code...
+
 
 @require_permission('servicos.delete_ordemservico')
 def ordem_servico_delete(request, pk):
@@ -1425,7 +1349,7 @@ def translate_text(request):
             text_protected = re.sub(r'[─═]{3,}', protect_element, text_protected)
             
             # 2. Proteger emojis e símbolos especiais
-            emoji_pattern = r'[📅🚌💰🎫📍⏰✈️🏨🍽️🎭🎨🏛️🌊🌲🦋🐦🌅🌄🎢🎡🎪🚁🚢⛵🏖️🗿🏰🎭📸🎬🎵🎸🎹🎺🎻🎤🎧🎮🎯🎲🎰🎳🏀⚽🏈🏉🎾🏐🏓🏸🥊🥋⛳🏹🎣🥅🥌🛷🎿⛷️🏂🏋️🤸🤼🤽🤾🤺🏇🏌️🧘🏃🚴🏊🤹]'
+            emoji_pattern = r'[📅🚌💰🎫📍⏰✈️🏨🍽️🎭🎨🏛️🌊🌲🦋🐦🌅🌄🎢🎡🎪🚁🚢⛵🏖️🗿🏰🎭📸🎬🎵🎸🎹🎺🎻🎤🎧🎮🎯🎲🎰🎳🏀⚽🏈🏉🎾🏐🏓🏸🥊🥋⛳🏹🎣🥅🥌🛷🎿⛷️🏂🏋️🤸🤼🤽🤾🤺🏇🏌️🧘🏃🚴🏊🤹✨]'
             text_protected = re.sub(emoji_pattern, protect_element, text_protected)
             
             # 3. Proteger bullets e caracteres especiais de lista
