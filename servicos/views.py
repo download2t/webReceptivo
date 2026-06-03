@@ -47,8 +47,8 @@ def _gerar_preview_roteiro_ordem(ordem):
 
     datas_ordenadas = sorted(set(por_data.keys()) | set(transfers_por_data.keys()))
 
-    roteiro = '✨ *ROTEIRO DE VIAGEM PERSONALIZADO* ✨\n'
-    roteiro += 'Olá! Preparamos o detalhamento do seu roteiro. Confira abaixo as atividades programadas:\n\n'
+    roteiro = '✨ *ROTEIRO* ✨\n'
+    roteiro += '\n\n'
 
     resumo_servicos = []
     resumo_transfers = []

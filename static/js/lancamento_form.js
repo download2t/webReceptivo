@@ -1369,9 +1369,8 @@
     }
 
     // Cabeçalho Profissional
-    let roteiro = "✨ *ROTEIRO DE VIAGEM PERSONALIZADO* ✨\n";
-    roteiro +=
-      "Olá! Preparamos o detalhamento do seu roteiro. Confira abaixo as atividades programadas:\n\n";
+    let roteiro = "✨ *ROTEIRO* ✨\n";
+    roteiro +="\n\n";
 
     // Detalhamento Diário
     datasOrdenadas.forEach(function (data) {
