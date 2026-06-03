@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="WebRoteiros - Sistema de Gestão Receptiva">
-    <meta name="author" content="WebRoteiros">
+    <meta name="description" content=" - Sistema de Gestão Receptiva">
+    <meta name="author" content="">
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -15,7 +15,7 @@
     <meta name="user-theme-preference" content="{{ user.profile.tema_preferido }}">
     {% endif %}
     
-    <title>{% block title %}WebRoteiros{% endblock %}</title>
+    <title>{% block title %}Passeios Foz{% endblock %}</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
@@ -39,7 +39,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark custom-navbar fixed-top">
             <div class="container-fluid">
                 <a class="navbar-brand fw-bold" href="{% url 'core:dashboard' %}">
-                    <i class="bi bi-building me-2"></i>WebRoteiros
+                    <i class="bi bi-building me-2"></i>Passeios Foz
                 </a>
                 
                 <!-- Botão do menu mobile -->
@@ -147,7 +147,7 @@
                 <div class="row align-items-center py-2">
                     <div class="col-md-6">
                         <small class="text-muted">
-                            © {% now "Y" %} WebRoteiros. Todos os direitos reservados.
+                            © {% now "Y" %} Passeios Foz. Todos os direitos reservados.
                         </small>
                     </div>
                     <div class="col-md-6 text-md-end">
