@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     '72.60.31.133',
     'mydevsystem.site',
     'www.mydevsystem.site',
+    'sistemapasseiosfoz.com.br',
 ]
 
 # Security settings - Produção
